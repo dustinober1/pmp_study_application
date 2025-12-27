@@ -5,6 +5,7 @@ import FlashcardDisplay from '@/components/FlashcardDisplay';
 import RatingButtons from '@/components/RatingButtons';
 import ProgressDisplay from '@/components/ProgressDisplay';
 import DomainTaskBrowser from '@/components/DomainTaskBrowser';
+import PracticeSessionFlow from '@/components/PracticeSessionFlow';
 import { CardRating, Flashcard, FlashcardContent, Domain, Task, Progress, StudyStats } from '@/types';
 
 // Mock data for demonstration
@@ -134,7 +135,7 @@ export default function StudyPage() {
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [isRating, setIsRating] = useState(false);
-  const [studyMode, setStudyMode] = useState<'browse' | 'study' | 'progress'>('browse');
+  const [studyMode, setStudyMode] = useState<'browse' | 'study' | 'progress' | 'practice'>('browse');
 
   const handleRate = async (rating: CardRating) => {
     setIsRating(true);
@@ -178,11 +179,11 @@ export default function StudyPage() {
         </div>
 
         {/* Mode Tabs */}
-        <div className="flex gap-2 mb-8 border-b border-gray-200">
+        <div className="flex gap-2 mb-8 border-b border-gray-200 overflow-x-auto">
           <button
             onClick={handleBrowseClick}
             className={`
-              px-4 py-3 font-semibold border-b-2 transition-colors
+              px-4 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap
               ${
                 studyMode === 'browse'
                   ? 'border-blue-500 text-blue-600'
@@ -195,7 +196,7 @@ export default function StudyPage() {
           <button
             onClick={() => setStudyMode('study')}
             className={`
-              px-4 py-3 font-semibold border-b-2 transition-colors
+              px-4 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap
               ${
                 studyMode === 'study'
                   ? 'border-blue-500 text-blue-600'
@@ -206,9 +207,22 @@ export default function StudyPage() {
             Study Session
           </button>
           <button
+            onClick={() => setStudyMode('practice')}
+            className={`
+              px-4 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap
+              ${
+                studyMode === 'practice'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }
+            `}
+          >
+            Practice Questions
+          </button>
+          <button
             onClick={handleProgressClick}
             className={`
-              px-4 py-3 font-semibold border-b-2 transition-colors
+              px-4 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap
               ${
                 studyMode === 'progress'
                   ? 'border-blue-500 text-blue-600'
@@ -269,6 +283,14 @@ export default function StudyPage() {
                   )}
                 </div>
               </div>
+            )}
+
+            {studyMode === 'practice' && (
+              <PracticeSessionFlow
+                domains={MOCK_DOMAINS}
+                tasks={MOCK_TASKS}
+                onClose={() => setStudyMode('browse')}
+              />
             )}
 
             {studyMode === 'progress' && (

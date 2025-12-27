@@ -816,3 +816,472 @@ export const reviewCardInSession = functions.https.onCall(async (data, context) 
     );
   }
 });
+
+// ============================================================================
+// PRACTICE SESSION FUNCTIONS
+// ============================================================================
+
+/**
+ * Create a new practice session
+ *
+ * Initializes a practice test session with scope (all, domain, or task)
+ * Returns session ID for tracking question attempts
+ */
+export const createPracticeSession = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "User must be authenticated"
+    );
+  }
+
+  const userId = context.auth.uid;
+  const {scope = {type: "all"}, platform = "web"} = data;
+
+  // Validate scope
+  if (!["all", "domain", "task"].includes(scope.type)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Invalid scope type"
+    );
+  }
+
+  try {
+    const now = new Date();
+    const sessionData = {
+      userId,
+      startedAt: admin.firestore.Timestamp.fromDate(now),
+      endedAt: null,
+      durationSeconds: 0,
+      scope: scope,
+      questionsPresented: 0,
+      questionsAnswered: 0,
+      questionsSkipped: 0,
+      correctAnswers: 0,
+      incorrectAnswers: 0,
+      successRate: 0,
+      questionIds: [],
+      platform,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const sessionRef = await db.collection("practiceSessions").add(sessionData);
+
+    return {
+      success: true,
+      sessionId: sessionRef.id,
+      startedAt: now.toISOString(),
+    };
+  } catch (error) {
+    console.error("Error creating practice session:", error);
+    throw new functions.https.HttpsError(
+      "internal",
+      "Failed to create practice session"
+    );
+  }
+});
+
+/**
+ * Get questions for practice session
+ *
+ * Returns practice questions filtered by:
+ * - User scope (all, domain, task)
+ * - Active questions only
+ * - Randomized order
+ */
+export const getQuestionsForPractice = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "User must be authenticated"
+    );
+  }
+
+  const {limit = 10, scope = {type: "all"}} = data;
+
+  // Validate limit
+  if (limit < 1 || limit > 100) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Limit must be between 1 and 100"
+    );
+  }
+
+  // Validate scope
+  if (!["all", "domain", "task"].includes(scope.type)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Invalid scope type"
+    );
+  }
+
+  try {
+    let query: FirebaseFirestore.Query = db
+      .collection("practiceQuestions")
+      .where("isActive", "==", true);
+
+    // Apply scope filter
+    if (scope.type === "domain" && scope.domainId) {
+      query = query.where("domainId", "==", scope.domainId);
+    } else if (scope.type === "task" && scope.taskId) {
+      query = query.where("taskId", "==", scope.taskId);
+    }
+
+    // Fetch extra questions to randomize
+    const questionsSnapshot = await query
+      .limit(limit * 3)
+      .get();
+
+    const questions = questionsSnapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .sort(() => Math.random() - 0.5)
+      .slice(0, limit)
+      .map((question: any) => ({
+        id: question.id,
+        question: question.question,
+        choices: question.choices,
+        difficulty: question.difficulty,
+        domainId: question.domainId,
+        taskId: question.taskId,
+        // Note: explanation is NOT returned here for immediate remediation
+      }));
+
+    return {
+      success: true,
+      questions,
+      count: questions.length,
+    };
+  } catch (error) {
+    console.error("Error getting questions for practice:", error);
+    throw new functions.https.HttpsError(
+      "internal",
+      "Failed to get practice questions"
+    );
+  }
+});
+
+/**
+ * Submit a practice answer
+ *
+ * Records a user's answer to a practice question and returns:
+ * - Whether the answer was correct
+ * - The correct answer
+ * - Detailed explanation (remediation)
+ */
+export const submitPracticeAnswer = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "User must be authenticated"
+    );
+  }
+
+  const userId = context.auth.uid;
+  const {sessionId, contentId, selectedChoice, elapsedMs = 0, skipped = false} = data;
+
+  // Validate input
+  if (!sessionId || !contentId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "sessionId and contentId are required"
+    );
+  }
+
+  if (!skipped && !["A", "B", "C", "D"].includes(selectedChoice)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "selectedChoice must be A, B, C, or D (unless skipped)"
+    );
+  }
+
+  try {
+    const batch = db.batch();
+    const now = new Date();
+
+    // Verify practice session exists and belongs to user
+    const sessionRef = db.collection("practiceSessions").doc(sessionId);
+    const sessionDoc = await sessionRef.get();
+
+    if (!sessionDoc.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "Practice session not found"
+      );
+    }
+
+    if (sessionDoc.data()?.userId !== userId) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "You do not have permission to use this session"
+      );
+    }
+
+    // Get question content
+    const questionRef = db.collection("practiceQuestions").doc(contentId);
+    const questionDoc = await questionRef.get();
+
+    if (!questionDoc.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "Question not found"
+      );
+    }
+
+    const questionData = questionDoc.data();
+    const correctAnswer = questionData?.choices.find((choice: any) => choice.isCorrect)?.letter;
+    const isCorrect = !skipped && selectedChoice === correctAnswer;
+
+    const elapsedSeconds = Math.round(elapsedMs / 1000);
+
+    // Create practice attempt record
+    batch.set(db.collection("practiceAttemptHistory").doc(), {
+      userId,
+      contentId,
+      sessionId,
+      domainId: questionData?.domainId,
+      taskId: questionData?.taskId,
+      selectedChoice: skipped ? null : selectedChoice,
+      correctChoice: correctAnswer,
+      isCorrect,
+      timeSpent: elapsedSeconds,
+      attempt: 1,
+      skipped,
+      attemptedAt: admin.firestore.Timestamp.fromDate(now),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Update session metrics
+    batch.update(sessionRef, {
+      questionsAnswered: admin.firestore.FieldValue.increment(skipped ? 0 : 1),
+      questionsSkipped: admin.firestore.FieldValue.increment(skipped ? 1 : 0),
+      correctAnswers: admin.firestore.FieldValue.increment(isCorrect ? 1 : 0),
+      incorrectAnswers: admin.firestore.FieldValue.increment(!isCorrect && !skipped ? 1 : 0),
+      durationSeconds: admin.firestore.FieldValue.increment(elapsedSeconds),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Update question content stats
+    batch.update(questionRef, {
+      "stats.totalAttempts": admin.firestore.FieldValue.increment(1),
+      "stats.correctAttempts": admin.firestore.FieldValue.increment(isCorrect ? 1 : 0),
+    });
+
+    await batch.commit();
+
+    // Return question content with explanation (remediation)
+    return {
+      success: true,
+      isCorrect,
+      correctAnswer,
+      explanation: questionData?.explanation || "",
+      references: questionData?.references || [],
+      timeSpent: elapsedSeconds,
+    };
+  } catch (error) {
+    console.error("Error submitting practice answer:", error);
+    throw new functions.https.HttpsError(
+      "internal",
+      "Failed to submit practice answer"
+    );
+  }
+});
+
+/**
+ * End a practice session
+ *
+ * Finalizes the session and records final metrics including success rate
+ */
+export const endPracticeSession = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "User must be authenticated"
+    );
+  }
+
+  const userId = context.auth.uid;
+  const {sessionId} = data;
+
+  if (!sessionId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "sessionId is required"
+    );
+  }
+
+  try {
+    const sessionRef = db.collection("practiceSessions").doc(sessionId);
+    const sessionDoc = await sessionRef.get();
+
+    if (!sessionDoc.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "Practice session not found"
+      );
+    }
+
+    // Verify ownership
+    if (sessionDoc.data()?.userId !== userId) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "You do not have permission to end this session"
+      );
+    }
+
+    const sessionData = sessionDoc.data();
+    const questionsAnswered = sessionData?.questionsAnswered || 0;
+    const correctAnswers = sessionData?.correctAnswers || 0;
+    const successRate = questionsAnswered > 0 ? correctAnswers / questionsAnswered : 0;
+
+    const now = new Date();
+    await sessionRef.update({
+      endedAt: admin.firestore.Timestamp.fromDate(now),
+      successRate: successRate,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const updatedSession = await sessionRef.get();
+    const updatedData = updatedSession.data();
+
+    return {
+      success: true,
+      session: {
+        id: sessionId,
+        ...updatedData,
+      },
+      stats: {
+        questionsPresented: updatedData?.questionsPresented || 0,
+        questionsAnswered: updatedData?.questionsAnswered || 0,
+        questionsSkipped: updatedData?.questionsSkipped || 0,
+        correctAnswers: updatedData?.correctAnswers || 0,
+        incorrectAnswers: updatedData?.incorrectAnswers || 0,
+        successRate: (successRate * 100).toFixed(1),
+      },
+    };
+  } catch (error) {
+    console.error("Error ending practice session:", error);
+    throw new functions.https.HttpsError(
+      "internal",
+      "Failed to end practice session"
+    );
+  }
+});
+
+/**
+ * Get practice session statistics
+ *
+ * Retrieves detailed information about a practice session including:
+ * - Session metadata (start/end times, duration)
+ * - Performance metrics (success rate, correct/incorrect counts)
+ * - Individual attempt records
+ */
+export const getPracticeStats = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "User must be authenticated"
+    );
+  }
+
+  const userId = context.auth.uid;
+  const {sessionId} = data;
+
+  if (!sessionId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "sessionId is required"
+    );
+  }
+
+  try {
+    // Get session document
+    const sessionRef = db.collection("practiceSessions").doc(sessionId);
+    const sessionDoc = await sessionRef.get();
+
+    if (!sessionDoc.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "Practice session not found"
+      );
+    }
+
+    const sessionData = sessionDoc.data();
+
+    // Verify ownership
+    if (sessionData?.userId !== userId) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "You do not have permission to view this session"
+      );
+    }
+
+    // Get attempts in this session
+    const attemptsSnapshot = await db
+      .collection("practiceAttemptHistory")
+      .where("userId", "==", userId)
+      .where("sessionId", "==", sessionId)
+      .orderBy("attemptedAt", "desc")
+      .get();
+
+    const attempts = attemptsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Calculate statistics
+    const totalAttempts = attempts.filter((a: any) => !a.skipped).length;
+    const correctCount = attempts.filter((a: any) => a.isCorrect).length;
+    const successRate = totalAttempts > 0 ? (correctCount / totalAttempts * 100).toFixed(1) : 0;
+
+    // Group by domain
+    const byDomain: Record<string, any> = {};
+    attempts.forEach((attempt: any) => {
+      const domain = attempt.domainId || "unknown";
+      if (!byDomain[domain]) {
+        byDomain[domain] = {
+          correct: 0,
+          total: 0,
+          skipped: 0,
+        };
+      }
+      if (attempt.skipped) {
+        byDomain[domain].skipped++;
+      } else {
+        byDomain[domain].total++;
+        if (attempt.isCorrect) {
+          byDomain[domain].correct++;
+        }
+      }
+    });
+
+    return {
+      success: true,
+      session: {
+        id: sessionId,
+        startedAt: sessionData?.startedAt,
+        endedAt: sessionData?.endedAt,
+        durationSeconds: sessionData?.durationSeconds || 0,
+        scope: sessionData?.scope,
+      },
+      stats: {
+        totalAttempts,
+        correctAnswers: correctCount,
+        incorrectAnswers: totalAttempts - correctCount,
+        skippedQuestions: attempts.filter((a: any) => a.skipped).length,
+        successRate: successRate,
+      },
+      byDomain,
+      attempts: attempts.slice(0, 50), // Last 50 attempts
+    };
+  } catch (error) {
+    console.error("Error getting practice stats:", error);
+    throw new functions.https.HttpsError(
+      "internal",
+      "Failed to get practice statistics"
+    );
+  }
+});

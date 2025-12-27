@@ -1,0 +1,228 @@
+{
+  "questions": [
+    {
+      "domainId": "people",
+      "taskId": "people-1",
+      "question": "Which conflict resolution technique is best when both parties need to win and preserve the relationship?",
+      "choices": [
+        {
+          "letter": "A",
+          "text": "Withdrawing/Avoiding",
+          "isCorrect": false
+        },
+        {
+          "letter": "B",
+          "text": "Collaborating/Problem Solving",
+          "isCorrect": true
+        },
+        {
+          "letter": "C",
+          "text": "Compromising/Reconciling",
+          "isCorrect": false
+        },
+        {
+          "letter": "D",
+          "text": "Forcing/Directing",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "Collaborating/Problem Solving is the best choice because it seeks to find a solution that satisfies both parties. This technique is time-intensive but preserves relationships and finds creative solutions. Compromising can be used when time is limited, but it requires both parties to give up something. Withdrawing/Avoiding does not address the issue, and Forcing/Directing may damage the relationship.",
+      "references": ["PMBOK 7th Edition, Section 2.3.7.1"],
+      "difficulty": "medium",
+      "tags": ["conflict-resolution", "stakeholder-management", "leadership"],
+      "version": 1
+    },
+    {
+      "domainId": "people",
+      "taskId": "people-1",
+      "question": "A project manager is dealing with a conflict between two team members. One team member wants to move forward with the current approach, while the other wants to try a new method. The project manager uses principled negotiation to help both parties find a mutually beneficial solution. What conflict resolution technique is being used?",
+      "choices": [
+        {
+          "letter": "A",
+          "text": "Smoothing/Accommodating",
+          "isCorrect": false
+        },
+        {
+          "letter": "B",
+          "text": "Compromising",
+          "isCorrect": false
+        },
+        {
+          "letter": "C",
+          "text": "Collaborating",
+          "isCorrect": true
+        },
+        {
+          "letter": "D",
+          "text": "Forcing",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "Collaborating is the correct answer. Principled negotiation seeks creative solutions where both parties' interests are met. This goes beyond compromising (where both give up something) or smoothing (where one party's concerns are minimized). Forcing would impose a solution without input from both parties.",
+      "references": ["PMBOK 7th Edition, Section 2.3.7.1", "Getting to Yes - Fisher & Ury"],
+      "difficulty": "medium",
+      "tags": ["conflict-resolution", "leadership", "principled-negotiation"],
+      "version": 1
+    },
+    {
+      "domainId": "people",
+      "taskId": "people-2",
+      "question": "What is the primary purpose of motivation theory in project management?",
+      "choices": [
+        {
+          "letter": "A",
+          "text": "To punish team members who do not perform well",
+          "isCorrect": false
+        },
+        {
+          "letter": "B",
+          "text": "To understand what drives people to work toward project goals",
+          "isCorrect": true
+        },
+        {
+          "letter": "C",
+          "text": "To create a competitive environment among team members",
+          "isCorrect": false
+        },
+        {
+          "letter": "D",
+          "text": "To replace the need for project management planning",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "The primary purpose of motivation theory is to understand what drives people to work toward project goals. This understanding helps project managers create environments where team members are engaged and motivated to perform their best. Theories like Maslow's Hierarchy of Needs, Herzberg's Two-Factor Theory, and McGregor's Theory X and Y provide frameworks for understanding motivation.",
+      "references": ["PMBOK 7th Edition, Section 2.3.6.1"],
+      "difficulty": "easy",
+      "tags": ["motivation", "team-management", "leadership"],
+      "version": 1
+    },
+    {
+      "domainId": "process",
+      "taskId": "process-1",
+      "question": "Which of the following best describes the purpose of the Collect Requirements process?",
+      "choices": [
+        {
+          "letter": "A",
+          "text": "To define the scope of the project in detail",
+          "isCorrect": false
+        },
+        {
+          "letter": "B",
+          "text": "To gather, analyze, and document what needs to be produced by the project",
+          "isCorrect": true
+        },
+        {
+          "letter": "C",
+          "text": "To create the project schedule",
+          "isCorrect": false
+        },
+        {
+          "letter": "D",
+          "text": "To manage stakeholder expectations",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "The purpose of the Collect Requirements process is to gather, analyze, and document what needs to be produced by the project. This is a key input to Define Scope, which then creates a detailed scope statement. Collecting requirements ensures that all stakeholder needs are understood and documented from the beginning.",
+      "references": ["PMBOK 7th Edition, Section 4.2"],
+      "difficulty": "easy",
+      "tags": ["requirements", "scope", "planning"],
+      "version": 1
+    },
+    {
+      "domainId": "process",
+      "taskId": "process-2",
+      "question": "A project manager is integrating multiple project management processes to ensure that the various elements of the project are properly coordinated. This describes which knowledge area?",
+      "choices": [
+        {
+          "letter": "A",
+          "text": "Project Integration Management",
+          "isCorrect": true
+        },
+        {
+          "letter": "B",
+          "text": "Project Scope Management",
+          "isCorrect": false
+        },
+        {
+          "letter": "C",
+          "text": "Project Stakeholder Management",
+          "isCorrect": false
+        },
+        {
+          "letter": "D",
+          "text": "Project Communication Management",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "Project Integration Management involves integrating and coordinating all the different processes and knowledge areas throughout the project lifecycle. It ensures that all elements work together effectively. This is foundational to all other knowledge areas and ensures the project objectives are met.",
+      "references": ["PMBOK 7th Edition, Chapter 3 - Project Integration Management"],
+      "difficulty": "easy",
+      "tags": ["integration", "planning", "knowledge-areas"],
+      "version": 1
+    },
+    {
+      "domainId": "business_environment",
+      "taskId": "business_environment-1",
+      "question": "Which of the following is an example of a business rule that would impact project planning?",
+      "choices": [
+        {
+          "letter": "A",
+          "text": "The project manager's experience level",
+          "isCorrect": false
+        },
+        {
+          "letter": "B",
+          "text": "The organization must comply with environmental regulations",
+          "isCorrect": true
+        },
+        {
+          "letter": "C",
+          "text": "The team member's technical skills",
+          "isCorrect": false
+        },
+        {
+          "letter": "D",
+          "text": "The project sponsor's preferences",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "A business rule is an established policy or procedure that the organization must follow. Compliance with environmental regulations is a business rule that directly impacts project planning and execution. Project manager experience, team skills, and sponsor preferences are not business rules but rather characteristics or preferences of people involved in the project.",
+      "references": ["PMBOK 7th Edition, Section 2.4"],
+      "difficulty": "medium",
+      "tags": ["business-environment", "compliance", "regulations"],
+      "version": 1
+    },
+    {
+      "domainId": "business_environment",
+      "taskId": "business_environment-2",
+      "question": "What is the primary focus of sustainable development in project management?",
+      "choices": [
+        {
+          "letter": "A",
+          "text": "Reducing project costs to the minimum possible level",
+          "isCorrect": false
+        },
+        {
+          "letter": "B",
+          "text": "Balancing economic, environmental, and social impacts to benefit society",
+          "isCorrect": true
+        },
+        {
+          "letter": "C",
+          "text": "Ensuring that projects are completed within the shortest timeframe",
+          "isCorrect": false
+        },
+        {
+          "letter": "D",
+          "text": "Focusing only on environmental protection",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "Sustainable development in project management involves balancing economic, environmental, and social impacts to create long-term value for society. This is often called the 'triple bottom line' - people, planet, and profit. It's not just about environmental protection alone, but considers the broader impacts of the project on society and the environment.",
+      "references": ["PMBOK 7th Edition, Section 2.5 - Sustainable Development"],
+      "difficulty": "medium",
+      "tags": ["sustainability", "business-environment", "social-responsibility"],
+      "version": 1
+    }
+  ]
+}

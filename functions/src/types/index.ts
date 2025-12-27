@@ -355,6 +355,159 @@ export interface FlashcardContentDocument {
 }
 
 // ============================================================================
+// PRACTICE QUESTIONS
+// ============================================================================
+
+/**
+ * Answer choice for a multiple choice question
+ */
+export interface AnswerChoice {
+  letter: 'A' | 'B' | 'C' | 'D';  // Choice letter
+  text: string;                    // Choice text
+  isCorrect: boolean;              // Whether this is the correct answer
+}
+
+/**
+ * Master practice question content collection - Admin-managed question content
+ * Collection: /practiceQuestions/{questionId}
+ *
+ * This is read-only for users and contains the actual question content.
+ * Each user attempt references this content via contentId.
+ */
+export interface PracticeQuestionContentDocument {
+  id: string;                      // Auto-generated ID
+
+  // Hierarchy
+  domainId: string;
+  taskId: string;
+
+  // Content
+  question: string;                // The question text
+  choices: AnswerChoice[];          // 4 answer choices (A, B, C, D)
+  explanation: string;             // Detailed explanation (remediation)
+  references?: string[];           // PMBOK references
+
+  // Metadata
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  version: number;                 // For content versioning
+
+  // Usage stats (aggregated across all users)
+  stats: {
+    totalAttempts: number;
+    correctAttempts: number;
+    successRate: number;           // correctAttempts / totalAttempts (0-1)
+  };
+
+  isActive: boolean;               // Can be deactivated without deletion
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * User practice attempt collection - User's practice question attempts
+ * Collection: /practiceAttempts/{attemptId}
+ *
+ * Records each time a user answers a practice question.
+ */
+export interface PracticeAttemptDocument {
+  id: string;                      // Auto-generated ID
+  userId: string;                  // Owner of this attempt
+
+  // Content reference
+  contentId: string;               // Reference to master question content
+  domainId: string;
+  taskId: string;
+
+  // Session reference
+  sessionId: string;               // Parent practice session
+
+  // Attempt data
+  selectedChoice: 'A' | 'B' | 'C' | 'D';  // User's selected answer
+  isCorrect: boolean;              // Whether the answer was correct
+  timeSpent: number;               // Seconds spent on this question
+
+  // Metadata
+  attempt: number;                 // Attempt number (1st attempt, 2nd, etc.)
+  skipped: boolean;                // Whether user skipped this question
+
+  attemptedAt: Date;
+  createdAt: Date;
+}
+
+/**
+ * Practice session collection - Records of practice test sessions
+ * Collection: /practiceSessions/{sessionId}
+ *
+ * Tracks a practice test session with multiple questions.
+ */
+export interface PracticeSessionDocument {
+  id: string;                      // Auto-generated ID
+  userId: string;
+
+  // Session metadata
+  startedAt: Date;
+  endedAt?: Date;
+  durationSeconds: number;         // Total session time
+
+  // Session scope
+  scope: {
+    type: 'all' | 'domain' | 'task';  // Scope of questions
+    domainId?: string;
+    taskId?: string;
+  };
+
+  // Session metrics
+  questionsPresented: number;      // Total questions in session
+  questionsAnswered: number;       // Questions user answered (not skipped)
+  questionsSkipped: number;        // Questions user skipped
+
+  // Performance metrics
+  correctAnswers: number;
+  incorrectAnswers: number;
+  successRate: number;             // correctAnswers / questionsAnswered (0-1)
+
+  // Question IDs in this session (for reference)
+  questionIds: string[];
+
+  // Platform
+  platform: 'web' | 'ios' | 'android';
+
+  createdAt: Date;
+}
+
+/**
+ * Practice attempt history collection - Individual question attempt records
+ * Collection: /practiceAttemptHistory/{historyId}
+ *
+ * This provides a detailed audit trail of all practice attempts.
+ * Practice sessions aggregate multiple attempts.
+ */
+export interface PracticeAttemptHistoryDocument {
+  id: string;                      // Auto-generated ID
+  userId: string;
+  contentId: string;
+
+  // Context
+  sessionId: string;               // Parent practice session
+  domainId: string;
+  taskId: string;
+
+  // Attempt data
+  selectedChoice: 'A' | 'B' | 'C' | 'D';
+  correctChoice: 'A' | 'B' | 'C' | 'D';
+  isCorrect: boolean;
+  timeSpent: number;               // Seconds
+
+  // Metadata
+  attempt: number;                 // Attempt sequence in session
+  skipped: boolean;
+
+  attemptedAt: Date;
+  createdAt: Date;
+}
+
+// ============================================================================
 // UTILITY TYPES
 // ============================================================================
 
