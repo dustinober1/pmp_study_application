@@ -1,0 +1,15 @@
+# Android App Signing Configuration
+# Copy this file to key.properties and fill in your actual values
+# IMPORTANT: Never commit the actual key.properties file to git
+
+# Keystore password
+storePassword=your_store_password_here
+
+# Key password (usually the same as storePassword)
+keyPassword=your_key_password_here
+
+# Key alias (the name of your signing key)
+keyAlias=pmp_key
+
+# Path to keystore file (relative to android directory)
+storeFile=../pmp_study_key.jks

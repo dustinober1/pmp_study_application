@@ -1,0 +1,45 @@
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+.firebaserc.local
+
+# Claude orchestrator files
+.claude/
+claude-progress.txt
+init.sh
+*.prompt
+*.log
+*.done
+*.status
+
+# Functions
+functions/node_modules/
+functions/lib/
+functions/.env
+functions/.env.local
+
+# Flutter
+flutter/.dart_tool/
+flutter/.packages
+flutter/build/
+flutter/.flutter-plugins
+flutter/.flutter-plugins-dependencies
+flutter/pubspec.lock
+
+# Next.js
+web/.next/
+web/out/
+web/node_modules/
+web/.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
