@@ -314,29 +314,34 @@ class FlashcardSet(BaseModel):
         return v
 
 
+class AnswerOption(BaseModel):
+    """A single answer option with its explanation."""
+    text: str = Field(description="The answer option text")
+    explanation: str = Field(description="Why this option is correct or incorrect")
+    is_correct: bool = Field(description="Whether this is the correct answer")
+    
+    @field_validator('text')
+    @classmethod
+    def text_must_have_content(cls, v: str) -> str:
+        if not v or len(v.strip()) < 10:
+            raise ValueError('Option text must be at least 10 characters')
+        return v.strip()
+    
+    @field_validator('explanation')
+    @classmethod
+    def explanation_must_be_detailed(cls, v: str) -> str:
+        if not v or len(v.strip()) < 20:
+            raise ValueError('Explanation must be at least 20 characters')
+        return v.strip()
+
+
 class PracticeQuestion(BaseModel):
-    """A hard, scenario-based PMP practice question with explanations for ALL options."""
+    """A hard, scenario-based PMP practice question with 4 options (randomizable order)."""
     question_text: str = Field(
         description="A complex scenario-based question (3-5 sentences describing a realistic project situation, then asking what the PM should do)"
     )
-    option_a: str = Field(description="First answer option (A)")
-    option_b: str = Field(description="Second answer option (B)")
-    option_c: str = Field(description="Third answer option (C)")
-    option_d: str = Field(description="Fourth answer option (D)")
-    correct_answer: Literal["A", "B", "C", "D"] = Field(
-        description="The correct answer letter (A, B, C, or D)"
-    )
-    explanation_a: str = Field(
-        description="Why option A is correct or incorrect"
-    )
-    explanation_b: str = Field(
-        description="Why option B is correct or incorrect"
-    )
-    explanation_c: str = Field(
-        description="Why option C is correct or incorrect"
-    )
-    explanation_d: str = Field(
-        description="Why option D is correct or incorrect"
+    options: list[AnswerOption] = Field(
+        description="Exactly 4 answer options. One must be correct (is_correct=true), three must be incorrect (is_correct=false)."
     )
     difficulty: Literal["medium", "hard"] = Field(
         default="hard",
@@ -350,19 +355,22 @@ class PracticeQuestion(BaseModel):
             raise ValueError('Question must be a detailed scenario (at least 100 characters)')
         return v.strip()
     
-    @field_validator('option_a', 'option_b', 'option_c', 'option_d')
+    @field_validator('options')
     @classmethod
-    def option_must_have_content(cls, v: str) -> str:
-        if not v or len(v.strip()) < 10:
-            raise ValueError('Options must be at least 10 characters')
-        return v.strip()
+    def must_have_exactly_four_options(cls, v: list) -> list:
+        if len(v) != 4:
+            raise ValueError('Must have exactly 4 options')
+        correct_count = sum(1 for opt in v if opt.is_correct)
+        if correct_count != 1:
+            raise ValueError('Exactly one option must be marked as correct')
+        return v
     
-    @field_validator('explanation_a', 'explanation_b', 'explanation_c', 'explanation_d')
-    @classmethod
-    def explanation_must_be_detailed(cls, v: str) -> str:
-        if not v or len(v.strip()) < 20:
-            raise ValueError('Explanations must be detailed (at least 20 characters)')
-        return v.strip()
+    def get_correct_index(self) -> int:
+        """Get the index (0-3) of the correct option."""
+        for i, opt in enumerate(self.options):
+            if opt.is_correct:
+                return i
+        return -1
 
 
 class QuestionSet(BaseModel):
@@ -423,13 +431,18 @@ class GenerateQuestions(dspy.Signature):
     3. PLAUSIBLE DISTRACTORS: All 4 options should be reasonable actions a PM might consider.
        Wrong answers should be things a PM COULD do, but are not the BEST choice.
        
-    4. EXPLANATIONS FOR ALL OPTIONS: For EACH option (A, B, C, D), explain:
-       - If correct: WHY this is the best choice and what makes it superior
-       - If incorrect: WHY this is not the best choice, even though it might seem reasonable
+    4. OPTIONS FORMAT: Each question has exactly 4 options. Each option has:
+       - text: The answer choice text
+       - explanation: Why this option is correct OR incorrect
+       - is_correct: true for the ONE correct answer, false for the three distractors
        
-    5. GROUNDED IN CONTENT: ONLY use concepts from the provided content. Do not fabricate.
+    5. EXPLANATIONS FOR ALL OPTIONS: For EACH option explain:
+       - If is_correct=true: WHY this is the best choice and what makes it superior
+       - If is_correct=false: WHY this is not the best choice, even though it might seem reasonable
+       
+    6. GROUNDED IN CONTENT: ONLY use concepts from the provided content. Do not fabricate.
     
-    6. PMP EXAM STYLE: Mirror the actual exam format:
+    7. PMP EXAM STYLE: Mirror the actual exam format:
        - Complex scenarios requiring judgment
        - Multiple valid-seeming options
        - Focus on what a PM should do FIRST or what is MOST important
@@ -649,15 +662,14 @@ class PMPContentGenerator:
             questions = [
                 {
                     "question_text": q.question_text,
-                    "option_a": q.option_a,
-                    "option_b": q.option_b,
-                    "option_c": q.option_c,
-                    "option_d": q.option_d,
-                    "correct_answer": q.correct_answer,
-                    "explanation_a": q.explanation_a,
-                    "explanation_b": q.explanation_b,
-                    "explanation_c": q.explanation_c,
-                    "explanation_d": q.explanation_d,
+                    "options": [
+                        {
+                            "text": opt.text,
+                            "explanation": opt.explanation,
+                            "is_correct": opt.is_correct
+                        }
+                        for opt in q.options
+                    ],
                     "difficulty": q.difficulty,
                     "domain": domain,
                     "domain_id": domain_id,
