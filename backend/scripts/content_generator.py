@@ -37,114 +37,155 @@ load_dotenv()
 # Configuration
 GUIDE_PATH = Path("/Users/dustinober/PMP-2026/guide")
 DEFAULT_OUTPUT_DIR = Path("/Users/dustinober/Projects/pmp_study_app/backend/generated_content")
-MODEL_NAME = "gemini-2.0-flash-lite"
+MODEL_NAME = "models/gemini-flash-latest"
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
+# Official PMP 2026 ECO (Examination Content Outline) Domains and Tasks
+# Source: New-PMP-Examination-Content-Outline-2026.pdf
 
-# Domain and Task mapping based on PMP 2026 ECO
-DOMAIN_TASK_MAPPING = {
+# Domain I: People (33%)
+PEOPLE_TASKS = {
+    1: "Develop a common vision",
+    2: "Manage conflicts",
+    3: "Lead the project team",
+    4: "Engage stakeholders",
+    5: "Align stakeholder expectations",
+    6: "Manage stakeholder expectations",
+    7: "Help ensure knowledge transfer",
+    8: "Plan and manage communication",
+}
+
+# Domain II: Process (41%)
+PROCESS_TASKS = {
+    1: "Develop an integrated project management plan and plan delivery",
+    2: "Develop and manage project scope",
+    3: "Help ensure value-based delivery",
+    4: "Plan and manage resources",
+    5: "Plan and manage procurement",
+    6: "Plan and manage finance",
+    7: "Plan and optimize quality of products/deliverables",
+    8: "Plan and manage schedule",
+    9: "Evaluate project status",
+    10: "Manage project closure",
+}
+
+# Domain III: Business Environment (26%)
+BUSINESS_ENVIRONMENT_TASKS = {
+    1: "Define and establish project governance",
+    2: "Plan and manage project compliance",
+    3: "Manage and control changes",
+    4: "Remove impediments and manage issues",
+    5: "Plan and manage risk",
+    6: "Continuous improvement",
+    7: "Support organizational change",
+    8: "Evaluate external business environment changes",
+}
+
+# Complete ECO structure
+PMP_2026_ECO = {
+    "People": {
+        "id": 1,
+        "weight": 33,
+        "tasks": PEOPLE_TASKS,
+    },
+    "Process": {
+        "id": 2,
+        "weight": 41,
+        "tasks": PROCESS_TASKS,
+    },
+    "Business Environment": {
+        "id": 3,
+        "weight": 26,
+        "tasks": BUSINESS_ENVIRONMENT_TASKS,
+    },
+}
+
+# Mapping guide chapters to ECO domains and tasks
+CHAPTER_TO_ECO_MAPPING = {
     "01-introduction": {
-        "domain": "Foundation",
-        "domain_id": None,  # For foundational content
-        "tasks": [
-            {"name": "Understanding the Exam", "order": 1},
-            {"name": "Ways of Working", "order": 2},
-            {"name": "Core Concepts", "order": 3},
-            {"name": "Ethics", "order": 4},
-        ]
+        "domain": "Process",
+        "domain_id": 2,
+        "primary_tasks": [1],  # Plan and plan delivery (foundational)
+        "description": "Foundation and exam overview content",
     },
     "02-strategic": {
         "domain": "Business Environment",
         "domain_id": 3,
-        "tasks": [
-            {"name": "Evaluate external business environment", "order": 1},
-            {"name": "Support organizational strategy", "order": 5},
-            {"name": "Help ensure value-based delivery", "order": 3},
-            {"name": "Navigate organizational change", "order": 6},
-        ]
+        "primary_tasks": [1, 7, 8],  # Governance, org change, external environment
+        "description": "Strategic alignment and business environment",
     },
     "03-team-leadership": {
         "domain": "People",
         "domain_id": 1,
-        "tasks": [
-            {"name": "Lead the project team", "order": 1},
-            {"name": "Support team performance", "order": 7},
-            {"name": "Manage conflict", "order": 8},
-            {"name": "Build trust and influence stakeholders", "order": 6},
-        ]
+        "primary_tasks": [1, 2, 3],  # Vision, conflicts, lead team
+        "description": "Team leadership and development",
     },
     "04-stakeholder": {
         "domain": "People",
         "domain_id": 1,
-        "tasks": [
-            {"name": "Identify and analyze stakeholders", "order": 3},
-            {"name": "Tailor communication to stakeholder needs", "order": 4},
-            {"name": "Execute stakeholder engagement plan", "order": 5},
-        ]
+        "primary_tasks": [4, 5, 6, 8],  # Engage, align, manage stakeholders, communication
+        "description": "Stakeholder engagement and management",
     },
     "05-initiation": {
         "domain": "Process",
         "domain_id": 2,
-        "tasks": [
-            {"name": "Recommend project management approach", "order": 6},
-            {"name": "Create and maintain project plan", "order": 7},
-        ]
+        "primary_tasks": [1, 2],  # Integrated plan, scope
+        "description": "Project initiation and charter",
     },
     "06-project-planning": {
         "domain": "Process",
         "domain_id": 2,
-        "tasks": [
-            {"name": "Define and break down scope", "order": 1},
-            {"name": "Prioritize work based on value", "order": 2},
-            {"name": "Define and manage resources", "order": 4},
-            {"name": "Plan and execute procurement", "order": 5},
-        ]
+        "primary_tasks": [2, 3, 4, 5, 6, 7, 8],  # Scope, value, resources, procurement, finance, quality, schedule
+        "description": "Comprehensive project planning",
     },
     "07-risk-quality": {
-        "domain": "Process",
-        "domain_id": 2,
-        "tasks": [
-            {"name": "Manage risk", "order": 9},
-        ]
+        "domain": "Business Environment",
+        "domain_id": 3,
+        "primary_tasks": [5, 4],  # Plan/manage risk, impediments
+        "description": "Risk and quality management",
     },
     "08-execution": {
         "domain": "Process",
         "domain_id": 2,
-        "tasks": [
-            {"name": "Assess opportunities for incremental delivery", "order": 3},
-            {"name": "Collect and analyze data", "order": 8},
-        ]
+        "primary_tasks": [3, 7, 9],  # Value delivery, quality optimization, project status
+        "description": "Project execution and delivery",
     },
     "09-monitoring": {
-        "domain": "Process",
-        "domain_id": 2,
-        "tasks": [
-            {"name": "Collect and analyze data", "order": 8},
-            {"name": "Manage change", "order": 10},
-        ]
+        "domain": "Business Environment",
+        "domain_id": 3,
+        "primary_tasks": [3, 4, 6],  # Change control, impediments, continuous improvement
+        "description": "Monitoring and controlling",
     },
     "10-ai-pm": {
         "domain": "Business Environment",
         "domain_id": 3,
-        "tasks": [
-            {"name": "Integrate sustainability and AI considerations", "order": 7},
-        ]
+        "primary_tasks": [6, 8],  # Continuous improvement, external environment
+        "description": "AI and modern PM practices",
     },
     "11-exam-prep": {
-        "domain": "Foundation",
-        "domain_id": None,
-        "tasks": [
-            {"name": "Exam Strategies", "order": 1},
-        ]
+        "domain": "Process",
+        "domain_id": 2,
+        "primary_tasks": [9, 10],  # Project status, closure
+        "description": "Exam preparation strategies",
     },
     "appendices": {
-        "domain": "Foundation",
-        "domain_id": None,
-        "tasks": [
-            {"name": "Reference Materials", "order": 1},
-        ]
+        "domain": "Process",
+        "domain_id": 2,
+        "primary_tasks": [1],  # Reference for planning
+        "description": "Reference materials and appendices",
     },
 }
+
+
+def get_eco_task_name(domain: str, task_number: int) -> str:
+    """Get the official ECO task name for a domain and task number."""
+    if domain == "People":
+        return PEOPLE_TASKS.get(task_number, f"Task {task_number}")
+    elif domain == "Process":
+        return PROCESS_TASKS.get(task_number, f"Task {task_number}")
+    elif domain == "Business Environment":
+        return BUSINESS_ENVIRONMENT_TASKS.get(task_number, f"Task {task_number}")
+    return f"Task {task_number}"
 
 
 @dataclass
@@ -421,15 +462,21 @@ Generate exactly {count} questions. Return ONLY the JSON array, no additional te
         
         print(f"  Processing: {file_path.name}")
         
-        # Get domain/task mapping
-        mapping = DOMAIN_TASK_MAPPING.get(chapter, {
-            "domain": "General",
-            "domain_id": None,
-            "tasks": [{"name": "General Knowledge", "order": 1}]
+        # Get domain/task mapping from official ECO
+        mapping = CHAPTER_TO_ECO_MAPPING.get(chapter, {
+            "domain": "Process",
+            "domain_id": 2,
+            "primary_tasks": [1],
+            "description": "General content"
         })
         
         domain = mapping["domain"]
-        task = mapping["tasks"][0]["name"] if mapping["tasks"] else "General"
+        domain_id = mapping["domain_id"]
+        
+        # Get the first primary task's official name
+        primary_task_num = mapping["primary_tasks"][0] if mapping["primary_tasks"] else 1
+        task = get_eco_task_name(domain, primary_task_num)
+        task_id = primary_task_num
         
         # Read and extract content
         with open(file_path, "r", encoding="utf-8") as f:
@@ -524,7 +571,7 @@ Generate exactly {count} questions. Return ONLY the JSON array, no additional te
         
         all_results = []
         
-        for chapter_name in sorted(DOMAIN_TASK_MAPPING.keys()):
+        for chapter_name in sorted(CHAPTER_TO_ECO_MAPPING.keys()):
             results = self.process_chapter(
                 chapter_name,
                 flashcards_per_file,
@@ -672,12 +719,17 @@ def main():
     args = parser.parse_args()
     
     if args.list_chapters:
-        print("Available chapters:")
-        for chapter in sorted(DOMAIN_TASK_MAPPING.keys()):
+        print("Available chapters (mapped to PMP 2026 ECO):\n")
+        for chapter in sorted(CHAPTER_TO_ECO_MAPPING.keys()):
             chapter_path = GUIDE_PATH / chapter
             if chapter_path.exists():
                 file_count = len(list(chapter_path.glob("*.md")))
+                mapping = CHAPTER_TO_ECO_MAPPING[chapter]
+                domain = mapping["domain"]
+                task_names = [get_eco_task_name(domain, t) for t in mapping["primary_tasks"][:2]]
+                tasks_str = ", ".join(task_names)
                 print(f"  {chapter} ({file_count} files)")
+                print(f"    Domain: {domain} | Tasks: {tasks_str[:60]}...")
         return
     
     if not args.chapter and not args.all:
