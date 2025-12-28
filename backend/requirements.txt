@@ -27,3 +27,4 @@ python-dotenv==1.0.1
 
 # AI Content Generation
 google-genai>=1.0.0
+dspy-ai>=2.6.0
