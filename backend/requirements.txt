@@ -24,3 +24,6 @@ httpx==0.26.0
 
 # Utilities
 python-dotenv==1.0.1
+
+# AI Content Generation
+google-generativeai==0.8.3
