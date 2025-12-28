@@ -54,14 +54,14 @@ class StudySession(Base):
     )
 
     # Optional domain/task focus for this session
-    domain_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
+    domain_id: Mapped[int | None] = mapped_column(
+        Integer,
         ForeignKey("domains.id", ondelete="SET NULL"),
         nullable=True,
     )
 
-    task_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
+    task_id: Mapped[int | None] = mapped_column(
+        Integer,
         ForeignKey("tasks.id", ondelete="SET NULL"),
         nullable=True,
     )

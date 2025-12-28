@@ -46,3 +46,7 @@ class DomainWithTasksResponse(DomainResponse):
     """Schema for Domain response including nested tasks."""
 
     tasks: list[TaskResponse] = Field(default_factory=list, description="Tasks in this domain")
+
+
+from app.schemas.task import TaskResponse  # noqa: E402
+DomainWithTasksResponse.model_rebuild()

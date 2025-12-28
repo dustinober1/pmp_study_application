@@ -46,3 +46,7 @@ class TaskWithDomainResponse(TaskResponse):
     """Schema for Task response including parent domain info."""
 
     domain: DomainResponse = Field(..., description="Parent domain")
+
+
+from app.schemas.domain import DomainResponse  # noqa: E402
+TaskWithDomainResponse.model_rebuild()
