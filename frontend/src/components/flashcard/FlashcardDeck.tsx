@@ -120,7 +120,7 @@ export const FlashcardDeck: React.FC<FlashcardDeckProps> = ({
 
     return (
         <div className="space-y-6">
-            <div className="max-w-xl mx-auto flex items-center justify-between px-2">
+            <div className="max-w-3xl mx-auto flex items-center justify-between px-2">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Card {currentIndex + 1} of {flashcards.length}
                 </div>

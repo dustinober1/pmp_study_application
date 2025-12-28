@@ -11,6 +11,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 if TYPE_CHECKING:
+    from app.models.analytics import UserAnalytics
+    from app.models.collaboration import (
+        Challenge,
+        Discussion,
+        StudyGroup,
+        StudyGroupMember,
+    )
+    from app.models.exam import ExamSession
     from app.models.progress import FlashcardProgress, QuestionProgress
     from app.models.session import StudySession
 
@@ -90,6 +98,48 @@ class User(Base):
         "StudySession",
         back_populates="user",
         cascade="all, delete-orphan",
+    )
+
+    exam_sessions: Mapped[list["ExamSession"]] = relationship(
+        "ExamSession",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    # Collaboration relationships
+    created_groups: Mapped[list["StudyGroup"]] = relationship(
+        "StudyGroup",
+        foreign_keys="StudyGroup.created_by_id",
+        back_populates="created_by",
+        cascade="all, delete-orphan",
+    )
+
+    group_memberships: Mapped[list["StudyGroupMember"]] = relationship(
+        "StudyGroupMember",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    discussions: Mapped[list["Discussion"]] = relationship(
+        "Discussion",
+        foreign_keys="Discussion.user_id",
+        back_populates="author",
+        cascade="all, delete-orphan",
+    )
+
+    created_challenges: Mapped[list["Challenge"]] = relationship(
+        "Challenge",
+        foreign_keys="Challenge.created_by_id",
+        back_populates="created_by",
+        cascade="all, delete-orphan",
+    )
+
+    # Analytics relationship
+    analytics: Mapped["UserAnalytics"] = relationship(
+        "UserAnalytics",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
     )
 
     def __repr__(self) -> str:
