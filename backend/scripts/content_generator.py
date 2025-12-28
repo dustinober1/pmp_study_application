@@ -5,7 +5,7 @@ Uses Google AI Studio's Gemini Flash Lite to generate flashcards and practice qu
 from markdown source files. Content is organized by domain and task for sorting.
 
 Prerequisites:
-    pip install google-generativeai python-dotenv
+    pip install google-genai python-dotenv
 
 Environment Variables:
     GOOGLE_AI_API_KEY: Your Google AI Studio API key
@@ -27,7 +27,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -36,7 +37,7 @@ load_dotenv()
 # Configuration
 GUIDE_PATH = Path("/Users/dustinober/PMP-2026/guide")
 DEFAULT_OUTPUT_DIR = Path("/Users/dustinober/Projects/pmp_study_app/backend/generated_content")
-MODEL_NAME = "models/gemini-2.0-flash-lite"
+MODEL_NAME = "gemini-2.0-flash-lite"
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
 
@@ -200,8 +201,7 @@ class ContentGenerator:
         if not self.api_key:
             raise ValueError("GOOGLE_AI_API_KEY environment variable is required")
         
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(MODEL_NAME)
+        self.client = genai.Client(api_key=self.api_key)
         self.batch_size = batch_size
         
     def _extract_text_from_markdown(self, content: str) -> str:
@@ -266,7 +266,10 @@ class ContentGenerator:
         """Call Gemini API with retry logic."""
         for attempt in range(MAX_RETRIES):
             try:
-                response = self.model.generate_content(prompt)
+                response = self.client.models.generate_content(
+                    model=MODEL_NAME,
+                    contents=prompt
+                )
                 return response.text
             except Exception as e:
                 if attempt < MAX_RETRIES - 1:

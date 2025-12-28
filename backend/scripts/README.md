@@ -7,7 +7,7 @@ This script uses Google AI Studio's Gemini Flash Lite model to generate flashcar
 1. **Google AI API Key**: Get one from [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. **Python Dependencies**: Install the required packages:
    ```bash
-   pip install google-generativeai python-dotenv
+   pip install google-genai python-dotenv
    ```
 
 ## Configuration
