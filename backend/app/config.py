@@ -27,8 +27,9 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql://postgres:postgres@localhost:5432/pmp_study"
 
-    # CORS
-    cors_origins: str = "http://localhost:3000"
+    # CORS - comma-separated list of allowed origins
+    # For local dev, supports multiple ports: http://localhost:3000,http://localhost:3001
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     # Security
     secret_key: str = "dev-secret-key-change-in-production"

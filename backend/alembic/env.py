@@ -10,8 +10,15 @@ from sqlalchemy import engine_from_config, pool
 from app.config import get_settings
 from app.database import Base
 
-# Import all models here so Alembic can detect them
-# from app.models import user, domain, task, flashcard, question, progress
+# Import all models here so Alembic can detect them for autogenerate
+# Uncomment as models are created:
+# from app.models.user import User
+# from app.models.domain import Domain
+# from app.models.task import Task
+# from app.models.flashcard import Flashcard
+# from app.models.question import Question
+# from app.models.progress import FlashcardProgress, QuestionProgress
+# from app.models.session import StudySession
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
