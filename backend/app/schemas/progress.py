@@ -5,6 +5,25 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class TaskProgressSummary(BaseModel):
+    """Progress summary for a single task within a domain."""
+
+    task_id: int = Field(..., description="Task ID")
+    task_name: str = Field(..., description="Task name")
+    total_flashcards: int = Field(default=0, description="Total flashcards in task")
+    reviewed_flashcards: int = Field(default=0, description="Flashcards reviewed at least once")
+    mastered_flashcards: int = Field(default=0, description="Flashcards with high ease factor")
+    total_questions: int = Field(default=0, description="Total questions in task")
+    attempted_questions: int = Field(default=0, description="Questions attempted at least once")
+    correct_questions: int = Field(default=0, description="Questions answered correctly")
+    flashcard_accuracy: float = Field(
+        default=0.0, description="Percentage of correct flashcard reviews"
+    )
+    question_accuracy: float = Field(
+        default=0.0, description="Percentage of correct question answers"
+    )
+
+
 class DomainProgressSummary(BaseModel):
     """Progress summary for a single domain."""
 
@@ -72,4 +91,13 @@ class StudyStreakResponse(BaseModel):
     last_study_date: datetime | None = Field(None, description="Last study date")
     study_dates: list[datetime] = Field(
         default_factory=list, description="Recent study dates for calendar display"
+    )
+
+
+class DomainDetailedProgressResponse(BaseModel):
+    """Detailed progress response for a specific domain (GET /api/progress/domain/:id)."""
+
+    domain: DomainProgressSummary = Field(..., description="Domain progress summary")
+    by_task: list[TaskProgressSummary] = Field(
+        default_factory=list, description="Progress breakdown by task within the domain"
     )

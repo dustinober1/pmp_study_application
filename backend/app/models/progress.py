@@ -39,8 +39,8 @@ class FlashcardProgress(Base):
         index=True,
     )
 
-    flashcard_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    flashcard_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("flashcards.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -147,8 +147,8 @@ class QuestionProgress(Base):
         index=True,
     )
 
-    question_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    question_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("questions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

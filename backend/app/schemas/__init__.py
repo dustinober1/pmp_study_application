@@ -62,6 +62,13 @@ from app.schemas.user import (
     UserSummary,
     UserUpdate,
 )
+from app.schemas.auth import (
+    AnonymousAuthRequest,
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+)
 
 __all__ = [
     # Domain schemas
@@ -119,4 +126,10 @@ __all__ = [
     "ProgressSummaryResponse",
     "FlashcardsDueResponse",
     "StudyStreakResponse",
+    # Auth schemas
+    "AnonymousAuthRequest",
+    "AuthResponse",
+    "LoginRequest",
+    "RegisterRequest",
+    "TokenResponse",
 ]

@@ -84,7 +84,7 @@ class FlashcardProgressResponse(FlashcardProgressBase):
 
     id: UUID = Field(..., description="Progress record UUID")
     user_id: UUID = Field(..., description="User UUID")
-    flashcard_id: UUID = Field(..., description="Flashcard UUID")
+    flashcard_id: int = Field(..., description="Flashcard ID")
     next_review_at: datetime | None = Field(None, description="Next scheduled review date")
     last_reviewed_at: datetime | None = Field(None, description="Last review date")
     review_count: int = Field(default=0, description="Total number of reviews")

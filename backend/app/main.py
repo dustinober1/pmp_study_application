@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.routers import auth, domains, flashcards, progress, questions
 
 settings = get_settings()
 
@@ -54,3 +55,11 @@ async def root() -> dict:
 async def health_check() -> dict:
     """Health check endpoint for monitoring."""
     return {"status": "healthy"}
+
+
+# Register routers
+app.include_router(auth.router)
+app.include_router(domains.router)
+app.include_router(flashcards.router)
+app.include_router(progress.router)
+app.include_router(questions.router)

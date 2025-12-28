@@ -53,6 +53,12 @@ class User(Base):
         nullable=True,
     )
 
+    # Password hash for registered users (None for anonymous-only users)
+    password_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
