@@ -10,6 +10,7 @@ import { PracticeService } from '@/lib/practice';
 import PracticeQuestion from './PracticeQuestion';
 import PracticeResults from './PracticeResults';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ErrorAlert } from './ErrorAlert';
 
 interface ScopeSelectionProps {
   domains: Array<{ id: string; name: string; description?: string }>;
@@ -337,13 +338,16 @@ export default function PracticeSessionFlow({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-        <p className="font-semibold">Error</p>
-        <p>{error}</p>
+      <div className="space-y-4">
+        <ErrorAlert
+          error={error}
+          type="error"
+          onDismiss={() => stage === 'selection' ? undefined : setError(null)}
+        />
         {stage !== 'selection' && (
           <button
             onClick={handleRetry}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Try Again
           </button>

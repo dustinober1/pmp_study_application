@@ -247,7 +247,30 @@ class StatsScreen extends ConsumerWidget {
           child: CircularProgressIndicator(),
         ),
         error: (error, stackTrace) => Center(
-          child: Text('Error loading statistics: $error'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 80,
+                color: Colors.red[300],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Error Loading Statistics',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  error.toString(),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { logout } from '@/lib/auth'
+import { ErrorAlert } from '@/components/ErrorAlert'
 import {
   getDashboardStats,
   getCardsDueToday,
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const [cardsDueToday, setCardsDueToday] = useState<CardsDueToday | null>(null)
   const [progressByDomain, setProgressByDomain] = useState<ProgressByDomain | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -37,6 +39,7 @@ export default function DashboardPage() {
       if (!user?.uid) return
 
       setIsLoading(true)
+      setError(null)
       try {
         const [stats, due, progress] = await Promise.all([
           getDashboardStats(user.uid),
@@ -48,6 +51,8 @@ export default function DashboardPage() {
         setCardsDueToday(due)
         setProgressByDomain(progress)
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load dashboard data'
+        setError(errorMessage)
         console.error('Error fetching dashboard data:', error)
       } finally {
         setIsLoading(false)
@@ -59,10 +64,13 @@ export default function DashboardPage() {
 
   async function handleLogout() {
     setIsLoggingOut(true)
+    setError(null)
     try {
       await logout()
       router.push('/')
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Logout failed. Please try again.'
+      setError(errorMessage)
       console.error('Logout failed:', error)
       setIsLoggingOut(false)
     }
@@ -104,6 +112,17 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="container-responsive py-12">
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6">
+            <ErrorAlert
+              error={error}
+              type="error"
+              onDismiss={() => setError(null)}
+            />
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">

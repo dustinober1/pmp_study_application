@@ -21,6 +21,7 @@ import ProgressDisplay from '@/components/ProgressDisplay';
 import DomainTaskBrowser from '@/components/DomainTaskBrowser';
 import PracticeSessionFlow from '@/components/PracticeSessionFlow';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { ErrorAlert } from '@/components/ErrorAlert';
 import { CardRating, Flashcard, FlashcardContent, Domain, Task, Progress, StudyStats, FSRSState } from '@/types';
 
 export default function StudyPage() {
@@ -48,12 +49,15 @@ export default function StudyPage() {
   // Loading state
   const [isLoading, setIsLoading] = useState(true);
   const [isStudySessionLoading, setIsStudySessionLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [studySessionError, setStudySessionError] = useState<string | null>(null);
 
   // Load reference data (domains and tasks)
   useEffect(() => {
     const loadReferenceData = async () => {
       try {
         setIsLoading(true);
+        setError(null);
 
         // Fetch domains
         const domainsSnapshot = await getDocs(collection(db, 'domains'));
@@ -81,6 +85,8 @@ export default function StudyPage() {
         });
         setTasks(tasksData);
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load domains and tasks';
+        setError(errorMessage);
         console.error('Error loading reference data:', error);
       } finally {
         setIsLoading(false);
@@ -196,6 +202,7 @@ export default function StudyPage() {
     const loadCardsForStudy = async () => {
       try {
         setIsStudySessionLoading(true);
+        setStudySessionError(null);
 
         // Create a study session
         const createStudySession = httpsCallable(functions, 'createStudySession');
@@ -213,6 +220,14 @@ export default function StudyPage() {
         const getCardsForReview = httpsCallable(functions, 'getCardsForReview');
         const reviewResult = await getCardsForReview({ limit: 50, scope });
         const cards = (reviewResult.data as any).cards || [];
+
+        if (cards.length === 0) {
+          setStudySessionError('No cards available for study in the selected scope.');
+          setCardsInSession([]);
+          setCurrentFlashcard(null);
+          setIsStudySessionLoading(false);
+          return;
+        }
 
         // Enrich cards with content
         const enrichedCards: (Flashcard & { content: FlashcardContent })[] = [];
@@ -245,8 +260,12 @@ export default function StudyPage() {
           setCardsInSession(enrichedCards);
           setCurrentCardIndex(0);
           setCurrentFlashcard(enrichedCards[0]);
+        } else {
+          setStudySessionError('Failed to load card content. Please try again.');
         }
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load cards for study';
+        setStudySessionError(errorMessage);
         console.error('Error loading cards for study:', error);
       } finally {
         setIsStudySessionLoading(false);
@@ -260,6 +279,7 @@ export default function StudyPage() {
     if (!currentFlashcard || !user || !sessionId) return;
 
     setIsRating(true);
+    setStudySessionError(null);
 
     try {
       // Call Cloud Function to record the rating
@@ -287,12 +307,15 @@ export default function StudyPage() {
           await endStudySession({ sessionId });
         } catch (error) {
           console.error('Error ending study session:', error);
+          setStudySessionError('Failed to properly end study session, but your progress was saved.');
         }
         setStudyMode('browse');
         setCurrentFlashcard(null);
         setCardsInSession([]);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to record card rating';
+      setStudySessionError(errorMessage);
       console.error('Error rating card:', error);
     } finally {
       setIsRating(false);
@@ -342,6 +365,17 @@ export default function StudyPage() {
             Learn PMP 2026 exam concepts with spaced repetition
           </p>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6">
+            <ErrorAlert
+              error={error}
+              type="error"
+              onDismiss={() => setError(null)}
+            />
+          </div>
+        )}
 
         {/* Mode Tabs */}
         <div className="flex gap-2 mb-8 border-b border-gray-200 overflow-x-auto">
@@ -423,6 +457,20 @@ export default function StudyPage() {
             {studyMode === 'study' && (
               isStudySessionLoading ? (
                 <LoadingSpinner />
+              ) : studySessionError ? (
+                <div className="space-y-4">
+                  <ErrorAlert
+                    error={studySessionError}
+                    type="error"
+                    onDismiss={() => setStudySessionError(null)}
+                  />
+                  <button
+                    onClick={() => setStudyMode('browse')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Back to Browse
+                  </button>
+                </div>
               ) : currentFlashcard ? (
                 <div className="space-y-6">
                   <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
