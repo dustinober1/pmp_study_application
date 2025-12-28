@@ -2,7 +2,7 @@
 PMP 2026 Content Generator with DSPy
 
 Uses DSPy for structured generation with hallucination control.
-Generates flashcards and practice questions from markdown source files.
+Generates flashcards and hard scenario-based practice questions from markdown source files.
 
 Prerequisites:
     pip install dspy-ai google-genai python-dotenv
@@ -12,7 +12,7 @@ Environment Variables:
 
 Usage:
     python -m scripts.content_generator_dspy --help
-    python -m scripts.content_generator_dspy --chapter 01-introduction
+    python -m scripts.content_generator_dspy --task "Lead the project team"
     python -m scripts.content_generator_dspy --all
 """
 
@@ -21,10 +21,9 @@ import json
 import os
 import re
 import sys
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 import dspy
 from pydantic import BaseModel, Field, field_validator
@@ -36,77 +35,254 @@ load_dotenv()
 # Configuration
 GUIDE_PATH = Path("/Users/dustinober/PMP-2026/guide")
 DEFAULT_OUTPUT_DIR = Path("/Users/dustinober/Projects/pmp_study_app/backend/generated_content")
-MODEL_NAME = "gemini/gemini-2.0-flash"  # LiteLLM format for Gemini
+MODEL_NAME = "models/gemini-flash-lite-latest"  # LiteLLM format for Gemini
 
 # ============================================================================
-# PMP 2026 ECO (Examination Content Outline) Domains and Tasks
-# Source: New-PMP-Examination-Content-Outline-2026.pdf
+# PMP 2026 ECO Task-to-File Mapping (Official ECO Structure)
+# Source: eco-2026-task-map.md
 # ============================================================================
 
-PEOPLE_TASKS = {
-    1: "Develop a common vision",
-    2: "Manage conflicts",
-    3: "Lead the project team",
-    4: "Engage stakeholders",
-    5: "Align stakeholder expectations",
-    6: "Manage stakeholder expectations",
-    7: "Help ensure knowledge transfer",
-    8: "Plan and manage communication",
+# Domain I: People (33%) - 8 Tasks
+ECO_PEOPLE_TASKS = {
+    1: {
+        "name": "Develop a common vision",
+        "files": [
+            "05-initiation/project-charter.md",
+            "03-team-leadership/team-charter.md",
+            "02-strategic/strategy-alignment.md",
+        ]
+    },
+    2: {
+        "name": "Manage conflicts",
+        "files": [
+            "03-team-leadership/conflict-management.md",
+            "04-stakeholder/conflict-negotiation.md",
+        ]
+    },
+    3: {
+        "name": "Lead the project team",
+        "files": [
+            "03-team-leadership/building-teams.md",
+            "03-team-leadership/motivation-performance.md",
+            "08-execution/executing-work.md",
+        ]
+    },
+    4: {
+        "name": "Engage stakeholders",
+        "files": [
+            "04-stakeholder/stakeholder-analysis.md",
+            "04-stakeholder/stakeholder-engagement.md",
+        ]
+    },
+    5: {
+        "name": "Align stakeholder expectations",
+        "files": [
+            "04-stakeholder/stakeholder-classification.md",
+            "04-stakeholder/communication-planning.md",
+            "05-initiation/delivery-strategy.md",
+        ]
+    },
+    6: {
+        "name": "Manage stakeholder expectations",
+        "files": [
+            "04-stakeholder/stakeholder-engagement.md",
+            "09-monitoring/monitoring-closing.md",
+        ]
+    },
+    7: {
+        "name": "Help ensure knowledge transfer",
+        "files": [
+            "09-monitoring/project-closure.md",
+            "09-monitoring/monitoring-closing.md",
+        ]
+    },
+    8: {
+        "name": "Plan and manage communication",
+        "files": [
+            "04-stakeholder/communication-planning.md",
+            "06-project-planning/communications-planning.md",
+            "09-monitoring/toolkit.md",
+        ]
+    },
 }
 
-PROCESS_TASKS = {
-    1: "Develop an integrated project management plan and plan delivery",
-    2: "Develop and manage project scope",
-    3: "Help ensure value-based delivery",
-    4: "Plan and manage resources",
-    5: "Plan and manage procurement",
-    6: "Plan and manage finance",
-    7: "Plan and optimize quality of products/deliverables",
-    8: "Plan and manage schedule",
-    9: "Evaluate project status",
-    10: "Manage project closure",
+# Domain II: Process (41%) - 10 Tasks
+ECO_PROCESS_TASKS = {
+    1: {
+        "name": "Develop an integrated project management plan and plan delivery",
+        "files": [
+            "01-introduction/ways-of-working.md",
+            "06-project-planning/scope-planning.md",
+        ]
+    },
+    2: {
+        "name": "Develop and manage project scope",
+        "files": [
+            "06-project-planning/scope-planning.md",
+            "08-execution/executing-work.md",
+        ]
+    },
+    3: {
+        "name": "Help ensure value-based delivery",
+        "files": [
+            "02-strategic/benefits-realization.md",
+            "02-strategic/benefits-value.md",
+            "08-execution/value-delivery.md",
+        ]
+    },
+    4: {
+        "name": "Plan and manage resources",
+        "files": [
+            "06-project-planning/resource-planning.md",
+            "03-team-leadership/building-teams.md",
+        ]
+    },
+    5: {
+        "name": "Plan and manage procurement",
+        "files": [
+            "06-project-planning/resource-planning.md",
+            "08-execution/engagement-procurement.md",
+        ]
+    },
+    6: {
+        "name": "Plan and manage finance",
+        "files": [
+            "06-project-planning/cost-planning.md",
+            "07-risk-quality/risk-management.md",
+            "09-monitoring/monitoring-closing.md",
+        ]
+    },
+    7: {
+        "name": "Plan and optimize quality of products/deliverables",
+        "files": [
+            "06-project-planning/quality-planning.md",
+            "07-risk-quality/quality-management.md",
+        ]
+    },
+    8: {
+        "name": "Plan and manage schedule",
+        "files": [
+            "06-project-planning/schedule-planning.md",
+            "09-monitoring/monitoring-closing.md",
+        ]
+    },
+    9: {
+        "name": "Evaluate project status",
+        "files": [
+            "01-introduction/core-data.md",
+            "06-project-planning/cost-planning.md",
+            "09-monitoring/monitoring-closing.md",
+            "09-monitoring/toolkit.md",
+        ]
+    },
+    10: {
+        "name": "Manage project closure",
+        "files": [
+            "09-monitoring/project-closure.md",
+        ]
+    },
 }
 
-BUSINESS_ENVIRONMENT_TASKS = {
-    1: "Define and establish project governance",
-    2: "Plan and manage project compliance",
-    3: "Manage and control changes",
-    4: "Remove impediments and manage issues",
-    5: "Plan and manage risk",
-    6: "Continuous improvement",
-    7: "Support organizational change",
-    8: "Evaluate external business environment changes",
+# Domain III: Business Environment (26%) - 8 Tasks
+ECO_BUSINESS_ENVIRONMENT_TASKS = {
+    1: {
+        "name": "Define and establish project governance",
+        "files": [
+            "02-strategic/compliance-governance.md",
+            "02-strategic/pmo-role.md",
+            "05-initiation/project-charter.md",
+        ]
+    },
+    2: {
+        "name": "Plan and manage project compliance",
+        "files": [
+            "02-strategic/compliance-governance.md",
+            "02-strategic/sustainability.md",
+        ]
+    },
+    3: {
+        "name": "Manage and control changes",
+        "files": [
+            "09-monitoring/monitoring-closing.md",
+            "08-execution/executing-work.md",
+            "09-monitoring/toolkit.md",
+        ]
+    },
+    4: {
+        "name": "Remove impediments and manage issues",
+        "files": [
+            "08-execution/executing-work.md",
+            "08-execution/toolkit.md",
+            "03-team-leadership/conflict-management.md",
+        ]
+    },
+    5: {
+        "name": "Plan and manage risk",
+        "files": [
+            "06-project-planning/risk-planning.md",
+            "07-risk-quality/risk-management.md",
+        ]
+    },
+    6: {
+        "name": "Continuous improvement",
+        "files": [
+            "07-risk-quality/quality-management.md",
+            "09-monitoring/project-closure.md",
+        ]
+    },
+    7: {
+        "name": "Support organizational change",
+        "files": [
+            "02-strategic/organizational-change.md",
+            "04-stakeholder/stakeholder-engagement.md",
+        ]
+    },
+    8: {
+        "name": "Evaluate external business environment changes",
+        "files": [
+            "02-strategic/external-environment.md",
+            "07-risk-quality/risk-management.md",
+        ]
+    },
 }
 
-CHAPTER_TO_ECO_MAPPING = {
-    "01-introduction": {"domain": "Process", "domain_id": 2, "primary_tasks": [1]},
-    "02-strategic": {"domain": "Business Environment", "domain_id": 3, "primary_tasks": [1, 7, 8]},
-    "03-team-leadership": {"domain": "People", "domain_id": 1, "primary_tasks": [1, 2, 3]},
-    "04-stakeholder": {"domain": "People", "domain_id": 1, "primary_tasks": [4, 5, 6, 8]},
-    "05-initiation": {"domain": "Process", "domain_id": 2, "primary_tasks": [1, 2]},
-    "06-project-planning": {"domain": "Process", "domain_id": 2, "primary_tasks": [2, 3, 4, 5, 6, 7, 8]},
-    "07-risk-quality": {"domain": "Business Environment", "domain_id": 3, "primary_tasks": [5, 4]},
-    "08-execution": {"domain": "Process", "domain_id": 2, "primary_tasks": [3, 7, 9]},
-    "09-monitoring": {"domain": "Business Environment", "domain_id": 3, "primary_tasks": [3, 4, 6]},
-    "10-ai-pm": {"domain": "Business Environment", "domain_id": 3, "primary_tasks": [6, 8]},
-    "11-exam-prep": {"domain": "Process", "domain_id": 2, "primary_tasks": [9, 10]},
-    "appendices": {"domain": "Process", "domain_id": 2, "primary_tasks": [1]},
+# Combined ECO structure
+PMP_2026_ECO = {
+    "People": {
+        "id": 1,
+        "weight": 33,
+        "tasks": ECO_PEOPLE_TASKS,
+    },
+    "Process": {
+        "id": 2,
+        "weight": 41,
+        "tasks": ECO_PROCESS_TASKS,
+    },
+    "Business Environment": {
+        "id": 3,
+        "weight": 26,
+        "tasks": ECO_BUSINESS_ENVIRONMENT_TASKS,
+    },
 }
 
 
-def get_eco_task_name(domain: str, task_number: int) -> str:
-    """Get the official ECO task name."""
-    if domain == "People":
-        return PEOPLE_TASKS.get(task_number, f"Task {task_number}")
-    elif domain == "Process":
-        return PROCESS_TASKS.get(task_number, f"Task {task_number}")
-    elif domain == "Business Environment":
-        return BUSINESS_ENVIRONMENT_TASKS.get(task_number, f"Task {task_number}")
-    return f"Task {task_number}"
+def get_all_eco_tasks() -> list[dict]:
+    """Get flat list of all ECO tasks with metadata."""
+    tasks = []
+    for domain_name, domain_data in PMP_2026_ECO.items():
+        for task_num, task_data in domain_data["tasks"].items():
+            tasks.append({
+                "domain": domain_name,
+                "domain_id": domain_data["id"],
+                "task_id": task_num,
+                "task_name": task_data["name"],
+                "files": task_data["files"],
+            })
+    return tasks
 
 
 # ============================================================================
-# Pydantic Models for Structured Output (DSPy TypedPredictors)
+# Pydantic Models for Structured Output
 # ============================================================================
 
 class Flashcard(BaseModel):
@@ -139,8 +315,10 @@ class FlashcardSet(BaseModel):
 
 
 class PracticeQuestion(BaseModel):
-    """A single PMP practice question with 4 options."""
-    question_text: str = Field(description="The scenario-based question text")
+    """A hard, scenario-based PMP practice question with explanations for ALL options."""
+    question_text: str = Field(
+        description="A complex scenario-based question (3-5 sentences describing a realistic project situation, then asking what the PM should do)"
+    )
     option_a: str = Field(description="First answer option (A)")
     option_b: str = Field(description="Second answer option (B)")
     option_c: str = Field(description="Third answer option (C)")
@@ -148,26 +326,42 @@ class PracticeQuestion(BaseModel):
     correct_answer: Literal["A", "B", "C", "D"] = Field(
         description="The correct answer letter (A, B, C, or D)"
     )
-    explanation: str = Field(
-        description="Explanation of why the correct answer is right"
+    explanation_a: str = Field(
+        description="Why option A is correct or incorrect"
     )
-    difficulty: Literal["easy", "medium", "hard"] = Field(
-        default="medium",
-        description="Difficulty level"
+    explanation_b: str = Field(
+        description="Why option B is correct or incorrect"
+    )
+    explanation_c: str = Field(
+        description="Why option C is correct or incorrect"
+    )
+    explanation_d: str = Field(
+        description="Why option D is correct or incorrect"
+    )
+    difficulty: Literal["medium", "hard"] = Field(
+        default="hard",
+        description="Difficulty level (medium or hard only)"
     )
     
-    @field_validator('question_text', 'explanation')
+    @field_validator('question_text')
     @classmethod
-    def must_be_substantial(cls, v: str) -> str:
-        if not v or len(v.strip()) < 20:
-            raise ValueError('Content must be at least 20 characters')
+    def must_be_scenario(cls, v: str) -> str:
+        if not v or len(v.strip()) < 100:
+            raise ValueError('Question must be a detailed scenario (at least 100 characters)')
         return v.strip()
     
     @field_validator('option_a', 'option_b', 'option_c', 'option_d')
     @classmethod
     def option_must_have_content(cls, v: str) -> str:
-        if not v or len(v.strip()) < 5:
-            raise ValueError('Options must be at least 5 characters')
+        if not v or len(v.strip()) < 10:
+            raise ValueError('Options must be at least 10 characters')
+        return v.strip()
+    
+    @field_validator('explanation_a', 'explanation_b', 'explanation_c', 'explanation_d')
+    @classmethod
+    def explanation_must_be_detailed(cls, v: str) -> str:
+        if not v or len(v.strip()) < 20:
+            raise ValueError('Explanations must be detailed (at least 20 characters)')
         return v.strip()
 
 
@@ -197,8 +391,9 @@ class GenerateFlashcards(dspy.Signature):
     - Each flashcard should test a single concept
     - Front: A clear question or prompt
     - Back: A concise, accurate answer with key details
-    - ONLY use information from the provided content - do not hallucinate
+    - ONLY use information from the provided content - do not make up facts
     - Focus on exam-relevant concepts, definitions, formulas, and practical applications
+    - Mix difficulty levels appropriately
     """
     
     content: str = dspy.InputField(desc="PMP study content from the source material")
@@ -210,18 +405,34 @@ class GenerateFlashcards(dspy.Signature):
 
 
 class GenerateQuestions(dspy.Signature):
-    """Generate PMP practice test questions from source content.
+    """Generate HARD, scenario-based PMP practice test questions that mimic the actual PMP exam.
     
-    You are an expert PMP exam question writer.
-    Generate high-quality, scenario-based multiple choice questions that mirror the 2026 PMP exam.
+    You are an expert PMP exam question writer creating questions for the 2026 PMP certification exam.
     
-    Requirements:
-    - Each question should be scenario-based when possible
-    - 4 answer choices (A, B, C, D) with exactly ONE correct answer
-    - Include explanation of why the correct answer is right
-    - ONLY use information from the provided content - do not hallucinate
-    - Questions should test application of knowledge, not just memorization
-    - Mix difficulty levels (easy, medium, hard)
+    CRITICAL REQUIREMENTS:
+    
+    1. SCENARIO-BASED: Every question MUST start with a realistic project scenario (3-5 sentences)
+       describing a specific situation a project manager faces. Include details like:
+       - Project context (type, phase, team size, constraints)
+       - A specific problem or decision point
+       - Relevant stakeholders involved
+       
+    2. DIFFICULTY: Questions should be HARD - testing application of knowledge, not memorization.
+       Use words like "BEST", "FIRST", "MOST important", "PRIMARY" to make students think critically.
+       
+    3. PLAUSIBLE DISTRACTORS: All 4 options should be reasonable actions a PM might consider.
+       Wrong answers should be things a PM COULD do, but are not the BEST choice.
+       
+    4. EXPLANATIONS FOR ALL OPTIONS: For EACH option (A, B, C, D), explain:
+       - If correct: WHY this is the best choice and what makes it superior
+       - If incorrect: WHY this is not the best choice, even though it might seem reasonable
+       
+    5. GROUNDED IN CONTENT: ONLY use concepts from the provided content. Do not fabricate.
+    
+    6. PMP EXAM STYLE: Mirror the actual exam format:
+       - Complex scenarios requiring judgment
+       - Multiple valid-seeming options
+       - Focus on what a PM should do FIRST or what is MOST important
     """
     
     content: str = dspy.InputField(desc="PMP study content from the source material")
@@ -233,7 +444,7 @@ class GenerateQuestions(dspy.Signature):
 
 
 # ============================================================================
-# DSPy Modules with Retry and Validation
+# DSPy Modules
 # ============================================================================
 
 class FlashcardGenerator(dspy.Module):
@@ -261,7 +472,7 @@ class FlashcardGenerator(dspy.Module):
 
 
 class QuestionGenerator(dspy.Module):
-    """DSPy module for generating practice questions with validation."""
+    """DSPy module for generating hard scenario-based questions."""
     
     def __init__(self):
         super().__init__()
@@ -318,30 +529,25 @@ def extract_text_from_markdown(content: str) -> str:
     return content.strip()
 
 
-def load_chapter_content(chapter_name: str, skip_files: list[str] = None) -> tuple[str, list[str]]:
-    """Load all markdown content from a chapter directory."""
-    chapter_path = GUIDE_PATH / chapter_name
-    if not chapter_path.exists():
-        raise FileNotFoundError(f"Chapter not found: {chapter_path}")
-    
-    skip_files = skip_files or ["index.md", "knowledge-check.md"]
-    
+def load_files_for_task(file_paths: list[str]) -> tuple[str, list[str]]:
+    """Load content from specific files for an ECO task."""
     all_content = []
-    processed_files = []
+    loaded_files = []
     
-    for md_file in sorted(chapter_path.glob("*.md")):
-        if md_file.name in skip_files:
-            continue
-        
-        with open(md_file, "r", encoding="utf-8") as f:
-            raw_content = f.read()
-        
-        text = extract_text_from_markdown(raw_content)
-        if len(text) >= 100:
-            all_content.append(f"## File: {md_file.name}\n\n{text}")
-            processed_files.append(md_file.name)
+    for file_path in file_paths:
+        full_path = GUIDE_PATH / file_path
+        if full_path.exists():
+            with open(full_path, "r", encoding="utf-8") as f:
+                raw_content = f.read()
+            
+            text = extract_text_from_markdown(raw_content)
+            if len(text) >= 100:
+                all_content.append(f"## Source: {file_path}\n\n{text}")
+                loaded_files.append(file_path)
+        else:
+            print(f"  ⚠️  File not found: {full_path}")
     
-    return "\n\n---\n\n".join(all_content), processed_files
+    return "\n\n---\n\n".join(all_content), loaded_files
 
 
 # ============================================================================
@@ -349,7 +555,7 @@ def load_chapter_content(chapter_name: str, skip_files: list[str] = None) -> tup
 # ============================================================================
 
 class PMPContentGenerator:
-    """Generate PMP flashcards and questions using DSPy."""
+    """Generate PMP flashcards and hard scenario-based questions using DSPy."""
     
     def __init__(self, api_key: str = None):
         """Initialize with Google AI API key."""
@@ -361,7 +567,7 @@ class PMPContentGenerator:
         self.lm = dspy.LM(
             model=MODEL_NAME,
             api_key=self.api_key,
-            max_tokens=8192,  # Large output for batch generation
+            max_tokens=16384,  # Large output for detailed explanations
             temperature=0.7,
         )
         dspy.configure(lm=self.lm)
@@ -370,41 +576,40 @@ class PMPContentGenerator:
         self.flashcard_gen = FlashcardGenerator()
         self.question_gen = QuestionGenerator()
     
-    def generate_for_chapter(
+    def generate_for_task(
         self,
-        chapter_name: str,
-        num_flashcards: int = 15,
+        domain: str,
+        task_id: int,
+        task_name: str,
+        files: list[str],
+        num_flashcards: int = 10,
         num_questions: int = 10
     ) -> dict:
-        """Generate content for an entire chapter (leverages full context window)."""
+        """Generate content for a specific ECO task."""
         
-        print(f"\n{'='*60}")
-        print(f"Processing Chapter: {chapter_name}")
-        print(f"{'='*60}")
+        domain_id = PMP_2026_ECO[domain]["id"]
         
-        # Get ECO mapping
-        mapping = CHAPTER_TO_ECO_MAPPING.get(chapter_name, {
-            "domain": "Process",
-            "domain_id": 2,
-            "primary_tasks": [1]
-        })
+        print(f"\n{'='*70}")
+        print(f"ECO Task: {domain} - Task {task_id}")
+        print(f"  {task_name}")
+        print(f"{'='*70}")
         
-        domain = mapping["domain"]
-        domain_id = mapping["domain_id"]
-        primary_task_num = mapping["primary_tasks"][0]
-        task_name = get_eco_task_name(domain, primary_task_num)
-        
-        print(f"Domain: {domain} (ID: {domain_id})")
-        print(f"Primary Task: {task_name}")
-        
-        # Load all chapter content at once (full context)
-        print("\nLoading chapter content...")
-        content, files = load_chapter_content(chapter_name)
-        print(f"Loaded {len(files)} files ({len(content):,} characters)")
+        # Load content from mapped files
+        print(f"\nLoading {len(files)} source files...")
+        content, loaded_files = load_files_for_task(files)
+        print(f"Loaded {len(loaded_files)} files ({len(content):,} characters)")
         
         if len(content) < 500:
             print("Insufficient content, skipping...")
-            return {"flashcards": [], "questions": [], "files": files}
+            return {
+                "domain": domain,
+                "domain_id": domain_id,
+                "task_id": task_id,
+                "task_name": task_name,
+                "files": loaded_files,
+                "flashcards": [],
+                "questions": []
+            }
         
         # Generate flashcards
         print(f"\nGenerating {num_flashcards} flashcards...")
@@ -423,8 +628,7 @@ class PMPContentGenerator:
                     "domain": domain,
                     "domain_id": domain_id,
                     "task": task_name,
-                    "task_id": primary_task_num,
-                    "source_chapter": chapter_name
+                    "task_id": task_id,
                 }
                 for fc in flashcard_set.flashcards
             ]
@@ -433,8 +637,8 @@ class PMPContentGenerator:
             print(f"✗ Error generating flashcards: {e}")
             flashcards = []
         
-        # Generate questions
-        print(f"\nGenerating {num_questions} questions...")
+        # Generate hard scenario-based questions
+        print(f"\nGenerating {num_questions} hard scenario-based questions...")
         try:
             question_set = self.question_gen(
                 content=content,
@@ -450,54 +654,62 @@ class PMPContentGenerator:
                     "option_c": q.option_c,
                     "option_d": q.option_d,
                     "correct_answer": q.correct_answer,
-                    "explanation": q.explanation,
+                    "explanation_a": q.explanation_a,
+                    "explanation_b": q.explanation_b,
+                    "explanation_c": q.explanation_c,
+                    "explanation_d": q.explanation_d,
                     "difficulty": q.difficulty,
                     "domain": domain,
                     "domain_id": domain_id,
                     "task": task_name,
-                    "task_id": primary_task_num,
-                    "source_chapter": chapter_name
+                    "task_id": task_id,
                 }
                 for q in question_set.questions
             ]
-            print(f"✓ Generated {len(questions)} questions")
+            print(f"✓ Generated {len(questions)} scenario-based questions")
         except Exception as e:
             print(f"✗ Error generating questions: {e}")
             questions = []
         
         return {
-            "chapter": chapter_name,
             "domain": domain,
             "domain_id": domain_id,
-            "task": task_name,
-            "task_id": primary_task_num,
-            "files": files,
+            "task_id": task_id,
+            "task_name": task_name,
+            "files": loaded_files,
             "flashcards": flashcards,
             "questions": questions
         }
     
     def generate_all(
         self,
-        num_flashcards_per_chapter: int = 15,
-        num_questions_per_chapter: int = 10
+        num_flashcards_per_task: int = 10,
+        num_questions_per_task: int = 10
     ) -> dict:
-        """Generate content for all chapters."""
+        """Generate content for all ECO tasks."""
         
         all_results = {
             "generated_at": datetime.now().isoformat(),
-            "chapters": [],
+            "eco_version": "PMP 2026",
+            "tasks": [],
             "all_flashcards": [],
             "all_questions": [],
             "summary": {}
         }
         
-        for chapter in sorted(CHAPTER_TO_ECO_MAPPING.keys()):
-            result = self.generate_for_chapter(
-                chapter,
-                num_flashcards_per_chapter,
-                num_questions_per_chapter
+        all_tasks = get_all_eco_tasks()
+        print(f"\nGenerating content for {len(all_tasks)} ECO tasks...")
+        
+        for task_info in all_tasks:
+            result = self.generate_for_task(
+                domain=task_info["domain"],
+                task_id=task_info["task_id"],
+                task_name=task_info["task_name"],
+                files=task_info["files"],
+                num_flashcards=num_flashcards_per_task,
+                num_questions=num_questions_per_task
             )
-            all_results["chapters"].append(result)
+            all_results["tasks"].append(result)
             all_results["all_flashcards"].extend(result["flashcards"])
             all_results["all_questions"].extend(result["questions"])
         
@@ -508,17 +720,13 @@ class PMPContentGenerator:
             "by_domain": {}
         }
         
-        for fc in all_results["all_flashcards"]:
-            domain = fc["domain"]
-            if domain not in all_results["summary"]["by_domain"]:
-                all_results["summary"]["by_domain"][domain] = {"flashcards": 0, "questions": 0}
-            all_results["summary"]["by_domain"][domain]["flashcards"] += 1
-        
-        for q in all_results["all_questions"]:
-            domain = q["domain"]
-            if domain not in all_results["summary"]["by_domain"]:
-                all_results["summary"]["by_domain"][domain] = {"flashcards": 0, "questions": 0}
-            all_results["summary"]["by_domain"][domain]["questions"] += 1
+        for domain_name in ["People", "Process", "Business Environment"]:
+            fc_count = len([f for f in all_results["all_flashcards"] if f["domain"] == domain_name])
+            q_count = len([q for q in all_results["all_questions"] if q["domain"] == domain_name])
+            all_results["summary"]["by_domain"][domain_name] = {
+                "flashcards": fc_count,
+                "questions": q_count
+            }
         
         return all_results
 
@@ -558,29 +766,35 @@ def save_results(results: dict, output_dir: Path) -> None:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Generate PMP content using DSPy with Gemini (hallucination-controlled)"
+        description="Generate hard PMP exam content using DSPy with Gemini"
     )
     parser.add_argument(
-        "--chapter",
+        "--task",
         type=str,
-        help="Specific chapter to process (e.g., 01-introduction)"
+        help="Specific task name to process (e.g., 'Lead the project team')"
+    )
+    parser.add_argument(
+        "--domain",
+        type=str,
+        choices=["People", "Process", "Business Environment"],
+        help="Process all tasks in a domain"
     )
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Process all chapters"
+        help="Process all ECO tasks"
     )
     parser.add_argument(
         "--flashcards",
         type=int,
-        default=15,
-        help="Number of flashcards per chapter (default: 15)"
+        default=10,
+        help="Number of flashcards per task (default: 10)"
     )
     parser.add_argument(
         "--questions",
         type=int,
         default=10,
-        help="Number of questions per chapter (default: 10)"
+        help="Number of questions per task (default: 10)"
     )
     parser.add_argument(
         "--output-dir",
@@ -589,29 +803,29 @@ def main():
         help="Output directory for generated content"
     )
     parser.add_argument(
-        "--list-chapters",
+        "--list-tasks",
         action="store_true",
-        help="List available chapters"
+        help="List all ECO tasks with their source files"
     )
     
     args = parser.parse_args()
     
-    if args.list_chapters:
-        print("Available chapters (with ECO mapping):\n")
-        for chapter in sorted(CHAPTER_TO_ECO_MAPPING.keys()):
-            chapter_path = GUIDE_PATH / chapter
-            if chapter_path.exists():
-                mapping = CHAPTER_TO_ECO_MAPPING[chapter]
-                domain = mapping["domain"]
-                task = get_eco_task_name(domain, mapping["primary_tasks"][0])
-                file_count = len(list(chapter_path.glob("*.md")))
-                print(f"  {chapter} ({file_count} files)")
-                print(f"    → {domain}: {task}")
+    if args.list_tasks:
+        print("PMP 2026 ECO Tasks with Source Files:\n")
+        for domain_name, domain_data in PMP_2026_ECO.items():
+            print(f"\n{'='*60}")
+            print(f"Domain: {domain_name} ({domain_data['weight']}%)")
+            print(f"{'='*60}")
+            for task_id, task_data in domain_data["tasks"].items():
+                print(f"\n  Task {task_id}: {task_data['name']}")
+                for f in task_data["files"]:
+                    exists = "✓" if (GUIDE_PATH / f).exists() else "✗"
+                    print(f"    {exists} {f}")
         return
     
-    if not args.chapter and not args.all:
+    if not args.task and not args.domain and not args.all:
         parser.print_help()
-        print("\nError: Must specify --chapter or --all")
+        print("\nError: Must specify --task, --domain, or --all")
         sys.exit(1)
     
     try:
@@ -619,22 +833,65 @@ def main():
         
         if args.all:
             results = generator.generate_all(args.flashcards, args.questions)
-        else:
-            result = generator.generate_for_chapter(
-                args.chapter,
-                args.flashcards,
-                args.questions
-            )
-            results = {
+        elif args.domain:
+            # Process all tasks in a domain
+            domain_tasks = PMP_2026_ECO[args.domain]["tasks"]
+            all_results = {
                 "generated_at": datetime.now().isoformat(),
-                "chapters": [result],
-                "all_flashcards": result["flashcards"],
-                "all_questions": result["questions"],
-                "summary": {
-                    "total_flashcards": len(result["flashcards"]),
-                    "total_questions": len(result["questions"])
-                }
+                "tasks": [],
+                "all_flashcards": [],
+                "all_questions": [],
+                "summary": {}
             }
+            for task_id, task_data in domain_tasks.items():
+                result = generator.generate_for_task(
+                    domain=args.domain,
+                    task_id=task_id,
+                    task_name=task_data["name"],
+                    files=task_data["files"],
+                    num_flashcards=args.flashcards,
+                    num_questions=args.questions
+                )
+                all_results["tasks"].append(result)
+                all_results["all_flashcards"].extend(result["flashcards"])
+                all_results["all_questions"].extend(result["questions"])
+            all_results["summary"] = {
+                "total_flashcards": len(all_results["all_flashcards"]),
+                "total_questions": len(all_results["all_questions"])
+            }
+            results = all_results
+        else:
+            # Find the specific task
+            found = False
+            for domain_name, domain_data in PMP_2026_ECO.items():
+                for task_id, task_data in domain_data["tasks"].items():
+                    if args.task.lower() in task_data["name"].lower():
+                        result = generator.generate_for_task(
+                            domain=domain_name,
+                            task_id=task_id,
+                            task_name=task_data["name"],
+                            files=task_data["files"],
+                            num_flashcards=args.flashcards,
+                            num_questions=args.questions
+                        )
+                        results = {
+                            "generated_at": datetime.now().isoformat(),
+                            "tasks": [result],
+                            "all_flashcards": result["flashcards"],
+                            "all_questions": result["questions"],
+                            "summary": {
+                                "total_flashcards": len(result["flashcards"]),
+                                "total_questions": len(result["questions"])
+                            }
+                        }
+                        found = True
+                        break
+                if found:
+                    break
+            
+            if not found:
+                print(f"Error: Task '{args.task}' not found")
+                sys.exit(1)
         
         if results["all_flashcards"] or results["all_questions"]:
             save_results(results, Path(args.output_dir))
