@@ -42,6 +42,14 @@ export function buildHeaders(additionalHeaders?: Record<string, string>): Header
     headers['X-Anonymous-ID'] = anonymousId;
   }
 
+  // Add Bearer token if it exists
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('pmp_auth_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   return headers;
 }
 

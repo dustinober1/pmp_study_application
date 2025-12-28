@@ -292,8 +292,13 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-  user: User;
-  token: string;
+  user_id: string;
+  anonymous_id: string;
+  email: string | null;
+  display_name: string | null;
+  is_registered: boolean;
+  access_token: string;
+  token_type: string;
 }
 
 export interface TokenResponse {

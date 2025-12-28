@@ -17,6 +17,7 @@ interface UserState {
 
   // Actions
   setUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
   setAnonymousId: (id: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -45,6 +46,16 @@ export const useUserStore = create<UserState>()(
           user,
           isAuthenticated: user !== null && user.email !== null,
         });
+      },
+
+      setToken: (token) => {
+        if (typeof window !== 'undefined') {
+          if (token) {
+            localStorage.setItem('pmp_auth_token', token);
+          } else {
+            localStorage.removeItem('pmp_auth_token');
+          }
+        }
       },
 
       setAnonymousId: (id) => {
@@ -97,6 +108,9 @@ export const useUserStore = create<UserState>()(
           isAuthenticated: false,
           error: null,
         });
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('pmp_auth_token');
+        }
       },
 
       reset: () => {

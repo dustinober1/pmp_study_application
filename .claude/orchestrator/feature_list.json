@@ -1,0 +1,163 @@
+{
+  "projectDir": "/Users/dustinober/Projects/pmp_study_app",
+  "taskDescription": "Build a PMP 2026 Study Application - a web-based exam preparation tool with flashcards, practice tests, and progress tracking organized by PMP 2026 ECO Domains and Tasks.\n\nTechnology Stack:\n- Frontend: Next.js 14, TypeScript, Tailwind CSS, Zustand (state), SWR (data fetching)\n- Backend: Python FastAPI, SQLAlchemy, Alembic (migrations)\n- Database: PostgreSQL\n- Hosting: Render\n\nPMP 2026 ECO Structure:\n- Domain 1: People (33% weight, 8 tasks)\n- Domain 2: Process (41% weight, 10 tasks)\n- Domain 3: Business Environment (26% weight, 8 tasks)\n\nKey features: Anonymous user sessions, SM-2 spaced repetition for flashcards, practice tests with immediate feedback, progress tracking with visualizations.",
+  "lastUpdated": "2025-12-28T15:48:13.972Z",
+  "features": [
+    {
+      "id": "feature-1",
+      "description": "Phase 1A: Initialize Next.js 14 frontend with TypeScript, Tailwind CSS, and project structure (src/app, src/components, src/lib, src/store, src/types folders)",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-2",
+      "description": "Phase 1B: Initialize FastAPI backend with SQLAlchemy, Alembic, requirements.txt, config.py, database.py, and Dockerfile",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-3",
+      "description": "Phase 1C: Set up PostgreSQL connection, create initial Alembic migration setup, and configure CORS for local development",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-4",
+      "description": "Phase 2A: Create SQLAlchemy models for Domain, Task, Flashcard, Question tables with relationships",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-5",
+      "description": "Phase 2B: Create SQLAlchemy models for User, FlashcardProgress, QuestionProgress, StudySession tables",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-6",
+      "description": "Phase 2C: Create Pydantic schemas for all models (request/response schemas)",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-7",
+      "description": "Phase 2D: Seed PMP 2026 data - 3 domains with 26 tasks, sample flashcards (5-10 per task), and sample questions (3-5 per task) based on the official ECO",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-8",
+      "description": "Phase 3A: Create domain and task API routes (GET /api/domains, GET /api/domains/:id/tasks)",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-9",
+      "description": "Phase 3B: Create flashcard API routes (GET /api/flashcards with filters, POST /api/flashcards/:id/review with SM-2 algorithm)",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-10",
+      "description": "Phase 3C: Create question API routes (GET /api/questions with filters, POST /api/questions/:id/answer)",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-11",
+      "description": "Phase 3D: Create progress API routes (GET /api/progress/summary, GET /api/progress/domain/:id)",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-12",
+      "description": "Phase 3E: Create auth API routes (POST /api/auth/anonymous, POST /api/auth/register, POST /api/auth/login with JWT)",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-13",
+      "description": "Phase 4A: Create frontend layout with responsive sidebar navigation, header, and main content area",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-14",
+      "description": "Phase 4B: Create base UI components (Button, Card, Modal, Input, Select) with Tailwind styling",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-15",
+      "description": "Phase 4C: Set up API client with SWR, Zustand stores for user and progress state, and TypeScript types",
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "feature-16",
+      "description": "Phase 4D: Create Dashboard page showing domain overview cards with progress indicators",
+      "status": "in_progress",
+      "passes": false
+    },
+    {
+      "id": "feature-17",
+      "description": "Phase 5A: Create flashcard selection pages (domain/task selection)",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-18",
+      "description": "Phase 5B: Create FlashcardComponent with flip animation, FlashcardDeck, and StudySession components",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-19",
+      "description": "Phase 5C: Implement flashcard study flow with Know it/Don't know it buttons, session summary, and progress tracking",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-20",
+      "description": "Phase 6A: Create practice test selection pages (domain/task selection)",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-21",
+      "description": "Phase 6B: Create QuestionComponent, AnswerOptions, TestSession, and ScoreSummary components",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-22",
+      "description": "Phase 6C: Implement practice test flow with immediate feedback, explanations, and exam simulation mode",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-23",
+      "description": "Phase 7: Create progress tracking page with overall mastery, domain breakdown, study streaks, time tracking, charts (recharts), and weak areas identification",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-24",
+      "description": "Phase 8A: Create auth pages (login, register) with form validation",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-25",
+      "description": "Phase 8B: Implement anonymous session persistence, JWT token auth, profile settings, and data sync on registration",
+      "status": "pending",
+      "passes": false
+    },
+    {
+      "id": "feature-26",
+      "description": "Phase 9: Create render.yaml blueprint, production Dockerfiles, environment configuration, and deploy to Render",
+      "status": "pending",
+      "passes": false
+    }
+  ]
+}

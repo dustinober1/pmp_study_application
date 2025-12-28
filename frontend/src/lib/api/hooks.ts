@@ -39,8 +39,8 @@ export function useDomain(id: number | undefined) {
 
 // ============ Task Hooks ============
 
-export function useTasks(domainId?: number) {
-  const url = domainId ? `/api/tasks?domain_id=${domainId}` : '/api/tasks';
+export function useTasks(domainId: number | undefined) {
+  const url = domainId ? `/api/domains/${domainId}/tasks` : null;
   return useSWR<Task[]>(url, fetcher);
 }
 

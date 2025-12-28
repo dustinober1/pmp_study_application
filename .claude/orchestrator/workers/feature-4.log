@@ -1,0 +1,6 @@
+⚠️  [BashTool] Pre-flight check is taking longer than expected. Run with ANTHROPIC_LOG=debug to check for failed or slow API requests.
+⚠️  [BashTool] Pre-flight check is taking longer than expected. Run with ANTHROPIC_LOG=debug to check for failed or slow API requests.
+⚠️  [BashTool] Pre-flight check is taking longer than expected. Run with ANTHROPIC_LOG=debug to check for failed or slow API requests.
+⚠️  [BashTool] Pre-flight check is taking longer than expected. Run with ANTHROPIC_LOG=debug to check for failed or slow API requests.
+API Error: 429 {"error":{"code":"model_cooldown","message":"All credentials for model gemini-claude-opus-4-5-thinking are cooling down via provider antigravity","model":"gemini-claude-opus-4-5-thinking","provider":"antigravity","reset_seconds":478,"reset_time":"7m57s"}}
+WORKER_EXITED

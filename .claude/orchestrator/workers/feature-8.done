@@ -1,0 +1,35 @@
+Feature 8 Completed: Domain and Task API Routes
+
+## Summary
+Created API routes for domains and tasks as part of Phase 3A.
+
+## Files Created
+- `backend/app/routers/domains.py` - New router with all domain/task endpoints
+
+## Files Modified
+- `backend/app/main.py` - Added import and registration of domains router
+
+## Endpoints Implemented
+
+### GET /api/domains
+- Returns all PMP 2026 ECO domains with their tasks
+- Domains and tasks are ordered by their `order` field
+- Uses eager loading (selectinload) for efficient task fetching
+- Response schema: `list[DomainWithTasksResponse]`
+
+### GET /api/domains/{domain_id}
+- Returns a specific domain by ID with its tasks
+- Returns 404 if domain not found
+- Response schema: `DomainWithTasksResponse`
+
+### GET /api/domains/{domain_id}/tasks
+- Returns all tasks for a specific domain
+- Validates domain exists before fetching tasks
+- Returns 404 if domain not found
+- Response schema: `list[TaskResponse]`
+
+## Technical Notes
+- Used existing Pydantic schemas from `app/schemas/domain.py` and `app/schemas/task.py`
+- Used existing SQLAlchemy models from `app/models/domain.py` and `app/models/task.py`
+- Followed FastAPI dependency injection pattern with `Depends(get_db)`
+- All endpoints use proper HTTP status codes and error handling

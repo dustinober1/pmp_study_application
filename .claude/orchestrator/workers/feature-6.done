@@ -1,126 +1,55 @@
-# Feature 6: Port Cloud Functions Logic to Client-Side - COMPLETE
+# Feature 6 Complete: Pydantic Schemas for All Models
 
 ## Summary
-Successfully ported all Cloud Functions logic for study session management and card review to client-side TypeScript with local IndexedDB persistence.
+Created comprehensive Pydantic schemas for all API request/response models, organized in the `backend/app/schemas/` directory.
 
-## What Was Implemented
+## Files Created/Modified
 
-### 1. New File: `web/src/lib/localStudyService.ts`
+### New Schema Files:
+1. `backend/app/schemas/domain.py` - Domain CRUD schemas
+2. `backend/app/schemas/task.py` - Task CRUD schemas
+3. `backend/app/schemas/user.py` - User and registration schemas
+4. `backend/app/schemas/flashcard.py` - Flashcard and SM-2 progress schemas
+5. `backend/app/schemas/question.py` - Question and answer schemas
+6. `backend/app/schemas/session.py` - Study session schemas
+7. `backend/app/schemas/progress.py` - Progress summary schemas
+8. `backend/app/schemas/__init__.py` - Central exports
 
-A complete client-side study service (`LocalStudyService`) that provides:
+### Modified:
+- `backend/requirements.txt` - Added email-validator dependency for EmailStr
 
-**Study Session Management:**
-- `createStudySession()` - Creates new study sessions (replaces Cloud Function)
-- `endStudySession()` - Finalizes sessions and records end time
-- `loadSession()` - Loads existing sessions by ID
-- `getCurrentSession()` - Returns active session
+## Schema Categories
 
-**Card Fetching:**
-- `getCardsForReview()` - Gets due cards filtered by scope/state (replaces Cloud Function)
-- `fetchNewCards()` - Gets NEW state cards for learning (replaces Cloud Function)
+### Domain Schemas:
+- DomainBase, DomainCreate, DomainUpdate, DomainResponse, DomainWithTasksResponse
 
-**Card Review:**
-- `reviewCardInSession()` - Main review handler that:
-  - Calculates FSRS schedule
-  - Updates flashcard with new FSRS data
-  - Creates review history entry
-  - Updates session metrics
-  - All in a single atomic operation (replaces Cloud Function)
+### Task Schemas:
+- TaskBase, TaskCreate, TaskUpdate, TaskResponse, TaskWithDomainResponse
 
-**Session Statistics:**
-- `getSessionStats()` - Returns session stats with rating counts and success rate
+### User Schemas:
+- UserBase, UserCreate, UserRegister, UserUpdate, UserResponse, UserSummary
 
-**Utility Methods:**
-- `initCard()` - Initialize new FSRS card
-- `isCardDue()` - Check if card is due
-- `getCardRetention()` - Get retention probability
-- `getRepeatOptions()` - Get all rating outcomes
-- `getDueFlashcardsCount()` - Count due cards
-- `getNewFlashcardsCount()` - Count new cards
+### Flashcard Schemas:
+- FlashcardBase, FlashcardCreate, FlashcardUpdate, FlashcardResponse
+- FlashcardReviewRequest, FlashcardReviewResponse
+- FlashcardProgressResponse, FlashcardWithProgressResponse
 
-### Cloud Functions Replaced
+### Question Schemas:
+- QuestionBase, QuestionCreate, QuestionUpdate, QuestionResponse
+- QuestionAnswerRequest, QuestionAnswerResponse
+- QuestionProgressResponse, QuestionWithProgressResponse
 
-| Cloud Function | Client Method | Status |
-|----------------|---------------|--------|
-| `createStudySession` | `createStudySession()` | ✅ Replaced |
-| `getCardsForReview` | `getCardsForReview()` | ✅ Replaced |
-| `fetchNewCards` | `fetchNewCards()` | ✅ Replaced |
-| `reviewCardInSession` | `reviewCardInSession()` | ✅ Replaced |
-| `updateStudySessionMetrics` | `updateStudySessionMetrics()` | ✅ Replaced (integrated) |
-| `endStudySession` | `endStudySession()` | ✅ Replaced |
-| `getSessionStats` | `getSessionStats()` | ✅ Replaced |
+### Session Schemas:
+- SessionType enum, StudySessionBase, StudySessionCreate, StudySessionEnd
+- StudySessionUpdate, StudySessionResponse, StudySessionSummary
 
-### Key Design Decisions
+### Progress Schemas:
+- DomainProgressSummary, OverallProgressSummary
+- ProgressSummaryResponse, FlashcardsDueResponse, StudyStreakResponse
 
-1. **Atomic Operations**: Card review updates flashcard, review history, and session in sequence to ensure data consistency.
-
-2. **Response Format Compatibility**: Methods return responses matching the original Cloud Function format for easy migration.
-
-3. **Singleton Pattern**: `getLocalStudyService()` provides a singleton instance for app-wide use.
-
-4. **Session Memory**: Current session is kept in memory for quick access, with database as source of truth.
-
-### Integration Points
-
-- Uses `LocalDatabaseService` for IndexedDB persistence
-- Uses shared `FSRS` class from `#fsrs` (shared/fsrs/index.ts)
-- Uses types from `./localDb/schema` for type safety
-- Returns response types compatible with original Cloud Functions
-
-### Files Modified/Created
-
-- **Created**: `web/src/lib/localStudyService.ts` (595 lines)
-
-### Existing Files Used (No Changes Needed)
-
-- `shared/fsrs/index.ts` - FSRS algorithm (already ported)
-- `web/src/lib/localDb/schema.ts` - Database schema
-- `web/src/lib/localDb/index.ts` - Database service
-- `web/src/lib/fsrsStudy.ts` - In-memory FSRS study service (still useful for some use cases)
-
-### Usage Example
-
-```typescript
-import { getLocalStudyService } from '@/lib/localStudyService';
-import { Rating } from '#fsrs';
-
-// Get service instance
-const studyService = await getLocalStudyService();
-
-// Create session
-const { sessionId } = await studyService.createStudySession(
-  { type: 'all' },
-  'web'
-);
-
-// Get cards for review
-const { cards } = await studyService.getCardsForReview(20);
-
-// Review a card
-const result = await studyService.reviewCardInSession(
-  sessionId,
-  cards[0].id,
-  Rating.Good,
-  5000 // 5 seconds elapsed
-);
-
-// End session
-await studyService.endStudySession(sessionId);
-```
-
-## Testing Status
-
-The implementation is complete but not yet tested. Testing should cover:
-1. Creating and ending sessions
-2. Fetching due and new cards
-3. Reviewing cards with different ratings
-4. Verifying FSRS calculations
-5. Checking database persistence
-6. Session statistics accuracy
-
-## No Blockers Encountered
-
-The implementation proceeded smoothly as:
-- FSRS algorithm was already ported to `shared/fsrs`
-- Local database schema was already complete
-- All required types were already defined
+## Key Features
+- Uses Pydantic v2 with ConfigDict(from_attributes=True) for ORM compatibility
+- Field validations for answer choices (A/B/C/D), difficulty levels, SM-2 quality ratings
+- Proper forward references using TYPE_CHECKING to avoid circular imports
+- Comprehensive Field descriptions for API documentation
+- Request/Response pattern for all API endpoints

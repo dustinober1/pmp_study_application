@@ -1,0 +1,38 @@
+Feature 11: Create Progress API Routes - COMPLETED
+
+## Summary
+Implemented two progress tracking API endpoints:
+
+### 1. GET /api/progress/summary
+Returns overall user progress summary including:
+- Overall statistics: total/reviewed/mastered flashcards, total/attempted/correct questions
+- Study session metrics: total sessions, total study time, study streak
+- Flashcard and question accuracy percentages
+- Last study date
+- Progress breakdown by domain (3 domains: People, Process, Business Environment)
+
+### 2. GET /api/progress/domain/{domain_id}
+Returns detailed progress for a specific domain including:
+- Domain-level summary (same stats as overall but filtered to domain)
+- Progress breakdown by task within the domain
+
+## Files Created/Modified
+
+### Created:
+- `backend/app/routers/progress.py` - New router with both endpoints
+
+### Modified:
+- `backend/app/schemas/progress.py` - Added `TaskProgressSummary` and `DomainDetailedProgressResponse` schemas
+- `backend/app/main.py` - Registered progress router
+
+## Implementation Details
+
+- Both endpoints require `X-Anonymous-ID` header for user identification
+- User is created automatically on first API call if not exists
+- Flashcard mastery is defined as ease_factor >= 2.5 AND repetitions >= 3
+- Study streak calculation considers consecutive days of study sessions
+- Accuracy is calculated as (correct / total * 100) with 1 decimal precision
+- All queries are optimized to fetch only necessary data
+
+## API Authentication
+Uses anonymous user flow with browser-generated UUID in `X-Anonymous-ID` header.
