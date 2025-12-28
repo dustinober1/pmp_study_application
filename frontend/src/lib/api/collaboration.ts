@@ -186,3 +186,45 @@ export async function getChallenges(
   });
   return fetcher<Challenge[]>(`/api/groups/${groupId}/challenges?${params.toString()}`);
 }
+
+/**
+ * Join a challenge
+ * POST /api/groups/{groupId}/challenges/{challengeId}/join
+ */
+export async function joinChallenge(
+  groupId: number,
+  challengeId: number
+): Promise<{ message: string }> {
+  return post<Record<string, never>, { message: string }>(
+    `/api/groups/${groupId}/challenges/${challengeId}/join`,
+    {}
+  );
+}
+
+/**
+ * Get challenge leaderboard
+ * GET /api/groups/{groupId}/challenges/{challengeId}/leaderboard
+ */
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: string;
+  display_name: string | null;
+  score: number;
+  completed_at: string | null;
+}
+
+export interface ChallengeLeaderboard {
+  challenge_id: number;
+  challenge_name: string;
+  entries: LeaderboardEntry[];
+  current_user_rank: number | null;
+}
+
+export async function getChallengeLeaderboard(
+  groupId: number,
+  challengeId: number
+): Promise<ChallengeLeaderboard> {
+  return fetcher<ChallengeLeaderboard>(
+    `/api/groups/${groupId}/challenges/${challengeId}/leaderboard`
+  );
+}
