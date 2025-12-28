@@ -18,6 +18,8 @@ dependencies:
   firebase_firestore: ^4.14.0
   firebase_storage: ^11.5.0
   firebase_messaging: ^14.6.0
+  firebase_crashlytics: ^3.4.0
+  firebase_analytics: ^10.7.0
 
   # State management
   riverpod: ^2.4.0

@@ -5,6 +5,7 @@ import { getAuth, connectAuthEmulator, Auth } from 'firebase/auth'
 import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore'
 import { getStorage, FirebaseStorage } from 'firebase/storage'
 import { getFunctions, connectFunctionsEmulator, Functions } from 'firebase/functions'
+import { initializeAnalytics } from './analytics'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -71,5 +72,8 @@ function initializeFirebase(): { app: FirebaseApp; auth: Auth; db: Firestore; st
 }
 
 const { app: appInstance, auth: authInstance, db: dbInstance, storage: storageInstance, functions: functionsInstance } = initializeFirebase()
+
+// Initialize analytics
+initializeAnalytics()
 
 export { authInstance as auth, dbInstance as db, storageInstance as storage, appInstance as app, functionsInstance as functions }

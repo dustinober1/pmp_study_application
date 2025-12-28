@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {FSRS, Rating, FSRSCard} from "./fsrs";
+import {errorTracker} from "./errorTracking";
 
 admin.initializeApp();
 
@@ -266,6 +267,16 @@ export const createStudySession = functions.https.onCall(async (data, context) =
 
     const sessionRef = await db.collection("studySessions").add(sessionData);
 
+    // Track successful study session creation
+    await errorTracker.logEvent("study_session_created", {
+      userId,
+      data: {
+        sessionId: sessionRef.id,
+        platform,
+        scopeType: scope.type,
+      },
+    });
+
     return {
       success: true,
       sessionId: sessionRef.id,
@@ -273,6 +284,12 @@ export const createStudySession = functions.https.onCall(async (data, context) =
     };
   } catch (error) {
     console.error("Error creating study session:", error);
+    await errorTracker.logError(error, {
+      userId,
+      functionName: "createStudySession",
+      action: "create_session",
+      severity: "high",
+    });
     throw new functions.https.HttpsError(
       "internal",
       "Failed to create study session"
@@ -538,6 +555,17 @@ export const endStudySession = functions.https.onCall(async (data, context) => {
     const updatedSession = await sessionRef.get();
     const sessionData = updatedSession.data();
 
+    // Track successful study session completion
+    await errorTracker.logEvent("study_session_ended", {
+      userId,
+      data: {
+        sessionId,
+        cardsReviewed: sessionData?.cardsReviewed || 0,
+        durationSeconds: sessionData?.durationSeconds || 0,
+        ratings: sessionData?.ratings,
+      },
+    });
+
     return {
       success: true,
       session: {
@@ -547,6 +575,15 @@ export const endStudySession = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error("Error ending study session:", error);
+    await errorTracker.logError(error, {
+      userId,
+      functionName: "endStudySession",
+      action: "end_session",
+      severity: "high",
+      additionalData: {
+        sessionId,
+      },
+    });
     throw new functions.https.HttpsError(
       "internal",
       "Failed to end study session"
@@ -796,6 +833,19 @@ export const reviewCardInSession = functions.https.onCall(async (data, context) 
     // Commit all changes
     await batch.commit();
 
+    // Track successful card review
+    await errorTracker.logEvent("card_reviewed", {
+      userId,
+      data: {
+        sessionId,
+        flashcardId,
+        rating,
+        elapsedMs,
+        domainId: flashcardData.domainId,
+        taskId: flashcardData.taskId,
+      },
+    });
+
     return {
       success: true,
       review: {
@@ -810,6 +860,17 @@ export const reviewCardInSession = functions.https.onCall(async (data, context) 
     };
   } catch (error) {
     console.error("Error reviewing card in session:", error);
+    await errorTracker.logError(error, {
+      userId,
+      functionName: "reviewCardInSession",
+      action: "review_card",
+      severity: "high",
+      additionalData: {
+        sessionId,
+        flashcardId,
+        rating,
+      },
+    });
     throw new functions.https.HttpsError(
       "internal",
       "Failed to record card review"
