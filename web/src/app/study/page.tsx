@@ -1,162 +1,312 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { db, functions } from '@/lib/firebase';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+  doc,
+  getDoc,
+  Timestamp
+} from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import FlashcardDisplay from '@/components/FlashcardDisplay';
 import RatingButtons from '@/components/RatingButtons';
 import ProgressDisplay from '@/components/ProgressDisplay';
 import DomainTaskBrowser from '@/components/DomainTaskBrowser';
 import PracticeSessionFlow from '@/components/PracticeSessionFlow';
-import { CardRating, Flashcard, FlashcardContent, Domain, Task, Progress, StudyStats } from '@/types';
-
-// Mock data for demonstration
-const MOCK_DOMAINS: Domain[] = [
-  {
-    id: 'people',
-    name: 'People',
-    description: 'Human resource management',
-    percentage: 33,
-  },
-  {
-    id: 'process',
-    name: 'Process',
-    description: 'Project management processes',
-    percentage: 41,
-  },
-  {
-    id: 'business_environment',
-    name: 'Business Environment',
-    description: 'Business and external environment',
-    percentage: 26,
-  },
-];
-
-const MOCK_TASKS: Task[] = [
-  { id: 'people-1', domainId: 'people', name: 'Task 1.1', description: 'Stakeholder Management' },
-  { id: 'people-2', domainId: 'people', name: 'Task 1.2', description: 'Team Development' },
-  { id: 'people-3', domainId: 'people', name: 'Task 1.3', description: 'Leadership' },
-  { id: 'process-1', domainId: 'process', name: 'Task 2.1', description: 'Planning' },
-  { id: 'process-2', domainId: 'process', name: 'Task 2.2', description: 'Execution' },
-  { id: 'process-3', domainId: 'process', name: 'Task 2.3', description: 'Monitoring' },
-  { id: 'business_environment-1', domainId: 'business_environment', name: 'Task 3.1', description: 'Strategy' },
-  { id: 'business_environment-2', domainId: 'business_environment', name: 'Task 3.2', description: 'Risk' },
-];
-
-const MOCK_FLASHCARD: Flashcard = {
-  id: 'fc-1',
-  userId: 'user-1',
-  contentId: 'content-1',
-  domainId: 'people',
-  taskId: 'people-1',
-  fsrs: {
-    state: 0,
-    difficulty: 5,
-    stability: 1,
-    due: new Date(),
-    reps: 0,
-    lapses: 0,
-  },
-  isSuspended: false,
-  tags: ['leadership', 'communication'],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-const MOCK_CONTENT: FlashcardContent = {
-  id: 'content-1',
-  domainId: 'people',
-  taskId: 'people-1',
-  front: 'What is the primary responsibility of a project manager in stakeholder management?',
-  back: 'The primary responsibility is to identify, analyze, and engage stakeholders throughout the project lifecycle to ensure their interests are considered and potential conflicts are managed proactively.',
-  tags: ['leadership', 'communication'],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-const MOCK_PROGRESS: Record<string, Progress> = {
-  people: {
-    id: 'people',
-    userId: 'user-1',
-    type: 'domain',
-    totalCards: 45,
-    newCards: 12,
-    learningCards: 15,
-    reviewCards: 12,
-    relearningCards: 2,
-    masteredCards: 4,
-    masteryPercentage: 35,
-    totalReviews: 120,
-    averageRetention: 0.72,
-  },
-  process: {
-    id: 'process',
-    userId: 'user-1',
-    type: 'domain',
-    totalCards: 65,
-    newCards: 20,
-    learningCards: 25,
-    reviewCards: 15,
-    relearningCards: 3,
-    masteredCards: 2,
-    masteryPercentage: 28,
-    totalReviews: 95,
-    averageRetention: 0.65,
-  },
-  'people-1': {
-    id: 'people-1',
-    userId: 'user-1',
-    type: 'task',
-    totalCards: 15,
-    newCards: 4,
-    learningCards: 5,
-    reviewCards: 4,
-    relearningCards: 1,
-    masteredCards: 1,
-    masteryPercentage: 40,
-    totalReviews: 40,
-    averageRetention: 0.75,
-  },
-};
-
-const MOCK_STATS: StudyStats = {
-  cardsAvailable: 110,
-  cardsDue: 27,
-  cardsNew: 32,
-  cardsLearning: 40,
-  cardsReview: 27,
-  cardsRelearning: 5,
-  streak: 5,
-  lastStudyDate: new Date(Date.now() - 86400000),
-};
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { CardRating, Flashcard, FlashcardContent, Domain, Task, Progress, StudyStats, FSRSState } from '@/types';
 
 export default function StudyPage() {
-  const [currentFlashcard] = useState<Flashcard>(MOCK_FLASHCARD);
-  const [currentContent] = useState<FlashcardContent>(MOCK_CONTENT);
+  const { user, loading: authLoading } = useAuth();
+
+  // Data state
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [progress, setProgress] = useState<Record<string, Progress>>({});
+  const [studyStats, setStudyStats] = useState<StudyStats | null>(null);
+
+  // UI state
   const [isFlipped, setIsFlipped] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [isRating, setIsRating] = useState(false);
   const [studyMode, setStudyMode] = useState<'browse' | 'study' | 'progress' | 'practice'>('browse');
 
+  // Study session state
+  const [currentFlashcard, setCurrentFlashcard] = useState<(Flashcard & { content: FlashcardContent }) | null>(null);
+  const [cardsInSession, setCardsInSession] = useState<(Flashcard & { content: FlashcardContent })[]>([]);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Loading state
+  const [isLoading, setIsLoading] = useState(true);
+  const [isStudySessionLoading, setIsStudySessionLoading] = useState(false);
+
+  // Load reference data (domains and tasks)
+  useEffect(() => {
+    const loadReferenceData = async () => {
+      try {
+        setIsLoading(true);
+
+        // Fetch domains
+        const domainsSnapshot = await getDocs(collection(db, 'domains'));
+        const domainsData = domainsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name,
+            description: data.description,
+            percentage: data.percentage,
+          } as Domain;
+        });
+        setDomains(domainsData);
+
+        // Fetch tasks
+        const tasksSnapshot = await getDocs(collection(db, 'tasks'));
+        const tasksData = tasksSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            domainId: data.domainId,
+            name: data.title || data.name,
+            description: data.description,
+          } as Task;
+        });
+        setTasks(tasksData);
+      } catch (error) {
+        console.error('Error loading reference data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadReferenceData();
+  }, []);
+
+  // Load user progress and stats
+  useEffect(() => {
+    if (!user) return;
+
+    const loadUserData = async () => {
+      try {
+        // Load progress for all domains and tasks
+        const progressSnapshot = await getDocs(
+          query(
+            collection(db, 'users', user.uid, 'progress'),
+            where('type', 'in', ['domain', 'task'])
+          )
+        );
+
+        const progressData: Record<string, Progress> = {};
+        progressSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          progressData[doc.id] = {
+            id: doc.id,
+            userId: user.uid,
+            type: data.type,
+            totalCards: data.totalCards || 0,
+            newCards: data.newCards || 0,
+            learningCards: data.learningCards || 0,
+            reviewCards: data.reviewCards || 0,
+            relearningCards: data.relearningCards || 0,
+            masteredCards: data.masteredCards || 0,
+            masteryPercentage: data.masteryPercentage || 0,
+            totalReviews: data.totalReviews || 0,
+            averageRetention: data.averageRetention || 0,
+            lastReviewedAt: data.lastReviewedAt?.toDate(),
+          };
+        });
+        setProgress(progressData);
+
+        // Calculate stats from flashcards
+        const flashcardsSnapshot = await getDocs(
+          query(
+            collection(db, 'flashcards'),
+            where('userId', '==', user.uid),
+            where('isSuspended', '==', false)
+          )
+        );
+
+        let cardsDue = 0;
+        let cardsNew = 0;
+        let cardsLearning = 0;
+        let cardsReview = 0;
+        let cardsRelearning = 0;
+        const now = new Date();
+
+        flashcardsSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const fsrs = data.fsrs || {};
+
+          // Count by state
+          switch (fsrs.state) {
+            case FSRSState.NEW:
+              cardsNew++;
+              break;
+            case FSRSState.LEARNING:
+              cardsLearning++;
+              break;
+            case FSRSState.REVIEW:
+              cardsReview++;
+              break;
+            case FSRSState.RELEARNING:
+              cardsRelearning++;
+              break;
+          }
+
+          // Count due cards
+          if (fsrs.due && new Date(fsrs.due.toDate ? fsrs.due.toDate() : fsrs.due) <= now) {
+            cardsDue++;
+          }
+        });
+
+        // Get last study date from user profile
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userData = userDoc.data();
+
+        setStudyStats({
+          cardsAvailable: flashcardsSnapshot.size,
+          cardsDue,
+          cardsNew,
+          cardsLearning,
+          cardsReview,
+          cardsRelearning,
+          streak: userData?.stats?.currentStreak || 0,
+          lastStudyDate: userData?.stats?.lastStudyDate?.toDate(),
+        });
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, [user]);
+
+  // Load flashcards for study session
+  useEffect(() => {
+    if (studyMode !== 'study' || !user) return;
+
+    const loadCardsForStudy = async () => {
+      try {
+        setIsStudySessionLoading(true);
+
+        // Create a study session
+        const createStudySession = httpsCallable(functions, 'createStudySession');
+        const scope = {
+          type: selectedTask ? 'task' : selectedDomain ? 'domain' : 'all',
+          ...(selectedDomain && { domainId: selectedDomain }),
+          ...(selectedTask && { taskId: selectedTask }),
+        };
+
+        const sessionResult = await createStudySession({ scope, platform: 'web' });
+        const newSessionId = (sessionResult.data as any).sessionId;
+        setSessionId(newSessionId);
+
+        // Get cards for review
+        const getCardsForReview = httpsCallable(functions, 'getCardsForReview');
+        const reviewResult = await getCardsForReview({ limit: 50, scope });
+        const cards = (reviewResult.data as any).cards || [];
+
+        // Enrich cards with content
+        const enrichedCards: (Flashcard & { content: FlashcardContent })[] = [];
+
+        for (const card of cards) {
+          try {
+            const contentDoc = await getDoc(doc(db, 'flashcardContent', card.contentId));
+            if (contentDoc.exists()) {
+              const contentData = contentDoc.data();
+              enrichedCards.push({
+                ...card,
+                content: {
+                  id: contentDoc.id,
+                  domainId: contentData.domainId,
+                  taskId: contentData.taskId,
+                  front: contentData.front,
+                  back: contentData.back,
+                  tags: contentData.tags || [],
+                  createdAt: contentData.createdAt?.toDate() || new Date(),
+                  updatedAt: contentData.updatedAt?.toDate() || new Date(),
+                } as FlashcardContent,
+              });
+            }
+          } catch (error) {
+            console.error(`Error loading content for card ${card.id}:`, error);
+          }
+        }
+
+        if (enrichedCards.length > 0) {
+          setCardsInSession(enrichedCards);
+          setCurrentCardIndex(0);
+          setCurrentFlashcard(enrichedCards[0]);
+        }
+      } catch (error) {
+        console.error('Error loading cards for study:', error);
+      } finally {
+        setIsStudySessionLoading(false);
+      }
+    };
+
+    loadCardsForStudy();
+  }, [studyMode, user, selectedDomain, selectedTask]);
+
   const handleRate = async (rating: CardRating) => {
+    if (!currentFlashcard || !user || !sessionId) return;
+
     setIsRating(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      // Call Cloud Function to record the rating
+      const reviewCardInSession = httpsCallable(functions, 'reviewCardInSession');
+      const elapsedMs = 0; // Would track actual time in production
 
-    // Log the rating (in real app, save to Firestore)
-    console.log(`Card rated: ${rating}`);
+      await reviewCardInSession({
+        sessionId,
+        flashcardId: currentFlashcard.id,
+        rating,
+        elapsedMs,
+      });
 
-    // Reset for next card
-    setIsFlipped(false);
-    setIsRating(false);
+      // Move to next card
+      setIsFlipped(false);
+      const nextIndex = currentCardIndex + 1;
 
-    // In a real app, fetch next card here
+      if (nextIndex < cardsInSession.length) {
+        setCurrentCardIndex(nextIndex);
+        setCurrentFlashcard(cardsInSession[nextIndex]);
+      } else {
+        // End session and return to browse
+        try {
+          const endStudySession = httpsCallable(functions, 'endStudySession');
+          await endStudySession({ sessionId });
+        } catch (error) {
+          console.error('Error ending study session:', error);
+        }
+        setStudyMode('browse');
+        setCurrentFlashcard(null);
+        setCardsInSession([]);
+      }
+    } catch (error) {
+      console.error('Error rating card:', error);
+    } finally {
+      setIsRating(false);
+    }
   };
 
   const handleStudyClick = (type: 'all' | 'domain' | 'task', id?: string) => {
-    setStudyMode('study');
     if (type === 'domain') setSelectedDomain(id || null);
     if (type === 'task') setSelectedTask(id || null);
+    if (type === 'all') {
+      setSelectedDomain(null);
+      setSelectedTask(null);
+    }
+    setStudyMode('study');
   };
 
   const handleBrowseClick = () => {
@@ -166,6 +316,21 @@ export default function StudyPage() {
   const handleProgressClick = () => {
     setStudyMode('progress');
   };
+
+  if (authLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please Log In</h1>
+          <p className="text-gray-600">You need to be logged in to access the study page.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -239,64 +404,76 @@ export default function StudyPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             {studyMode === 'browse' && (
-              <DomainTaskBrowser
-                domains={MOCK_DOMAINS}
-                tasks={MOCK_TASKS}
-                progress={MOCK_PROGRESS}
-                selectedDomain={selectedDomain || undefined}
-                selectedTask={selectedTask || undefined}
-                onDomainSelect={setSelectedDomain}
-                onTaskSelect={setSelectedTask}
-                onStudyClick={handleStudyClick}
-              />
+              isLoading ? (
+                <LoadingSpinner />
+              ) : (
+                <DomainTaskBrowser
+                  domains={domains}
+                  tasks={tasks}
+                  progress={progress}
+                  selectedDomain={selectedDomain || undefined}
+                  selectedTask={selectedTask || undefined}
+                  onDomainSelect={setSelectedDomain}
+                  onTaskSelect={setSelectedTask}
+                  onStudyClick={handleStudyClick}
+                />
+              )
             )}
 
             {studyMode === 'study' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-800">Study Session</h2>
-                    <div className="text-sm text-gray-600">
-                      Card 1 of 10
+              isStudySessionLoading ? (
+                <LoadingSpinner />
+              ) : currentFlashcard ? (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold text-gray-800">Study Session</h2>
+                      <div className="text-sm text-gray-600">
+                        Card {currentCardIndex + 1} of {cardsInSession.length}
+                      </div>
                     </div>
-                  </div>
 
-                  <FlashcardDisplay
-                    flashcard={currentFlashcard}
-                    content={currentContent}
-                    isFlipped={isFlipped}
-                    onFlip={setIsFlipped}
-                  />
-
-                  {isFlipped && (
-                    <RatingButtons
-                      onRate={handleRate}
-                      disabled={isRating}
-                      loading={isRating}
+                    <FlashcardDisplay
+                      flashcard={currentFlashcard}
+                      content={currentFlashcard.content}
+                      isFlipped={isFlipped}
+                      onFlip={setIsFlipped}
                     />
-                  )}
 
-                  {!isFlipped && (
-                    <div className="mt-8 text-center">
-                      <p className="text-gray-600">Click the card to reveal the answer</p>
-                    </div>
-                  )}
+                    {isFlipped && (
+                      <RatingButtons
+                        onRate={handleRate}
+                        disabled={isRating}
+                        loading={isRating}
+                      />
+                    )}
+
+                    {!isFlipped && (
+                      <div className="mt-8 text-center">
+                        <p className="text-gray-600">Click the card to reveal the answer</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                  <p className="text-center text-gray-600">No cards available for study. Try another domain or task!</p>
+                </div>
+              )
             )}
 
             {studyMode === 'practice' && (
               <PracticeSessionFlow
-                domains={MOCK_DOMAINS}
-                tasks={MOCK_TASKS}
+                domains={domains}
+                tasks={tasks}
                 onClose={() => setStudyMode('browse')}
               />
             )}
 
-            {studyMode === 'progress' && (
+            {studyMode === 'progress' && studyStats && (
               <ProgressDisplay
-                progress={MOCK_PROGRESS['people']}
-                stats={MOCK_STATS}
+                progress={progress['people']}
+                stats={studyStats}
                 title="Overall Progress"
               />
             )}
@@ -305,10 +482,14 @@ export default function StudyPage() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-4">
-              <ProgressDisplay
-                stats={MOCK_STATS}
-                title="Quick Stats"
-              />
+              {studyStats ? (
+                <ProgressDisplay
+                  stats={studyStats}
+                  title="Quick Stats"
+                />
+              ) : (
+                <LoadingSpinner />
+              )}
             </div>
           </div>
         </div>

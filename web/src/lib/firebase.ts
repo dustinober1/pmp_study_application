@@ -4,6 +4,7 @@ import { initializeApp, getApp, FirebaseApp } from 'firebase/app'
 import { getAuth, connectAuthEmulator, Auth } from 'firebase/auth'
 import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore'
 import { getStorage, FirebaseStorage } from 'firebase/storage'
+import { getFunctions, connectFunctionsEmulator, Functions } from 'firebase/functions'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -18,10 +19,11 @@ let app: FirebaseApp | null = null
 let auth: Auth | null = null
 let db: Firestore | null = null
 let storage: FirebaseStorage | null = null
+let functions: Functions | null = null
 
-function initializeFirebase(): { app: FirebaseApp; auth: Auth; db: Firestore; storage: FirebaseStorage } {
-  if (auth && db && storage && app) {
-    return { app, auth, db, storage }
+function initializeFirebase(): { app: FirebaseApp; auth: Auth; db: Firestore; storage: FirebaseStorage; functions: Functions } {
+  if (auth && db && storage && app && functions) {
+    return { app, auth, db, storage, functions }
   }
 
   try {
@@ -33,6 +35,7 @@ function initializeFirebase(): { app: FirebaseApp; auth: Auth; db: Firestore; st
   auth = getAuth(app)
   db = getFirestore(app)
   storage = getStorage(app)
+  functions = getFunctions(app)
 
   // Configure emulators if in development
   if (process.env.NEXT_PUBLIC_FIREBASE_USE_EMULATOR === 'true') {
@@ -53,11 +56,20 @@ function initializeFirebase(): { app: FirebaseApp; auth: Auth; db: Firestore; st
         // Emulator already configured
       }
     }
+
+    if (process.env.NEXT_PUBLIC_FUNCTIONS_EMULATOR_HOST) {
+      const [host, port] = process.env.NEXT_PUBLIC_FUNCTIONS_EMULATOR_HOST.split(':')
+      try {
+        connectFunctionsEmulator(functions, host, parseInt(port))
+      } catch (error) {
+        // Emulator already configured
+      }
+    }
   }
 
-  return { app, auth, db, storage }
+  return { app, auth, db, storage, functions }
 }
 
-const { app: appInstance, auth: authInstance, db: dbInstance, storage: storageInstance } = initializeFirebase()
+const { app: appInstance, auth: authInstance, db: dbInstance, storage: storageInstance, functions: functionsInstance } = initializeFirebase()
 
-export { authInstance as auth, dbInstance as db, storageInstance as storage, appInstance as app }
+export { authInstance as auth, dbInstance as db, storageInstance as storage, appInstance as app, functionsInstance as functions }

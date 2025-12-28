@@ -23,6 +23,26 @@ enum ConflictResolutionStrategy {
   lastWriteWins,
 }
 
+enum SyncStatus {
+  idle,
+  syncing,
+  success,
+  error,
+  retrying,
+}
+
+class SyncStatusUpdate {
+  final SyncStatus status;
+  final String? message;
+  final int? pendingCount;
+
+  SyncStatusUpdate({
+    required this.status,
+    this.message,
+    this.pendingCount,
+  });
+}
+
 class BackgroundSyncService {
   final LocalCacheService _cacheService;
   final FirestoreService _firestoreService;
@@ -32,6 +52,15 @@ class BackgroundSyncService {
   late Stream<List<ConnectivityResult>> _connectivityStream;
   bool _isOnline = false;
   bool _isSyncing = false;
+
+  // Retry configuration
+  int _retryCount = 0;
+  static const int _maxRetries = 3;
+  static const Duration _initialRetryDelay = Duration(seconds: 5);
+  static const double _retryBackoffMultiplier = 2.0;
+
+  // Callbacks for status updates
+  void Function(SyncStatusUpdate)? onSyncStatusChanged;
 
   BackgroundSyncService(
     this._cacheService,
@@ -48,8 +77,15 @@ class BackgroundSyncService {
       _isOnline = !result.contains(ConnectivityResult.none);
 
       if (!wasOnline && _isOnline) {
-        _logger.i('Connection restored, starting sync...');
+        _logger.i('Connection restored, resetting retry counter and starting sync...');
+        _retryCount = 0;
         syncPendingChanges();
+      } else if (!_isOnline) {
+        _logger.w('Lost connection - sync will retry when connection restored');
+        _notifySyncStatus(
+          SyncStatus.idle,
+          message: 'Offline - waiting for connection',
+        );
       }
     });
   }
@@ -63,27 +99,96 @@ class BackgroundSyncService {
   Future<void> syncPendingChanges({
     ConflictResolutionStrategy strategy = ConflictResolutionStrategy.lastWriteWins,
   }) async {
-    if (_isSyncing || !_isOnline) return;
+    if (_isSyncing) return;
+    if (!_isOnline) {
+      _logger.w('Cannot sync - offline');
+      return;
+    }
 
     _isSyncing = true;
     try {
       final pendingFlashcards = await _cacheService.getPendingSyncFlashcards();
 
+      if (pendingFlashcards.isEmpty) {
+        _logger.i('No pending changes to sync');
+        _notifySyncStatus(
+          SyncStatus.success,
+          message: 'All changes synced',
+          pendingCount: 0,
+        );
+        return;
+      }
+
+      _notifySyncStatus(
+        SyncStatus.syncing,
+        message: 'Syncing ${pendingFlashcards.length} items...',
+        pendingCount: pendingFlashcards.length,
+      );
+
+      int syncedCount = 0;
+      int failedCount = 0;
+
       for (final flashcard in pendingFlashcards) {
         try {
           await _syncFlashcard(flashcard, strategy);
           await _cacheService.markFlashcardSynced(flashcard.id);
+          syncedCount++;
         } catch (e) {
           _logger.e('Error syncing flashcard ${flashcard.id}: $e');
+          failedCount++;
         }
       }
 
-      _logger.i('Sync completed successfully');
+      if (failedCount == 0) {
+        _logger.i('Sync completed successfully - $syncedCount items synced');
+        _retryCount = 0;
+        _notifySyncStatus(
+          SyncStatus.success,
+          message: '$syncedCount items synced',
+          pendingCount: 0,
+        );
+      } else {
+        _logger.w('Sync partially completed - $syncedCount synced, $failedCount failed');
+        await _scheduleRetry(strategy);
+      }
     } catch (e) {
       _logger.e('Error during sync: $e');
+      await _scheduleRetry(strategy);
     } finally {
       _isSyncing = false;
     }
+  }
+
+  Future<void> _scheduleRetry(ConflictResolutionStrategy strategy) async {
+    if (_retryCount >= _maxRetries) {
+      _logger.e('Max retries exceeded');
+      _notifySyncStatus(
+        SyncStatus.error,
+        message: 'Sync failed after $_maxRetries attempts',
+      );
+      return;
+    }
+
+    _retryCount++;
+    final delayMs = (_initialRetryDelay.inMilliseconds *
+            (_retryBackoffMultiplier * (_retryCount - 1)).toInt())
+        .round();
+    final delay = Duration(milliseconds: delayMs);
+
+    _logger.i('Scheduling retry ${_retryCount} in ${delay.inSeconds} seconds...');
+    _notifySyncStatus(
+      SyncStatus.retrying,
+      message: 'Retrying in ${delay.inSeconds}s (attempt $_retryCount/$_maxRetries)',
+    );
+
+    Future.delayed(delay, () {
+      if (_isOnline) {
+        _logger.i('Retrying sync (attempt $_retryCount/$_maxRetries)');
+        syncPendingChanges(strategy: strategy);
+      } else {
+        _logger.i('Still offline, will retry when connection restored');
+      }
+    });
   }
 
   Future<void> _syncFlashcard(
@@ -181,6 +286,30 @@ class BackgroundSyncService {
       operation.toString().split('.').last,
       data,
     );
+    _logger.i('Recorded local change for $flashcardId: ${operation.toString().split('.').last}');
+  }
+
+  void _notifySyncStatus(
+    SyncStatus status, {
+    String? message,
+    int? pendingCount,
+  }) {
+    onSyncStatusChanged?.call(
+      SyncStatusUpdate(
+        status: status,
+        message: message,
+        pendingCount: pendingCount,
+      ),
+    );
+  }
+
+  void setSyncStatusCallback(void Function(SyncStatusUpdate) callback) {
+    onSyncStatusChanged = callback;
+  }
+
+  Future<int> getPendingSyncCount() async {
+    final pending = await _cacheService.getPendingSyncFlashcards();
+    return pending.length;
   }
 }
 
