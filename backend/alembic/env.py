@@ -18,6 +18,9 @@ from app.models.flashcard import Flashcard
 from app.models.question import Question
 from app.models.progress import FlashcardProgress, QuestionProgress
 from app.models.session import StudySession
+from app.models.collaboration import StudyGroup, StudyGroupMember, Discussion, Challenge
+from app.models.exam import ExamSession, ExamAnswer, ExamReport
+from app.models.analytics import UserAnalytics, LearningRecommendation
 
 # Ensure models are imported (prevents unused import warnings)
 __all__ = [
@@ -29,6 +32,15 @@ __all__ = [
     "FlashcardProgress",
     "QuestionProgress",
     "StudySession",
+    "StudyGroup",
+    "StudyGroupMember",
+    "Discussion",
+    "Challenge",
+    "ExamSession",
+    "ExamAnswer",
+    "ExamReport",
+    "UserAnalytics",
+    "LearningRecommendation",
 ]
 
 # this is the Alembic Config object, which provides
