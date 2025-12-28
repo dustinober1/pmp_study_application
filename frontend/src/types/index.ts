@@ -155,6 +155,7 @@ export interface QuestionWithProgress extends Question {
 
 export interface QuestionAnswerRequest {
   answer: AnswerChoice;
+  response_time_seconds?: number;
 }
 
 export interface QuestionAnswerResponse {

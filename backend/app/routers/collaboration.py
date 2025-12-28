@@ -14,6 +14,9 @@ from app.models.collaboration import (
     StudyGroup,
     StudyGroupMember,
 )
+from app.models.exam import ExamReport, ExamSession
+from app.models.progress import FlashcardProgress, QuestionProgress
+from app.models.session import StudySession
 from app.models.user import User
 from app.schemas.collaboration import (
     ChallengeCreate,
@@ -23,6 +26,8 @@ from app.schemas.collaboration import (
     GroupMemberResponse,
     JoinGroupRequest,
     JoinGroupResponse,
+    LeaderboardEntry,
+    LeaderboardResponse,
     StudyGroupCreate,
     StudyGroupListResponse,
     StudyGroupResponse,
@@ -517,3 +522,183 @@ async def list_challenges(
         )
         for challenge, user in results
     ]
+
+
+# Leaderboard Endpoints
+
+
+def calculate_study_streak(db: Session, user_id: str) -> int:
+    """Calculate current study streak in consecutive days."""
+    from datetime import date, timedelta
+
+    sessions = db.execute(
+        select(StudySession.started_at)
+        .where(StudySession.user_id == user_id)
+        .order_by(StudySession.started_at.desc())
+    ).scalars().all()
+
+    if not sessions:
+        return 0
+
+    # Get unique study dates
+    study_dates = {session.date() for session in sessions}
+
+    today = date.today()
+    current_streak = 0
+
+    # Check if studying today or yesterday to start streak
+    if sessions[0].date() == today:
+        current_streak = 1
+        check_date = today - timedelta(days=1)
+    elif sessions[0].date() == today - timedelta(days=1):
+        current_streak = 1
+        check_date = today - timedelta(days=1)
+    else:
+        return 0
+
+    # Count consecutive days backward
+    while check_date in study_dates:
+        current_streak += 1
+        check_date -= timedelta(days=1)
+
+    return current_streak
+
+
+def get_user_exam_score(db: Session, user_id: str) -> float:
+    """Get user's best exam score as percentage."""
+    # Get best completed exam score
+    best_exam = db.execute(
+        select(ExamReport)
+        .join(ExamSession, ExamReport.exam_session_id == ExamSession.id)
+        .where(ExamSession.user_id == user_id)
+        .where(ExamSession.status == "completed")
+        .order_by(ExamReport.score_percentage.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+
+    return best_exam.score_percentage if best_exam else 0.0
+
+
+def get_user_flashcard_mastery(db: Session, user_id: str) -> int:
+    """Count mastered flashcards (ease_factor >= 2.5 and repetitions >= 3)."""
+    mastered_count = db.execute(
+        select(func.count(FlashcardProgress.id))
+        .where(FlashcardProgress.user_id == user_id)
+        .where(FlashcardProgress.ease_factor >= 2.5)
+        .where(FlashcardProgress.repetitions >= 3)
+    ).scalar()
+
+    return mastered_count or 0
+
+
+def get_user_study_time(db: Session, user_id: str) -> int:
+    """Get total study time in minutes."""
+    total_seconds = db.execute(
+        select(func.coalesce(func.sum(StudySession.duration_seconds), 0))
+        .where(StudySession.user_id == user_id)
+    ).scalar()
+
+    return (total_seconds or 0) // 60  # Convert to minutes
+
+
+@router.get("/{group_id}/leaderboard", response_model=LeaderboardResponse)
+async def get_group_leaderboard(
+    group_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    x_anonymous_id: Annotated[str, Header(alias="X-Anonymous-Id")],
+    sort_by: Annotated[str, Query(description="Sort by: exam_score, study_streak, mastery, or study_time")] = "exam_score",
+) -> LeaderboardResponse:
+    """
+    Get leaderboard for a study group.
+
+    Ranks members by various metrics:
+    - exam_score: Best completed exam score percentage
+    - study_streak: Current consecutive days of studying
+    - mastery: Number of mastered flashcards (ef >= 2.5, reps >= 3)
+    - study_time: Total study time in minutes
+
+    User must be a member of the group to view the leaderboard.
+    """
+    user = get_or_create_user(db, x_anonymous_id)
+
+    # Verify group exists
+    group_stmt = select(StudyGroup).where(StudyGroup.id == group_id)
+    group = db.execute(group_stmt).scalar_one_or_none()
+
+    if group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Study group with id {group_id} not found",
+        )
+
+    # Verify user is a member
+    membership = get_group_membership(db, group_id, str(user.id))
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of this group to view the leaderboard",
+        )
+
+    # Validate sort_by parameter
+    valid_sort_fields = {"exam_score", "study_streak", "mastery", "study_time"}
+    if sort_by not in valid_sort_fields:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid sort_by field. Must be one of: {', '.join(valid_sort_fields)}",
+        )
+
+    # Get all members with user info
+    stmt = (
+        select(StudyGroupMember, User)
+        .join(User, StudyGroupMember.user_id == User.id)
+        .where(StudyGroupMember.group_id == group_id)
+    )
+
+    results = db.execute(stmt).all()
+
+    leaderboard_entries = []
+    current_user_rank = None
+
+    for member, user_info in results:
+        # Calculate metrics for each member
+        exam_score = get_user_exam_score(db, str(user_info.id))
+        study_streak = calculate_study_streak(db, str(user_info.id))
+        mastery = get_user_flashcard_mastery(db, str(user_info.id))
+        study_time = get_user_study_time(db, str(user_info.id))
+
+        entry = LeaderboardEntry(
+            rank=0,  # Will be set after sorting
+            user_id=user_info.id,
+            display_name=user_info.display_name,
+            role=member.role,
+            exam_score=exam_score,
+            study_streak=study_streak,
+            mastery=mastery,
+            study_time_minutes=study_time,
+        )
+        leaderboard_entries.append(entry)
+
+    # Sort by specified field (descending)
+    if sort_by == "exam_score":
+        leaderboard_entries.sort(key=lambda x: x.exam_score, reverse=True)
+    elif sort_by == "study_streak":
+        leaderboard_entries.sort(key=lambda x: x.study_streak, reverse=True)
+    elif sort_by == "mastery":
+        leaderboard_entries.sort(key=lambda x: x.mastery, reverse=True)
+    elif sort_by == "study_time":
+        leaderboard_entries.sort(key=lambda x: x.study_time_minutes, reverse=True)
+
+    # Assign ranks
+    for idx, entry in enumerate(leaderboard_entries, start=1):
+        entry.rank = idx
+        # Track current user's rank
+        if entry.user_id == user.id:
+            current_user_rank = idx
+
+    return LeaderboardResponse(
+        group_id=group.id,
+        group_name=group.name,
+        sorted_by=sort_by,
+        entries=leaderboard_entries,
+        current_user_rank=current_user_rank,
+    )

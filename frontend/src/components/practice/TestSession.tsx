@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QuestionComponent } from './QuestionComponent';
 import { useQuestionAnswer } from '@/lib/api/hooks';
 import Button from '@/components/ui/Button';
@@ -14,28 +14,58 @@ interface TestSessionProps {
     onComplete?: (results: Record<string, unknown>) => void;
 }
 
+// Store response times for each question (needed for exam mode submission)
+interface AnswerWithTime {
+    answer: AnswerChoice;
+    response_time_seconds: number;
+}
+
 export const TestSession: React.FC<TestSessionProps> = ({
     questions,
     mode = 'immediate',
     onComplete
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [answers, setAnswers] = useState<Record<number, AnswerChoice>>({});
+    const [answers, setAnswers] = useState<Record<number, AnswerWithTime>>({});
     const [feedbacks, setFeedbacks] = useState<Record<number, QuestionAnswerResponse>>({});
     const [isFinished, setIsFinished] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [timeLeft, setTimeLeft] = useState(questions.length * 90); // 90 seconds per question
+    const questionStartTimeRef = useRef<number>(Date.now());
 
     const currentQuestion = questions[currentIndex];
     const { trigger: submitAnswer } = useQuestionAnswer(currentQuestion?.id || 0);
 
-    const handleFinish = useCallback(() => {
+    const handleFinish = useCallback(async () => {
+        // In exam mode, submit all answers to the backend with their response times
+        if (mode === 'exam' && Object.keys(answers).length > 0) {
+            setIsSubmitting(true);
+            try {
+                const submitPromises = Object.entries(answers).map(([questionId, answerData]) =>
+                    fetch(`/api/questions/${questionId}/answer`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            answer: answerData.answer,
+                            response_time_seconds: answerData.response_time_seconds,
+                        }),
+                    })
+                );
+                await Promise.all(submitPromises);
+            } catch (error) {
+                console.error('Failed to submit exam answers:', error);
+            } finally {
+                setIsSubmitting(false);
+            }
+        }
+
         setIsFinished(true);
         onComplete?.({
             total: questions.length,
             answered: Object.keys(answers).length,
             correct: Object.values(feedbacks).filter(f => f.is_correct).length
         });
-    }, [questions.length, answers, feedbacks, onComplete]);
+    }, [questions.length, answers, feedbacks, onComplete, mode]);
 
     // Timer logic for exam mode
     useEffect(() => {
@@ -56,11 +86,14 @@ export const TestSession: React.FC<TestSessionProps> = ({
     }, [isFinished, handleFinish]);
 
     const handleAnswer = async (choice: AnswerChoice) => {
-        setAnswers({ ...answers, [currentQuestion.id]: choice });
+        const responseTimeSeconds = (Date.now() - questionStartTimeRef.current) / 1000;
+        const answerWithTime: AnswerWithTime = { answer: choice, response_time_seconds: responseTimeSeconds };
+
+        setAnswers({ ...answers, [currentQuestion.id]: answerWithTime });
 
         if (mode === 'immediate') {
             try {
-                const response = await submitAnswer({ answer: choice });
+                const response = await submitAnswer({ answer: choice, response_time_seconds: responseTimeSeconds });
                 if (response) {
                     setFeedbacks({ ...feedbacks, [currentQuestion.id]: response });
                 }
@@ -84,6 +117,11 @@ export const TestSession: React.FC<TestSessionProps> = ({
             setCurrentIndex(currentIndex - 1);
         }
     };
+
+    // Reset question start time when current question changes
+    useEffect(() => {
+        questionStartTimeRef.current = Date.now();
+    }, [currentIndex]);
 
 
     const formatTime = (seconds: number) => {
@@ -203,9 +241,9 @@ export const TestSession: React.FC<TestSessionProps> = ({
                             variant="primary"
                             className="bg-green-600 hover:bg-green-700"
                             onClick={handleFinish}
-                            disabled={mode === 'immediate' && !isAnswered}
+                            disabled={(mode === 'immediate' && !isAnswered) || isSubmitting}
                         >
-                            Finish Test
+                            {isSubmitting ? 'Submitting...' : 'Finish Test'}
                         </Button>
                     ) : (
                         <Button

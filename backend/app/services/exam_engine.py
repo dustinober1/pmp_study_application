@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import islice
 from random import Random, shuffle
+from typing import Literal
 
 from sqlalchemy.orm import Session
 
@@ -57,6 +58,29 @@ class QuestionSelection:
     domain_name: str
     task_name: str
     question_index: int
+
+
+@dataclass
+class DomainPerformance:
+    """Represents a user's performance in a specific domain."""
+
+    domain_name: str
+    accuracy: float
+    total_attempts: int
+    avg_response_time: float | None = None
+
+
+DIFFICULTY_ORDER: dict[str, int] = {
+    "easy": 0,
+    "medium": 1,
+    "hard": 2,
+}
+
+
+def question_difficulty_key(question: Question) -> int:
+    """Get difficulty key for sorting questions."""
+    difficulty = question.difficulty or "medium"
+    return DIFFICULTY_ORDER.get(difficulty.lower(), 1)
 
 
 @dataclass
@@ -108,6 +132,194 @@ class ExamEngine:
             tasks = self.db.query(Task).order_by(Task.id).all()
             self._tasks_cache = {t.id: t for t in tasks}
         return self._tasks_cache
+
+    def get_user_domain_performance(self, user_id: uuid.UUID) -> dict[str, DomainPerformance]:
+        """
+        Get user's historical performance by domain.
+
+        Aggregates data from prior exam sessions and question progress
+        to calculate accuracy and response time per domain.
+
+        Args:
+            user_id: User ID to get performance for
+
+        Returns:
+            Dictionary mapping domain names to DomainPerformance objects
+        """
+        from app.models.exam import ExamAnswer as EA
+        from app.models.exam import ExamSession as ES
+        from app.models.progress import QuestionProgress as QP
+
+        performance: dict[str, DomainPerformance] = {}
+
+        # Initialize with zero performance for all domains
+        for domain in self.domains.values():
+            performance[domain.name] = DomainPerformance(
+                domain_name=domain.name,
+                accuracy=0.0,
+                total_attempts=0,
+                avg_response_time=None,
+            )
+
+        # Get completed exam sessions
+        exam_sessions = (
+            self.db.query(ES)
+            .filter(
+                ES.user_id == user_id,
+                ES.status == ExamStatus.COMPLETED.value,
+            )
+            .all()
+        )
+
+        # Aggregate exam performance by domain
+        for session in exam_sessions:
+            answers = (
+                self.db.query(EA)
+                .filter(EA.exam_session_id == session.id)
+                .all()
+            )
+
+            for answer in answers:
+                question = self.db.get(Question, answer.question_id)
+                if not question:
+                    continue
+
+                task = self.tasks.get(question.task_id)
+                if not task:
+                    continue
+
+                domain = self.domains.get(task.domain_id)
+                if not domain:
+                    continue
+
+                domain_name = domain.name
+                perf = performance[domain_name]
+                perf.total_attempts += 1
+                if answer.is_correct:
+                    perf.accuracy = (
+                        (perf.accuracy * (perf.total_attempts - 1) + 1.0)
+                        / perf.total_attempts
+                    )
+                else:
+                    perf.accuracy = (
+                        perf.accuracy * (perf.total_attempts - 1)
+                    ) / perf.total_attempts
+
+                # Track response time
+                if answer.time_spent_seconds and answer.time_spent_seconds > 0:
+                    if perf.avg_response_time is None:
+                        perf.avg_response_time = float(answer.time_spent_seconds)
+                    else:
+                        perf.avg_response_time = (
+                            perf.avg_response_time * 0.9
+                            + float(answer.time_spent_seconds) * 0.1
+                        )
+
+        # Also consider question progress (practice questions)
+        question_progress_entries = (
+            self.db.query(QP).filter(QP.user_id == user_id).all()
+        )
+
+        for qp in question_progress_entries:
+            question = self.db.get(Question, qp.question_id)
+            if not question:
+                continue
+
+            task = self.tasks.get(question.task_id)
+            if not task:
+                continue
+
+            domain = self.domains.get(task.domain_id)
+            if not domain:
+                continue
+
+            domain_name = domain.name
+            perf = performance[domain_name]
+
+            # Weight question progress less than exam performance
+            weight = 0.3
+            exam_weight = 1.0 - weight
+
+            if perf.total_attempts == 0:
+                perf.accuracy = qp.correct_count / qp.attempt_count if qp.attempt_count > 0 else 0.0
+            else:
+                qp_accuracy = qp.correct_count / qp.attempt_count if qp.attempt_count > 0 else 0.0
+                perf.accuracy = perf.accuracy * exam_weight + qp_accuracy * weight
+
+            perf.total_attempts += qp.attempt_count
+
+            if qp.last_response_time_seconds:
+                if perf.avg_response_time is None:
+                    perf.avg_response_time = qp.last_response_time_seconds
+                else:
+                    perf.avg_response_time = (
+                        perf.avg_response_time * 0.9 + qp.last_response_time_seconds * 0.1
+                    )
+
+        return performance
+
+    def calculate_adaptive_domain_weights(
+        self,
+        user_id: uuid.UUID,
+    ) -> dict[str, float]:
+        """
+        Calculate adaptive domain weights based on user's prior performance.
+
+        Increases weight for weak domains (more questions to practice)
+        and slightly decreases for strong domains.
+
+        Adjustment rules:
+        - Accuracy < 60%: Increase weight by 30%
+        - Accuracy 60-75%: Increase weight by 15%
+        - Accuracy 75-85%: No adjustment
+        - Accuracy > 85%: Decrease weight by 10%
+
+        Args:
+            user_id: User ID to calculate weights for
+
+        Returns:
+            Adjusted domain weights dictionary
+        """
+        performance = self.get_user_domain_performance(user_id)
+
+        adaptive_weights = self.config.domain_weights.copy()
+        total_adjustment = 0.0
+
+        # Calculate adjustments
+        adjustments: dict[str, float] = {}
+        for domain_name, weight in self.config.domain_weights.items():
+            perf = performance.get(domain_name)
+            if not perf or perf.total_attempts < 5:
+                # Not enough data - use default weight
+                adjustments[domain_name] = 0.0
+                continue
+
+            accuracy = perf.accuracy
+
+            if accuracy < 0.60:
+                # Weak domain - increase significantly
+                adjustment = 0.30
+            elif accuracy < 0.75:
+                # Below average - increase moderately
+                adjustment = 0.15
+            elif accuracy < 0.85:
+                # Adequate - no adjustment
+                adjustment = 0.0
+            else:
+                # Strong domain - decrease slightly
+                adjustment = -0.10
+
+            adjustments[domain_name] = adjustment
+            adaptive_weights[domain_name] = weight * (1 + adjustment)
+            total_adjustment += adjustment
+
+        # Normalize to ensure weights sum to 1
+        total_weight = sum(adaptive_weights.values())
+        if total_weight != 1.0:
+            for domain_name in adaptive_weights:
+                adaptive_weights[domain_name] /= total_weight
+
+        return adaptive_weights
 
     def get_domain_questions(self, domain_name: str) -> list[Question]:
         """
@@ -168,14 +380,21 @@ class ExamEngine:
         domain_name: str,
         count: int,
         random_seed: int | None = None,
+        user_id: uuid.UUID | None = None,
+        difficulty_preference: Literal["easier", "mixed", "harder"] = "mixed",
     ) -> list[Question]:
         """
-        Select random questions for a specific domain.
+        Select questions for a specific domain with optional adaptive difficulty.
 
         Args:
             domain_name: Name of the domain
             count: Number of questions to select
             random_seed: Optional seed for reproducibility
+            user_id: Optional user ID for adaptive difficulty selection
+            difficulty_preference: Difficulty level preference
+                - "easier": Select more easy/medium questions for weak domains
+                - "mixed": Balanced selection (default)
+                - "harder": Select more medium/hard questions for strong domains
 
         Returns:
             List of selected questions
@@ -188,32 +407,128 @@ class ExamEngine:
                 f"Available: {len(questions)}, Required: {count}"
             )
 
-        # Shuffle questions randomly
-        rng = Random(random_seed) if random_seed is not None else Random()
-        shuffled = questions.copy()
-        shuffle(shuffled, random=rng.random)
+        selected: list[Question] = []
 
-        return shuffled[:count]
+        # Determine difficulty distribution based on preference
+        if difficulty_preference == "easier":
+            # Focus on easier questions: 50% easy, 40% medium, 10% hard
+            distribution = {"easy": 0.5, "medium": 0.4, "hard": 0.1}
+        elif difficulty_preference == "harder":
+            # Focus on harder questions: 10% easy, 40% medium, 50% hard
+            distribution = {"easy": 0.1, "medium": 0.4, "hard": 0.5}
+        else:
+            # Mixed: 25% easy, 50% medium, 25% hard
+            distribution = {"easy": 0.25, "medium": 0.5, "hard": 0.25}
+
+        # Group questions by difficulty
+        by_difficulty: dict[str, list[Question]] = {
+            "easy": [],
+            "medium": [],
+            "hard": [],
+        }
+
+        for q in questions:
+            diff = (q.difficulty or "medium").lower()
+            if diff not in by_difficulty:
+                diff = "medium"
+            by_difficulty[diff].append(q)
+
+        # If no difficulty data, fall back to random selection
+        if all(len(v) == 0 for v in by_difficulty.values()):
+            rng = Random(random_seed) if random_seed is not None else Random()
+            shuffled = questions.copy()
+            shuffle(shuffled, random=rng.random)
+            return shuffled[:count]
+
+        # Select questions based on distribution
+        rng = Random(random_seed) if random_seed is not None else Random()
+
+        for difficulty, weight in distribution.items():
+            target_count = int(count * weight)
+
+            available = by_difficulty[difficulty]
+            if len(available) < target_count:
+                # Not enough questions of this difficulty, take what we have
+                to_select = len(available)
+            else:
+                to_select = target_count
+
+            # Randomly select from this difficulty level
+            shuffled = available.copy()
+            shuffle(shuffled, random=rng.random)
+            selected.extend(shuffled[:to_select])
+
+        # If we still need more questions, fill randomly from remaining
+        if len(selected) < count:
+            selected_ids = {q.id for q in selected}
+            remaining = [q for q in questions if q.id not in selected_ids]
+            shuffle(remaining, random=rng.random)
+            needed = count - len(selected)
+            selected.extend(remaining[:needed])
+
+        # If we have too many, trim randomly
+        elif len(selected) > count:
+            shuffle(selected, random=rng.random)
+            selected = selected[:count]
+
+        return selected
 
     def generate_exam_questions(
         self,
         random_seed: int | None = None,
+        user_id: uuid.UUID | None = None,
+        adaptive_difficulty: bool = True,
     ) -> list[QuestionSelection]:
         """
         Generate a complete set of exam questions with proper domain distribution.
 
         Args:
             random_seed: Optional seed for reproducibility
+            user_id: Optional user ID for adaptive difficulty
+            adaptive_difficulty: Whether to use adaptive difficulty adjustment
 
         Returns:
             List of QuestionSelection objects with domain and task metadata
         """
+        # Use adaptive domain weights if user_id provided and adaptive enabled
+        if adaptive_difficulty and user_id:
+            domain_weights = self.calculate_adaptive_domain_weights(user_id)
+            # Temporarily override config weights
+            original_weights = self.config.domain_weights
+            self.config.domain_weights = domain_weights
+
         distribution = self.calculate_domain_distribution(self.config.total_questions)
+
+        # Restore original weights if we temporarily overrode them
+        if adaptive_difficulty and user_id:
+            self.config.domain_weights = original_weights
+
         selected_questions: list[QuestionSelection] = []
         question_index = 0
 
+        # Get user performance for difficulty adjustment
+        user_performance = None
+        if adaptive_difficulty and user_id:
+            user_performance = self.get_user_domain_performance(user_id)
+
         for domain_name, count in distribution.items():
-            questions = self.select_questions_for_domain(domain_name, count, random_seed)
+            # Determine difficulty preference based on user performance
+            difficulty_pref: Literal["easier", "mixed", "harder"] = "mixed"
+            if user_performance and domain_name in user_performance:
+                perf = user_performance[domain_name]
+                if perf.total_attempts >= 5:
+                    if perf.accuracy < 0.65:
+                        difficulty_pref = "easier"
+                    elif perf.accuracy > 0.85:
+                        difficulty_pref = "harder"
+
+            questions = self.select_questions_for_domain(
+                domain_name,
+                count,
+                random_seed,
+                user_id=user_id,
+                difficulty_preference=difficulty_pref,
+            )
 
             for question in questions:
                 task = self.tasks[question.task_id]
@@ -243,6 +558,7 @@ class ExamEngine:
         self,
         user_id: uuid.UUID,
         random_seed: int | None = None,
+        adaptive_difficulty: bool = True,
     ) -> ExamSession:
         """
         Create a new exam session with generated questions.
@@ -250,11 +566,16 @@ class ExamEngine:
         Args:
             user_id: User ID taking the exam
             random_seed: Optional seed for reproducibility
+            adaptive_difficulty: Whether to use adaptive difficulty adjustment
 
         Returns:
             Created ExamSession
         """
-        questions = self.generate_exam_questions(random_seed)
+        questions = self.generate_exam_questions(
+            random_seed=random_seed,
+            user_id=user_id,
+            adaptive_difficulty=adaptive_difficulty,
+        )
 
         session = ExamSession(
             user_id=user_id,

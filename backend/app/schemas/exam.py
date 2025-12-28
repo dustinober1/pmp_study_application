@@ -39,6 +39,10 @@ class ExamSessionCreate(BaseModel):
         le=200,
         description="Number of questions (default: 185 for PMP)",
     )
+    adaptive_difficulty: bool = Field(
+        default=True,
+        description="Enable adaptive difficulty based on prior performance",
+    )
 
 
 class ExamSessionResponse(BaseModel):

@@ -173,6 +173,14 @@ async def submit_answer(
                 db.add(progress)
 
             db.commit()
+
+            # Trigger analytics recalculation after progress update
+            from app.services.adaptive_engine import calculate_user_analytics
+            try:
+                calculate_user_analytics(db, user.id)
+            except Exception:
+                # Analytics calculation should not block the response
+                pass
         except Exception:
             # Progress tracking failed, but answer submission should still succeed
             db.rollback()

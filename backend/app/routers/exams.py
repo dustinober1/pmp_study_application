@@ -61,6 +61,10 @@ async def create_exam_session(
 
     The exam is created with 185 questions (default PMP) over 240 minutes.
     Questions are pre-selected and stored in ExamAnswer records.
+
+    Adaptive difficulty adjusts question selection based on prior performance:
+    - Weak domains get easier questions and more weight
+    - Strong domains get harder questions and less weight
     """
     user = get_or_create_user(db, x_anonymous_id)
 
@@ -80,8 +84,14 @@ async def create_exam_session(
     # Create exam engine with custom config if provided
     engine = create_exam_engine(db)
 
+    # Get adaptive difficulty setting (default True)
+    adaptive_difficulty = config.adaptive_difficulty if config else True
+
     # Create the exam session with generated questions
-    session = engine.create_exam_session(user_id=user.id)
+    session = engine.create_exam_session(
+        user_id=user.id,
+        adaptive_difficulty=adaptive_difficulty,
+    )
 
     db.refresh(session)
 

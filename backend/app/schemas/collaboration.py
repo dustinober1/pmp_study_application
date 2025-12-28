@@ -138,3 +138,39 @@ class ChallengeResponse(ChallengeBase):
     created_by_id: UUID = Field(..., description="UUID of challenge creator")
     created_by_name: str | None = Field(None, description="Display name of creator")
     created_at: datetime = Field(..., description="Creation timestamp")
+
+
+# Leaderboard Schemas
+
+
+class LeaderboardEntry(BaseModel):
+    """Schema for a single entry in the group leaderboard."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    rank: int = Field(..., description="Leaderboard rank (1-based)")
+    user_id: UUID = Field(..., description="User UUID")
+    display_name: str | None = Field(None, description="User's display name")
+    role: str = Field(..., description="Member role in the group")
+    exam_score: float = Field(..., description="Best exam score percentage (0-100)")
+    study_streak: int = Field(..., description="Current study streak in days")
+    mastery: int = Field(..., description="Number of mastered flashcards")
+    study_time_minutes: int = Field(..., description="Total study time in minutes")
+
+
+class LeaderboardResponse(BaseModel):
+    """Schema for group leaderboard response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    group_id: int = Field(..., description="Study group ID")
+    group_name: str = Field(..., description="Study group name")
+    sorted_by: str = Field(
+        ...,
+        description="Sort field used (exam_score, study_streak, mastery, or study_time)",
+    )
+    entries: list[LeaderboardEntry] = Field(..., description="Leaderboard entries sorted by rank")
+    current_user_rank: int | None = Field(
+        None,
+        description="Current user's rank in the leaderboard (null if user is not a member)",
+    )
