@@ -185,6 +185,12 @@ class QuestionProgress(Base):
         nullable=True,
     )
 
+    # Response time tracking for analytics (in seconds)
+    last_response_time_seconds: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -132,6 +132,11 @@ class QuestionAnswerRequest(BaseModel):
         max_length=1,
         description="User's answer (A, B, C, or D)",
     )
+    response_time_seconds: float | None = Field(
+        None,
+        ge=0,
+        description="Time taken to answer in seconds (for analytics)",
+    )
 
     @field_validator("answer")
     @classmethod

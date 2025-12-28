@@ -157,6 +157,7 @@ async def submit_answer(
                 progress.last_answer = user_answer
                 progress.last_correct = is_correct
                 progress.last_attempted_at = datetime.now(timezone.utc)
+                progress.last_response_time_seconds = answer_request.response_time_seconds
             else:
                 # Create new progress record
                 progress = QuestionProgress(
@@ -167,6 +168,7 @@ async def submit_answer(
                     last_answer=user_answer,
                     last_correct=is_correct,
                     last_attempted_at=datetime.now(timezone.utc),
+                    last_response_time_seconds=answer_request.response_time_seconds,
                 )
                 db.add(progress)
 
