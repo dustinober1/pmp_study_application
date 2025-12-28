@@ -320,3 +320,11 @@ export interface ApiError {
   detail: string;
   status_code?: number;
 }
+
+// ============ Collaboration Types ============
+// Export all collaboration types from the dedicated module
+export * from './collaboration';
+
+// ============ Exam Types ============
+// Export all exam types from the dedicated module
+export * from './exam';
