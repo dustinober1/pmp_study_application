@@ -105,6 +105,28 @@ export async function getGroups(limit = 50, offset = 0): Promise<StudyGroupList[
 }
 
 /**
+ * List user's joined groups
+ * GET /api/groups/my-groups
+ */
+export async function getMyGroups(): Promise<StudyGroupList[]> {
+  return fetcher<StudyGroupList[]>('/api/groups/my-groups');
+}
+
+/**
+ * Get challenge notification counts
+ * GET /api/groups/challenge-notifications
+ */
+export interface ChallengeNotifications {
+  active_count: number;
+  new_this_week: number;
+  expiring_soon: number;
+}
+
+export async function getChallengeNotifications(): Promise<ChallengeNotifications> {
+  return fetcher<ChallengeNotifications>('/api/groups/challenge-notifications');
+}
+
+/**
  * Join a study group using invite code
  * POST /api/groups/{groupId}/join
  */

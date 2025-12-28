@@ -26,6 +26,14 @@ interface CollaborationState {
   // Challenges
   challenges: Challenge[];
 
+  // Challenge notifications (real-time updates)
+  challengeNotifications: {
+    active_count: number;
+    new_this_week: number;
+    expiring_soon: number;
+    last_updated: string | null;
+  };
+
   // Loading states
   isLoadingGroups: boolean;
   isLoadingDiscussions: boolean;
@@ -53,6 +61,13 @@ interface CollaborationState {
   updateChallenge: (challengeId: number, updates: Partial<Challenge>) => void;
   removeChallenge: (challengeId: number) => void;
 
+  // Actions - Challenge Notifications
+  setChallengeNotifications: (notifications: {
+    active_count: number;
+    new_this_week: number;
+    expiring_soon: number;
+  }) => void;
+
   // Loading states
   setLoadingGroups: (loading: boolean) => void;
   setLoadingDiscussions: (loading: boolean) => void;
@@ -70,6 +85,12 @@ const initialState = {
   inviteCode: null,
   discussions: [],
   challenges: [],
+  challengeNotifications: {
+    active_count: 0,
+    new_this_week: 0,
+    expiring_soon: 0,
+    last_updated: null,
+  },
   isLoadingGroups: false,
   isLoadingDiscussions: false,
   isLoadingChallenges: false,
@@ -174,6 +195,16 @@ export const useCollaborationStore = create<CollaborationState>()(
         }));
       },
 
+      // Challenge notifications
+      setChallengeNotifications: (notifications) => {
+        set({
+          challengeNotifications: {
+            ...notifications,
+            last_updated: new Date().toISOString(),
+          },
+        });
+      },
+
       // Loading states
       setLoadingGroups: (loading) => {
         set({ isLoadingGroups: loading });
@@ -259,4 +290,20 @@ export const useActiveChallenges = () => {
       return start <= now && end >= now;
     })
   );
+};
+
+// Challenge notification selectors
+export const useChallengeNotificationCounts = () => {
+  return useCollaborationStore((state) => state.challengeNotifications);
+};
+
+export const useChallengeNotificationCount = () => {
+  return useCollaborationStore((state) =>
+    state.challengeNotifications.new_this_week + state.challengeNotifications.expiring_soon
+  );
+};
+
+export const useHasChallengeNotifications = () => {
+  const notifications = useCollaborationStore((state) => state.challengeNotifications);
+  return notifications.new_this_week + notifications.expiring_soon > 0;
 };

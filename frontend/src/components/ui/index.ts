@@ -23,3 +23,7 @@ export type { InputProps, InputSize, InputVariant } from './Input';
 // Select
 export { default as Select } from './Select';
 export type { SelectProps, SelectSize, SelectVariant, SelectOption } from './Select';
+
+// NotificationBadge
+export { NotificationBadge, NotificationDot, NotificationBell } from './NotificationBadge';
+export type { NotificationBadgeProps, NotificationDotProps, NotificationBellProps } from './NotificationBadge';

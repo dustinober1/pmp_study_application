@@ -159,6 +159,121 @@ async def list_study_groups(
     ]
 
 
+@router.get("/my-groups", response_model=list[StudyGroupListResponse])
+async def list_my_groups(
+    db: Annotated[Session, Depends(get_db)],
+    x_anonymous_id: Annotated[str, Header(alias="X-Anonymous-Id")],
+) -> list[StudyGroupListResponse]:
+    """
+    List study groups the current user is a member of.
+
+    Returns groups the user has joined, with member counts.
+    Used for fetching user's groups for challenge notifications.
+    """
+    from datetime import datetime
+
+    user = get_or_create_user(db, x_anonymous_id)
+
+    # Query groups where user is a member, with member counts
+    stmt = (
+        select(
+            StudyGroup.id,
+            StudyGroup.name,
+            StudyGroup.description,
+            StudyGroup.invite_code,
+            StudyGroup.created_at,
+            func.count(StudyGroupMember.id).label("member_count"),
+        )
+        .join(StudyGroupMember, StudyGroup.id == StudyGroupMember.group_id)
+        .where(StudyGroupMember.user_id == user.id)
+        .group_by(StudyGroup.id)
+        .order_by(StudyGroup.created_at.desc())
+    )
+
+    results = db.execute(stmt).all()
+
+    return [
+        StudyGroupListResponse(
+            id=row.id,
+            name=row.name,
+            description=row.description,
+            invite_code=row.invite_code,
+            member_count=row.member_count,
+            created_at=row.created_at,
+        )
+        for row in results
+    ]
+
+
+@router.get("/challenge-notifications")
+async def get_challenge_notifications(
+    db: Annotated[Session, Depends(get_db)],
+    x_anonymous_id: Annotated[str, Header(alias="X-Anonymous-Id")],
+) -> dict[str, int]:
+    """
+    Get challenge notification counts for the current user.
+
+    Returns counts of active challenges, new challenges this week,
+    and expiring challenges across all user's groups.
+    Used for displaying notification badges in the UI.
+    """
+    from datetime import datetime, timedelta
+
+    user = get_or_create_user(db, x_anonymous_id)
+
+    # Get user's group IDs
+    group_ids_stmt = (
+        select(StudyGroupMember.group_id)
+        .where(StudyGroupMember.user_id == user.id)
+    )
+    group_ids_result = db.execute(group_ids_stmt).scalars().all()
+
+    if not group_ids_result:
+        return {
+            "active_count": 0,
+            "new_this_week": 0,
+            "expiring_soon": 0,
+        }
+
+    group_ids = list(group_ids_result)
+
+    now = datetime.utcnow()
+    one_week_ago = now - timedelta(days=7)
+    two_days_from_now = now + timedelta(days=2)
+
+    # Count active challenges
+    active_count_stmt = (
+        select(func.count(Challenge.id))
+        .where(Challenge.group_id.in_(group_ids))
+        .where(Challenge.start_date <= now)
+        .where(Challenge.end_date >= now)
+    )
+    active_count = db.execute(active_count_stmt).scalar() or 0
+
+    # Count new challenges this week
+    new_this_week_stmt = (
+        select(func.count(Challenge.id))
+        .where(Challenge.group_id.in_(group_ids))
+        .where(Challenge.created_at >= one_week_ago)
+    )
+    new_this_week = db.execute(new_this_week_stmt).scalar() or 0
+
+    # Count challenges expiring soon (within 2 days)
+    expiring_soon_stmt = (
+        select(func.count(Challenge.id))
+        .where(Challenge.group_id.in_(group_ids))
+        .where(Challenge.end_date >= now)
+        .where(Challenge.end_date <= two_days_from_now)
+    )
+    expiring_soon = db.execute(expiring_soon_stmt).scalar() or 0
+
+    return {
+        "active_count": active_count,
+        "new_this_week": new_this_week,
+        "expiring_soon": expiring_soon,
+    }
+
+
 @router.post("/{group_id}/join", response_model=JoinGroupResponse)
 async def join_study_group(
     group_id: int,
