@@ -114,7 +114,15 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
-    group_memberships: Mapped[list["StudyGroupMember"]] = relationship(
+    study_groups: Mapped[list["StudyGroup"]] = relationship(
+        "StudyGroup",
+        secondary="study_group_members",
+        primaryjoin="User.id == StudyGroupMember.user_id",
+        secondaryjoin="StudyGroup.id == StudyGroupMember.group_id",
+        viewonly=True,
+    )
+
+    memberships: Mapped[list["StudyGroupMember"]] = relationship(
         "StudyGroupMember",
         back_populates="user",
         cascade="all, delete-orphan",

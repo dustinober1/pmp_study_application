@@ -59,6 +59,7 @@ async def health_check() -> dict:
 
 # Register routers
 app.include_router(auth.router)
+app.include_router(analytics.router)
 app.include_router(collaboration.router)
 app.include_router(domains.router)
 app.include_router(exams.router)
