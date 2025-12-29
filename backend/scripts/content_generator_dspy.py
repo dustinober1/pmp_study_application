@@ -465,7 +465,7 @@ class FlashcardGenerator(dspy.Module):
     
     def __init__(self):
         super().__init__()
-        self.generate = dspy.TypedPredictor(GenerateFlashcards)
+        self.generate = dspy.Predict(GenerateFlashcards)
     
     def forward(
         self,
@@ -489,7 +489,7 @@ class QuestionGenerator(dspy.Module):
     
     def __init__(self):
         super().__init__()
-        self.generate = dspy.TypedPredictor(GenerateQuestions)
+        self.generate = dspy.Predict(GenerateQuestions)
     
     def forward(
         self,
