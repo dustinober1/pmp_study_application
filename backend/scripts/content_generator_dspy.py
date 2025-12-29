@@ -350,7 +350,7 @@ class PracticeQuestion(BaseModel):
     question_text: str = Field(
         description="A complex scenario-based question",
         alias="question",  # Accept 'question' as alias
-        validation_alias=AliasChoices('question', 'text', 'question_text') # Accept 'question', 'text', or 'question_text'
+        validation_alias=AliasChoices('question', 'text', 'question_text', 'scenario') # Accept 'question', 'text', 'question_text', or 'scenario'
     )
     options: list[AnswerOption] = Field(
         description="Exactly 4 answer options. One must be correct (is_correct=true), three must be incorrect (is_correct=false)."
@@ -359,7 +359,7 @@ class PracticeQuestion(BaseModel):
         default="hard",
         description="Difficulty level (medium or hard only)"
     )
-    
+
     @field_validator('question_text')
     @classmethod
     def must_be_scenario(cls, v: str) -> str:
@@ -456,6 +456,21 @@ class GenerateQuestions(dspy.Signature):
     5. EXPLANATIONS FOR ALL OPTIONS: For EACH option explain:
        - If is_correct=true: WHY this is the best choice and what makes it superior
        - If is_correct=false: WHY this is not the best choice, even though it might seem reasonable
+    
+    OUTPUT JSON FORMAT:
+    {
+      "questions": [
+        {
+          "question_text": "Scenario description...",
+          "difficulty": "hard",
+          "options": [
+            { "text": "Option A", "explanation": "...", "is_correct": false },
+            { "text": "Option B", "explanation": "...", "is_correct": true },
+            ...
+          ]
+        }
+      ]
+    }
        
     6. GROUNDED IN CONTENT: ONLY use concepts from the provided content. Do not fabricate.
     
