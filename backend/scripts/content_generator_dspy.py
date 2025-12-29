@@ -1038,7 +1038,8 @@ def deduplicate_content(
 def save_results(
     results: dict, 
     output_dir: Path,
-    append_to_master: bool = True
+    append_to_master: bool = True,
+    skip_deduplication: bool = False
 ) -> None:
     """Save generated content to files with optional append to master files."""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1051,9 +1052,17 @@ def save_results(
     new_flashcards = results.get("all_flashcards", [])
     new_questions = results.get("all_questions", [])
     
-    unique_fcs, unique_qs, fc_dupes, q_dupes = deduplicate_content(
-        new_flashcards, new_questions, fc_hashes, q_hashes
-    )
+    if skip_deduplication:
+        unique_fcs = new_flashcards
+        unique_qs = new_questions
+        fc_dupes = 0
+        q_dupes = 0
+        
+        # When allowing duplicates, we still want to add them to master
+    else:
+        unique_fcs, unique_qs, fc_dupes, q_dupes = deduplicate_content(
+            new_flashcards, new_questions, fc_hashes, q_hashes
+        )
     
     if fc_dupes > 0 or q_dupes > 0:
         print(f"\n⚠️  Removed duplicates: {fc_dupes} flashcards, {q_dupes} questions")
@@ -1160,6 +1169,11 @@ def main():
         help="Don't append to master files (just create timestamped files)"
     )
     parser.add_argument(
+        "--allow-duplicates",
+        action="store_true",
+        help="Save generated content even if it's identical to existing master file content"
+    )
+    parser.add_argument(
         "--list-tasks",
         action="store_true",
         help="List all ECO tasks with their source files"
@@ -1254,7 +1268,8 @@ def main():
             save_results(
                 results, 
                 Path(args.output_dir),
-                append_to_master=not args.no_append
+                append_to_master=not args.no_append,
+                skip_deduplication=args.allow_duplicates
             )
             print(f"\n{'='*60}")
             print("✅ Content generation complete!")

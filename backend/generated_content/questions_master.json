@@ -1,6 +1,6 @@
 {
-  "updated_at": "2025-12-28T19:31:44.684612",
-  "count": 33,
+  "updated_at": "2025-12-28T19:35:50.534800",
+  "count": 49,
   "questions": [
     {
       "question_text": "You are leading a critical infrastructure upgrade project, currently in the planning phase. During a review of the preliminary Project Charter, a senior functional manager, who is a key stakeholder, states that the project's success criteria seem disconnected from the stated business case, which focuses on regulatory compliance, while the charter emphasizes operational efficiency gains. You know the Sponsor signed the charter, but this manager has significant influence over resource allocation. What is the BEST course of action for the Project Manager regarding this discrepancy?",
@@ -983,6 +983,486 @@
         {
           "text": "Document the PO\u2019s request as an exception in the Decision Log, allowing the team to proceed but noting that this decision must be escalated to the Project Sponsor for review.",
           "explanation": "Incorrect. Deviating from the DoD is a quality/process issue handled within the team's governance structure (the Team Charter), not typically an immediate escalation to the Project Sponsor, who governs the Project Charter.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are managing the final stages of a mission-critical, high-visibility software deployment for a government agency. The Project Charter, signed six months ago, explicitly granted you the authority to approve procurement expenditures up to $50,000 without sponsor review. Three weeks before the mandated Go-Live date, a critical security audit flags a vulnerability requiring a specialized, one-time license for a monitoring tool costing $65,000. The security officer insists this purchase must happen immediately, or the project cannot launch legally. The Sponsor is currently unreachable on an international trip until the day after the required purchase deadline.\n\nWhat is the MOST appropriate action for the Project Manager to take?",
+      "options": [
+        {
+          "text": "Immediately approve the $65,000 expenditure using your defined authority, document the deviation from the initial budget envelope, and notify the Sponsor upon their return.",
+          "explanation": "This is incorrect. While the Project Charter defines your authority ($50K limit), the security constraint is critical. Exceeding the explicit financial authority limit defined in the Charter, even for a critical reason, requires escalation or formal change to the Charter before commitment, unless the Charter explicitly states that regulatory compliance overrides budget limits.",
+          "is_correct": false
+        },
+        {
+          "text": "Escalate the situation immediately to the Governance Review Board or the Portfolio management level, citing the conflict between the Charter's budget authority and the overriding regulatory requirement.",
+          "explanation": "This is the BEST choice. The situation involves a conflict between the PM's stated authority ($50K) and a mandatory external constraint (security/legal compliance) that requires a budget increase. This requires a decision outside the PM's defined authority, necessitating escalation to the body that oversees strategic alignment and governance (Steering Committee or Portfolio level).",
+          "is_correct": true
+        },
+        {
+          "text": "Contact the functional manager of the security officer to gain verbal approval for the expenditure, since the security requirement is non-negotiable.",
+          "explanation": "This is incorrect. Relying on a functional manager, who is not the Sponsor or the authorizing governance body, for an expenditure that exceeds the PM's Charter-defined authority bypasses the established organizational governance structure (EEF/OPA).",
+          "is_correct": false
+        },
+        {
+          "text": "Review the Project Charter's section on High-Level Risks to see if 'regulatory changes' or 'unforeseen mandatory purchases' were listed, and if so, use that clause to justify the expenditure.",
+          "explanation": "This is incorrect. While reviewing risks is good practice, high-level risks listed in the Charter do not automatically grant the PM authority to breach spending limits defined elsewhere in the same document. The authority level is explicit and must be followed or formally escalated.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are leading a project to deploy a new manufacturing quality control system. Your Project Charter specifies success criteria based on achieving a 99.9% throughput rate within the first month post-launch. Midway through execution, an Enterprise Environmental Factor (EEF)\u2014a sudden, localized shortage of a key raw material\u2014causes the planned throughput rate for the first month to realistically drop to 98.5%. The Sponsor is focused solely on the Charter's success criteria and insists the team must meet the 99.9% target, regardless of the external constraint. The team charter emphasizes self-policing and collective accountability.\n\nGiven this conflict between the external environment and the mandated success criteria, what should the Project Manager prioritize doing?",
+      "options": [
+        {
+          "text": "Convene the team to update the Team Charter's Definition of Done (DoD) to reflect the current 98.5% achievable rate, thereby aligning team quality expectations with reality.",
+          "explanation": "This is incorrect. The DoD is for quality control of deliverables, not for resetting the overall project success criteria defined in the Project Charter. Resetting the DoD here would make the team believe the project succeeded while failing the strategic objective.",
+          "is_correct": false
+        },
+        {
+          "text": "Immediately initiate the Continuous Alignment Loop by assessing the impact of the EEF on the Charter's success criteria and preparing options for governance review.",
+          "explanation": "This is the BEST choice. The situation involves a detected external change (EEF) impacting the strategic goal (Success Criteria in the Charter). The PM must follow the Continuous Alignment Loop: Detect, Assess impact on value/benefits, and Escalate options (continue, pivot, pause, stop) to the governance body for a decision.",
+          "is_correct": true
+        },
+        {
+          "text": "Refer the Sponsor to the Business Case to demonstrate that the strategic justification for the project still holds, even if the initial success metric is temporarily missed.",
+          "explanation": "This is incorrect. While the Business Case justifies *starting* the project, the Charter's Success Criteria define *finishing* it successfully. The PM must address the Charter metric directly, using the Business Case only as background context if needed.",
+          "is_correct": false
+        },
+        {
+          "text": "Instruct the team to focus solely on their work habits and communication norms (Ground Rules) until the material shortage resolves, assuming the Sponsor will adjust the deadline later.",
+          "explanation": "This is incorrect. Ignoring the conflict with the Sponsor regarding the Charter's success criteria allows the strategic alignment thread to break. Ignoring the Sponsor's directive, even if based on an EEF, is poor stakeholder management.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are managing a complex integration project where the Project Charter explicitly lists 'Vendor dependency on System X' as a High-Level Risk. You are currently in the Planning phase. You discover through Organizational Process Assets (OPAs) that the organization mandates a specific, rigorous vendor selection procedure (a 30-day process) for any external contract exceeding $100K, which is standard for this type of integration. However, the Sponsor, eager to meet the Charter's aggressive Summary Milestone Schedule, suggests bypassing the full OPA procedure to use a pre-vetted vendor who is slightly more expensive but can start next week.\n\nWhat is the MOST important action for the Project Manager regarding this request?",
+      "options": [
+        {
+          "text": "Accept the Sponsor's direction, noting in the project log that the decision was made by the sponsor to maintain schedule adherence, and proceed with the pre-vetted vendor.",
+          "explanation": "This is incorrect. Bypassing mandatory organizational procedures (OPAs) documented by the PMO, even with sponsor approval, introduces significant governance risk and violates the established organizational constraints, potentially creating future audit issues.",
+          "is_correct": false
+        },
+        {
+          "text": "Inform the Sponsor that the Project Charter's high-level risk regarding vendor dependency necessitates following the established OPA for vendor selection to mitigate unforeseen constraints.",
+          "explanation": "This is incorrect. While referencing the risk is useful, the immediate issue is violating a mandatory organizational process (OPA) related to procurement, which is a constraint. The PM must address the process violation directly, not just the risk mentioned in the Charter.",
+          "is_correct": false
+        },
+        {
+          "text": "Present the Sponsor with a comparison of the trade-offs: the cost increase vs. the schedule impact of following the OPA, framing the decision as a formal change request against the Charter's high-level schedule and budget.",
+          "explanation": "This is the BEST choice. The Sponsor wants to deviate from an internal process (OPA) to meet a Charter milestone. The PM must treat this as a proposed change to the constraints/schedule baseline and facilitate the governance process (likely involving the PMO or Finance, based on the OPA) to get a formal decision on adjusting the boundaries.",
+          "is_correct": true
+        },
+        {
+          "text": "Document the suggestion in the Team Charter's Decision Log as an alternative approach, and ask the team to vote on whether they can meet the milestone using the pre-vetted, more expensive vendor.",
+          "explanation": "This is incorrect. Decisions regarding procurement processes and formal organizational constraints (OPAs) are beyond the scope of the Team Charter and team voting. This decision must adhere to organizational governance.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "Your team is developing a new mobile application. During the execution phase, a key developer, who is noted in the Team Charter as having specialized knowledge in security protocols, refuses to participate in code reviews for any feature not directly assigned to them, stating, 'My accountability stops at my assigned tasks.' This behavior is causing a bottleneck in achieving the Definition of Done (DoD), which requires peer review for all code. The Team Charter's Decision Making section defaults to 'Consensus' for operational issues.\n\nAs the Project Manager, what is the MOST effective immediate step based on the principles of high-performing teams?",
+      "options": [
+        {
+          "text": "Escalate the developer's non-compliance to their functional manager, citing the violation of the team's collaboration norms outlined in the Team Charter.",
+          "explanation": "This is incorrect. Escalation is Step 4 in the team's documented escalation path. The PM must first attempt facilitation (Step 2) or self-resolution (Step 1) before involving functional management.",
+          "is_correct": false
+        },
+        {
+          "text": "Facilitate a session to review the specific ground rule regarding collaboration and use the PM/Scrum Master role as the tie-breaker if consensus cannot be reached quickly.",
+          "explanation": "This is incorrect. While facilitation is good, the PM should first refer the team to the existing Ground Rules/Charter and encourage self-policing. Using the tie-breaker assumes the team cannot resolve it via their documented process first.",
+          "is_correct": false
+        },
+        {
+          "text": "Bring the team back to the Team Charter to review the Ground Rules on communication and collaboration, emphasizing the 'self-policing' principle and asking the team how they will address the gap in the DoD.",
+          "explanation": "This is the BEST choice. The issue is behavioral, rooted in the team agreement. The PM should reinforce the collaborative nature of the Charter and enforce the 'self-policing' principle, allowing the team to collectively address the violation of their own agreed-upon norms that is blocking the DoD.",
+          "is_correct": true
+        },
+        {
+          "text": "Temporarily amend the Definition of Done (DoD) to allow code reviews to be signed off by the Product Owner instead of a peer developer until the conflict is resolved.",
+          "explanation": "This is incorrect. Altering the DoD without team consensus or a clear strategic reason compromises quality standards. The issue is behavioral adoption of existing agreements, not the quality definition itself.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are launching a project to develop an internal AI tool. The Project Charter has been drafted, and you are seeking final sign-off from the CIO, who is the designated Sponsor. The CIO reviews the charter and states, 'The budget envelope seems reasonable, but I need you to commit to a specific Go-Live date in July. I can't approve this without a fixed milestone.' You know from Historical Cost Estimation Data (an OPA) and discussions with SMEs (Expert Judgment) that the proposed July date is highly optimistic and likely to require an additional $200K contingency, which is not yet in the pre-approved budget section of the Charter.\n\nWhat is the MOST critical element you must address with the CIO before obtaining formal authorization?",
+      "options": [
+        {
+          "text": "Revisit the Business Case to see if the anticipated benefits still justify the risk associated with pushing the schedule aggressively.",
+          "explanation": "This is incorrect. While alignment with the Business Case is important, the immediate need is securing the authorization (Charter sign-off). The CIO is demanding a specific constraint (schedule) that directly impacts the pre-approved budget, which requires a documented adjustment to the Charter's constraints/budget components.",
+          "is_correct": false
+        },
+        {
+          "text": "Explain that the Charter is an authorization document, not a detailed plan, and that specific milestones are defined later in the Project Management Plan.",
+          "explanation": "This is incorrect. While technically true that the detailed schedule is in the PMP, the Charter *must* contain Summary Milestones. If the Sponsor demands a specific date for authorization, failing to negotiate that boundary means the PM does not have the necessary high-level guardrails for planning.",
+          "is_correct": false
+        },
+        {
+          "text": "Ensure the Charter explicitly documents the necessary schedule constraint (July Go-Live) alongside the corresponding High-Level Risk and the required adjustment to the Pre-approved Budget, then seek sign-off.",
+          "explanation": "This is the BEST choice. The PM must ensure the Charter captures the boundaries (Assumptions & Constraints) agreed upon at authorization. If the Sponsor insists on the July date, the PM must document this constraint, its related risk, and the necessary budget impact to ensure formal alignment before proceeding.",
+          "is_correct": true
+        },
+        {
+          "text": "Use expert judgment from similar project PMs (OPA source) to advise the CIO that the July date is unrealistic based on past organizational performance metrics.",
+          "explanation": "This is incorrect. Advising the Sponsor against their explicit request without providing them the documented trade-offs related to the Charter components (budget/risk) is premature. The PM's role here is to document the agreed-upon constraints, not veto the Sponsor's strategic demand.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are leading a project in a highly matrixed organization. Your Project Charter explicitly states your authority level allows you to 'Assign and reassign team members within the project.' Halfway through the execution phase, a key architect reports directly to a functional manager who claims the architect is needed for operational support due to an unexpected internal audit (an Internal EEF). The functional manager states the architect will only be available 10% of the time, directly contradicting your resource assignment authority in the Charter. The team is already understaffed.\n\nWhat should the Project Manager do FIRST?",
+      "options": [
+        {
+          "text": "Immediately escalate the resource conflict to the Sponsor, presenting the conflicting directives regarding resource allocation as documented in the Charter.",
+          "explanation": "This is the BEST choice. There is a direct conflict between the PM's formally documented authority (Charter) and an internal organizational constraint/action (EEF enforced by the functional manager). This requires the Sponsor, who authorized the Charter, to intervene and resolve the conflict in authority.",
+          "is_correct": true
+        },
+        {
+          "text": "Consult the PMO for guidance on the official escalation path for resource disputes, as this situation is likely covered by organizational governance policies (OPAs).",
+          "explanation": "This is incorrect. While consulting OPAs is useful, the conflict is explicitly defined in the Project Charter, which is the PM's immediate source of power. The PM should leverage the Charter first by escalating to the authorizing body (Sponsor) before seeking interpretation from the PMO.",
+          "is_correct": false
+        },
+        {
+          "text": "Meet with the functional manager and the architect to facilitate a discussion on how the architect\u2019s immediate operational needs can be temporarily delayed until the next major milestone is met.",
+          "explanation": "This is incorrect. This attempts negotiation (Step 1/2 of escalation) before asserting the formal authority granted by the Charter. When authority is explicitly challenged by a functional manager, the PM must first rely on the Charter and escalate.",
+          "is_correct": false
+        },
+        {
+          "text": "Update the Team Charter\u2019s Escalation Path to include the functional manager as Step 3, then proceed with negotiation to find a compromise on resource allocation.",
+          "explanation": "This is incorrect. Changing the Team Charter to define conflict resolution for a challenge to the *Project* Charter's authority is putting the cart before the horse. The existing escalation path should be used first.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are initiating a project to adopt a new global compliance standard. The legal department, a key stakeholder, has provided high-level requirements that are extremely restrictive, significantly impacting the scope boundaries outlined in the draft Project Charter. The Business Case justifies the project based on market access, which these restrictions might jeopardize if the project takes too long. The legal department insists their requirements are non-negotiable due to external government regulations (an External EEF).\n\nWhich document should the Project Manager use as the primary anchor point when negotiating the scope boundaries with the legal department?",
+      "options": [
+        {
+          "text": "The Contract/SOW, to determine the exact legal obligations stipulated by the external governing body.",
+          "explanation": "This is incorrect. The content states that the Contract/SOW is for external deliverables and legal obligations. While relevant, the immediate conflict is internal\u2014aligning the project's scope boundaries (High-Level Requirements) with the Sponsor's justification (Business Case) while respecting the legal constraint (EEF). The Project Charter is the document that formally captures the project's boundaries and justification.",
+          "is_correct": false
+        },
+        {
+          "text": "The Business Case, to demonstrate that the project's core value justification will be lost if the restrictive scope limits are fully adopted.",
+          "explanation": "This is incorrect. While the Business Case drives the 'Why,' the Project Charter contains the 'High-Level Requirements' and 'Project Purpose/Justification,' making it the direct artifact for scope negotiation at this stage.",
+          "is_correct": false
+        },
+        {
+          "text": "The Project Charter, specifically the sections detailing High-Level Requirements and Project Purpose/Justification, while incorporating the regulatory constraints as Assumptions/Constraints.",
+          "explanation": "This is the BEST choice. The Charter is the document being finalized that captures the high-level needs and boundaries. The PM must negotiate the scope by balancing the Charter's stated requirements against the non-negotiable external constraints (EEF) and documenting them clearly as Assumptions & Constraints within the Charter.",
+          "is_correct": true
+        },
+        {
+          "text": "The Work Breakdown Structure (WBS), to show the legal department the detailed level of decomposition that will result from their restrictive requirements.",
+          "explanation": "This is incorrect. The WBS is created *after* the Charter and is not appropriate for negotiating high-level boundaries during initiation.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "Your team is implementing a new hybrid software development approach. During the first Retrospective, the team notes that while their communication norms (e.g., using Slack for quick syncs) are clear, decision-making speed is hampered because every minor technical divergence requires a full team vote, leading to stagnation. The Team Charter defaults to 'Consensus' for all decisions. The team is highly skilled, and the PM has moderate authority over resource allocation but limited authority over technical standards.\n\nBased on the goal of continuous validation and improving team effectiveness, what approach should the Project Manager facilitate next?",
+      "options": [
+        {
+          "text": "Propose updating the Decision Making section of the Team Charter to adopt the 'Expert/Delegated' model for all technical decisions, specifically delegating authority to the Lead Architect.",
+          "explanation": "This is the BEST choice. The current model (Consensus) is causing stagnation (a recurring problem indicating a gap). Since the team is highly skilled and the PM's authority is limited on technical standards, delegating decision rights to a recognized expert (Lead Architect) within the Charter framework is the most efficient way to improve speed while maintaining ownership.",
+          "is_correct": true
+        },
+        {
+          "text": "Escalate the decision-making bottleneck to the Sponsor, as the established consensus model is clearly failing to meet the project's operational needs.",
+          "explanation": "This is incorrect. Decision models failing operationally should be addressed internally first via Charter maintenance (Step 1/2 of the escalation ladder). Escalating to the Sponsor (Step 4) is reserved for issues beyond the team's authority or when negotiation fails.",
+          "is_correct": false
+        },
+        {
+          "text": "Implement the 24-Hour Rule for all technical debates, forcing a resolution or escalation within one day to prevent issues from festering.",
+          "explanation": "This is incorrect. The 24-Hour Rule is for unresolved *conflict*, not for operational decision-making processes. Applying it here forces quick decisions without fixing the underlying governance problem.",
+          "is_correct": false
+        },
+        {
+          "text": "Require the team to switch the default model to 'Majority Vote' immediately, as it is faster than consensus and requires only 50%+1 agreement.",
+          "explanation": "This is incorrect. Changing the default model without team buy-in (consensus) violates the collaborative nature of the Charter. While faster, it may lead to lower buy-in from the minority.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are leading a large-scale merger integration project. The Project Charter was approved last quarter, formally authorizing you as PM. Your PMO mandates the use of specific risk register templates and historical cost data (OPAs). However, the acquiring company's integration team insists on using their own, less detailed risk templates and refuses to share historical data, citing 'confidentiality' related to the merger. This creates a gap between organizational process requirements and project execution. The Project Charter only lists 'Confidentiality requirements' as a high-level assumption.\n\nWhat is the FIRST action the Project Manager should take to address this procedural misalignment?",
+      "options": [
+        {
+          "text": "Immediately flag this as a critical risk to the Sponsor, requesting a directive to force the acquiring team to comply with the PMO's mandated OPA standards.",
+          "explanation": "This is incorrect. While the conflict involves the Charter's implicit reliance on OPAs, directly demanding compliance from an external party via the Sponsor might escalate unnecessarily before understanding the context or finding a common ground.",
+          "is_correct": false
+        },
+        {
+          "text": "Engage the PMO to leverage their expertise in organizational governance to mediate a solution that satisfies both the confidentiality constraints (EEF/Assumption) and the OPA requirement.",
+          "explanation": "This is the BEST choice. The conflict is between adherence to organizational standards (OPAs) and external constraints/assumptions (confidentiality). The PMO is the organizational expert in standardizing processes and governance, making them the ideal partner to find a compliant middle ground.",
+          "is_correct": true
+        },
+        {
+          "text": "Update the Project Charter to remove the reliance on internal risk templates and historical data, reflecting the reality of the external constraints imposed by the merger.",
+          "explanation": "This is incorrect. The Charter is the authorization document; changing it to accommodate procedural non-compliance sets a poor precedent. The PM should strive to adhere to OPAs unless explicitly overridden by governance.",
+          "is_correct": false
+        },
+        {
+          "text": "Use your authority level to assign a team member to create a bridge document that maps the acquiring team's risk format to the required internal OPA format.",
+          "explanation": "This is incorrect. While creating a mapping tool is a good tactical step, the PM must first address the procedural conflict at the governance level (PMO/Sponsor) to ensure the proposed solution is officially sanctioned.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are managing a project to overhaul a core customer-facing service. The Project Charter clearly defines the measurable success criteria: 'Reduce average call handle time (AHT) by 25% within 90 days post-launch.' During the execution phase, the Business Case is reviewed, and the Benefits Realization Plan indicates that the strategic value is actually derived from 'customer satisfaction (CSAT)' scores, not AHT reduction. A major external competitor just launched a superior feature, meaning meeting the 25% AHT goal might no longer be enough to meet the strategic benefits.\n\nAccording to the principles of Continuous Validation, what is the MOST important step the Project Manager must take now?",
+      "options": [
+        {
+          "text": "Continue executing strictly to the Project Charter's AHT goal, as it is the formal authorization document and the only metric currently binding the project baseline.",
+          "explanation": "This is incorrect. Strategic alignment requires continuous validation. If the underlying value (Benefits Realization) has shifted due to market changes (External EEF), rigidly sticking to an outdated metric in the Charter breaks alignment.",
+          "is_correct": false
+        },
+        {
+          "text": "Immediately pause all scope changes and convene the Sponsor and Benefits Owner to assess the impact of the competitor's launch on the CSAT objective and the viability of the AHT goal.",
+          "explanation": "This is the BEST choice. The situation triggers the Continuous Alignment Loop: Detect (competitor launch/shift in value), Assess (impact on Charter success criteria vs. Benefits Plan), and Escalate options to governance. Pausing scope changes ensures stability while the strategic assessment occurs.",
+          "is_correct": true
+        },
+        {
+          "text": "Facilitate a session with the team to update the Team Charter's Success Criteria to reflect the CSAT goal, ensuring the team's focus aligns with the new outcome.",
+          "explanation": "This is incorrect. The Team Charter success criteria must align with the *Project* Charter success criteria. The PM must fix the alignment at the Project Charter level (via governance) before adjusting the team's internal guide.",
+          "is_correct": false
+        },
+        {
+          "text": "Formally document the competitor's launch as a new High-Level Risk in the Project Charter, requesting the Sponsor to approve the mitigation strategy outlined in the existing Business Case.",
+          "explanation": "This is incorrect. This is an external event impacting strategic viability, not just a risk to be mitigated; it requires assessing whether to pivot or persevere, which goes beyond simple risk management.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are managing a software development project using an Agile approach. The Project Charter is intentionally lightweight, focusing on the Product Vision and initial Release Roadmap. During the third iteration, the team discovers that their initial 'Hypothesis' regarding user adoption (listed in the Agile Charter equivalent) is proving false based on early user feedback. The Product Owner wants to pivot the feature set significantly to address the real user need, which will extend the timeline beyond the initial high-level milestone committed in the Charter. The Sponsor is highly focused on the fixed delivery date.\n\nWhat governance artifact or mechanism should the Project Manager primarily use to structure the conversation with the Sponsor regarding this necessary pivot?",
+      "options": [
+        {
+          "text": "The Work Breakdown Structure (WBS) to show how the pivot requires decomposing new, previously unplanned features.",
+          "explanation": "This is incorrect. The WBS is a detailed planning tool, not suitable for discussing high-level strategic pivots during initiation/early execution.",
+          "is_correct": false
+        },
+        {
+          "text": "The Project Charter's High-Level Requirements section, arguing that the initial assumptions were flawed and must be updated to reflect validated user hypotheses.",
+          "explanation": "This is incorrect. While related, the Agile Charter uses 'Hypotheses to validate' instead of fixed requirements. The PM should frame the discussion around the impact on the strategic guardrails (Roadmap/Milestones) documented in the Charter.",
+          "is_correct": false
+        },
+        {
+          "text": "The Agile Charter's documented Release Roadmap and the impact assessment of the pivot on the fixed milestone, framing it as a governance decision (Pivot or Persevere).",
+          "explanation": "This is the BEST choice. In Agile, the Roadmap sets the high-level schedule guardrails. The PM must use the Continuous Alignment Loop to present the validated hypothesis (new information) and frame the decision for the Sponsor as a strategic choice between adhering to the fixed milestone or pivoting to realize the intended benefits.",
+          "is_correct": true
+        },
+        {
+          "text": "The Team Charter's Decision Log, referencing previous decisions made regarding scope flexibility during planning to support the Product Owner's request.",
+          "explanation": "This is incorrect. The Decision Log records how the team made *internal* operational decisions. This situation requires governance oversight because the *Sponsor's* commitment (the fixed milestone in the Charter) is being challenged.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are taking over a project mid-stream after the initial PM abruptly left. The project involves integrating two large corporate databases. You review the Project Charter and find that the Key Stakeholder List only includes the Sponsor (VP of IT) and the two functional managers responsible for the data owners. However, during your initial interviews (using Expert Judgment), you identify that the Chief Compliance Officer (CCO) has significant regulatory oversight over the data being moved. The CCO is not listed in the Charter. The CCO is now raising concerns about data integrity, which could halt progress.\n\nWhat is the MOST important next step for the Project Manager?",
+      "options": [
+        {
+          "text": "Immediately escalate to the Sponsor, demanding that the CCO be added to the Key Stakeholder List in the Project Charter before any further work proceeds.",
+          "explanation": "This is incorrect. While the CCO is clearly a stakeholder, the PM should not unilaterally change the Project Charter (an authorization document) without Sponsor approval. The immediate need is to manage the CCO's concerns.",
+          "is_correct": false
+        },
+        {
+          "text": "Acknowledge the CCO's concerns, integrate them into the risk register (as a potential governance constraint), and continue execution based on the existing, approved Charter authority.",
+          "explanation": "This is incorrect. Ignoring a major stakeholder raising critical concerns (especially compliance-related) is a massive oversight that risks project viability, even if they are missing from the official Charter.",
+          "is_correct": false
+        },
+        {
+          "text": "Engage the CCO to understand their specific concerns regarding regulatory impact, document these as high-level risks and requirements, and then present the updated stakeholder/risk profile to the Sponsor for Charter amendment.",
+          "explanation": "This is the BEST choice. The PM must immediately address the critical stakeholder's concerns (using expert judgment/interviews), capture the impact as new high-level risks/requirements, and then seek formal authorization from the Sponsor to update the Charter, thus ensuring proper governance.",
+          "is_correct": true
+        },
+        {
+          "text": "Refer to the Team Charter's Escalation Path to determine the next level of management to address the CCO's concerns, as they are now blocking progress.",
+          "explanation": "This is incorrect. The Team Charter governs team behavior and internal conflict. Issues involving external governance, compliance, and Charter updates must be addressed at the Project Charter/Sponsor level.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "Your team is responsible for building a highly specialized piece of hardware. The Project Charter established a clear, fixed budget envelope and assigned you, the PM, the authority to approve resource assignments within the project scope. During the planning phase, the team identifies that the required testing environment will need to be rented monthly, costing $15,000 per month. The Project Charter lists 'Facility Rental Costs' as an Assumption, not a Constraint. You discover in the Financial Controls OPA that any recurring operational expenditure must be approved by the Finance Department before the Project Management Plan can be finalized.\n\nWhat is the MOST important factor driving your next action?",
+      "options": [
+        {
+          "text": "Your explicit authority to assign resources, which implies you can allocate funds necessary for team execution, overriding the OPA if the Charter implies control.",
+          "explanation": "This is incorrect. Project Manager authority levels (Budget, Resources, Scope) detailed in the Charter do not override mandatory organizational financial controls (OPAs) for setting up recurring expenses.",
+          "is_correct": false
+        },
+        {
+          "text": "The organizational constraint identified in the Financial Controls OPA, which requires Finance approval for recurring expenses before planning can conclude.",
+          "explanation": "This is the BEST choice. The OPA represents an organizational constraint (a condition not under your direct control) regarding financial processes. Even if the budget is assumed, the *process* for committing recurring operational costs must follow the OPA before the detailed plan is locked down.",
+          "is_correct": true
+        },
+        {
+          "text": "The status of the 'Facility Rental Costs' listed as an Assumption in the Charter, as you must first confirm if this cost is truly an assumption or a hidden constraint.",
+          "explanation": "This is incorrect. While clarifying assumptions is important, the immediate blocker is the mandatory sign-off process dictated by the OPA. The OPA dictates the *how*, which must be addressed before the *what* (assumption vs. constraint) is fully resolved.",
+          "is_correct": false
+        },
+        {
+          "text": "The High-Level Requirements, ensuring that the testing environment cost aligns with the minimum technical specifications necessary to meet those requirements.",
+          "explanation": "This is incorrect. Aligning cost to requirements is part of detailed planning (PMP), but the immediate action is procedural compliance with the organizational requirement to obtain Finance approval.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are leading a project to implement a new enterprise-wide HR system. The Project Charter was signed based on the assumption that the existing HR data would be largely clean and ready for migration. Midway through planning, an analysis of the current data (leveraging Expert Judgment from the HR data steward) reveals significant contamination and duplication, requiring a dedicated 6-week data cleansing effort. This was not identified as a High-Level Risk in the Charter. The Sponsor is now demanding that the data cleansing must happen *outside* the project scope to protect the existing baseline schedule.\n\nWhat is the MOST important action for the Project Manager to recommend to maintain strategic alignment?",
+      "options": [
+        {
+          "text": "Document the data quality issue as a new High-Level Risk in the Charter, and request the Sponsor to formally accept the risk that data migration will fail if cleansing is skipped.",
+          "explanation": "This is incorrect. Accepting the risk of failure is possible, but the PM must first assess the impact on the project's ability to deliver value. Ignoring a known massive impediment (data cleansing) to meet an arbitrary baseline breaks strategic alignment.",
+          "is_correct": false
+        },
+        {
+          "text": "Initiate the Continuous Alignment Loop: Assess the impact of the required cleansing effort on the Project Purpose/Justification (Business Case value) and present governance options (continue, pivot, pause, stop).",
+          "explanation": "This is the BEST choice. A major assumption failure fundamentally challenges the project's viability and alignment. The PM must assess the impact on the overall value (Purpose/Justification) and recommend a governance path (e.g., pausing to incorporate cleansing into scope/schedule, or cancelling if the cost/time is prohibitive).",
+          "is_correct": true
+        },
+        {
+          "text": "Refer to the Team Charter and ask the team if they can absorb the data cleansing effort by reducing scope in other areas, adhering to the existing budget ceiling.",
+          "explanation": "This is incorrect. Data cleansing of this magnitude is a major scope change, not a minor team adjustment solvable by adjusting the Definition of Done or trading minor scope items. This requires Project Charter governance review.",
+          "is_correct": false
+        },
+        {
+          "text": "Use the Project Manager's authority over scope changes of less than two weeks to formally add the data cleansing as a new, mandatory task within the Project Management Plan.",
+          "explanation": "This is incorrect. The PM's authority over scope changes is explicitly limited (e.g., <$10K or <2 weeks). A 6-week mandatory effort is a significant scope addition that impacts the high-level schedule and must be addressed through formal governance.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are managing a project to develop a new drone navigation system. The Project Charter specifies that the project must integrate with existing air traffic control hardware, which is a known constraint. Your team is highly collaborative, and they have developed a robust Definition of Done (DoD) covering rigorous simulation testing. However, during a review of the initial integration tests, the team discovers that the existing air traffic control hardware (an EEF) has undocumented firmware limitations that prevent required data packet rates. This was not detailed in any input document. The team proposes an immediate, complex workaround that deviates from the high-level integration requirements in the Charter.\n\nWhat should the Project Manager do FIRST to ensure the team's proposed workaround aligns with organizational standards?",
+      "options": [
+        {
+          "text": "Direct the team to document the firmware limitation as a new High-Level Risk in the Charter, and then proceed with the workaround since the team's DoD ensures quality.",
+          "explanation": "This is incorrect. The workaround deviates from the High-Level Requirements in the Charter. Even if the team's DoD is met, any deviation from Charter requirements requires formal assessment and approval via the change control process, not just documentation as a risk.",
+          "is_correct": false
+        },
+        {
+          "text": "Facilitate a session to determine if the proposed workaround constitutes a change to the High-Level Requirements, and if so, prepare a formal change request for Sponsor approval.",
+          "explanation": "This is the BEST choice. The team's proposed action directly contradicts the Charter's stated boundaries (High-Level Requirements). The PM must first determine if the necessary deviation requires escalating a formal change request to the authorizing body (Sponsor).",
+          "is_correct": true
+        },
+        {
+          "text": "Review the Team Charter to confirm the team's Decision Making model allows them to unilaterally approve scope deviations if the existing requirements are technically infeasible due to external factors.",
+          "explanation": "This is incorrect. Team decision models govern internal operations; they cannot override constraints or requirements set forth in the Project Charter, which is the foundational authorization document.",
+          "is_correct": false
+        },
+        {
+          "text": "Consult the Lessons Learned repository (OPA) for similar integration projects to see if a standard approach exists for overriding external hardware limitations.",
+          "explanation": "This is incorrect. While using OPAs is valuable, addressing a deviation from the Project Charter's requirements is a governance issue that requires Sponsor authorization, not just procedural precedent.",
+          "is_correct": false
+        }
+      ],
+      "difficulty": "hard",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "question_text": "You are initiating a project to replace an outdated internal accounting system. The Sponsor is the Chief Financial Officer (CFO). During the Project Charter development, the CFO insists that the project must use the organization's legacy accounting codes, even though the project's purpose (stated in the Charter) is to modernize financial reporting standards. The CFO states this is a non-negotiable constraint based on current legal audits. Finance Department staff (a key stakeholder group) confirm that adopting the new standards would require extensive external consulting, blowing the initial budget envelope.\n\nWhat is the MOST important element the Project Manager must ensure is explicitly captured in the Project Charter before seeking final authorization?",
+      "options": [
+        {
+          "text": "The explicit inclusion of the legacy accounting codes as a High-Level Requirement, alongside the constraint that the project budget is fixed despite the potential for reduced future reporting benefits.",
+          "explanation": "This is the BEST choice. The PM must ensure the Charter captures the actual boundaries agreed upon by the Sponsor. By documenting the legacy codes as a requirement and the fixed budget as a constraint, the PM ensures the project is authorized to succeed within these specific, potentially contradictory, boundaries.",
+          "is_correct": true
+        },
+        {
+          "text": "The definition of the Project Manager's authority level regarding scope changes related to financial reporting standards, citing the conflict between the CFO and the Finance staff.",
+          "explanation": "This is incorrect. The PM's authority level deals with execution control, not resolving fundamental conflicts in the project's strategic definition (Purpose, Requirements, Constraints) during initiation.",
+          "is_correct": false
+        },
+        {
+          "text": "A formal exception documented in the Charter that waives the requirement to use the Organizational Process Assets (OPAs) related to modern financial reporting standards.",
+          "explanation": "This is incorrect. While the OPA might be overridden, the Charter must document the *result* (the requirement to use legacy codes), not the process of overriding an OPA. The Charter must stand on its own as the authorization source.",
+          "is_correct": false
+        },
+        {
+          "text": "A preliminary assessment from similar project PMs (Expert Judgment) detailing how past projects navigated the conflict between modernization and legacy constraints.",
+          "explanation": "This is incorrect. While valuable for risk assessment, the immediate need before authorization is capturing the *current agreement* (the CFO's mandate) within the Charter's required components.",
           "is_correct": false
         }
       ],
