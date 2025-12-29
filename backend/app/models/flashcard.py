@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 if TYPE_CHECKING:
+    from app.models.concept import ConceptTag
     from app.models.task import Task
 
 
@@ -40,6 +41,11 @@ class Flashcard(Base):
 
     # Relationships
     task: Mapped["Task"] = relationship("Task", back_populates="flashcards")
+    concepts: Mapped[list["ConceptTag"]] = relationship(
+        "ConceptTag",
+        secondary="flashcard_concepts",
+        back_populates="flashcards",
+    )
 
     def __repr__(self) -> str:
         return f"<Flashcard(id={self.id}, front='{self.front[:30]}...', task_id={self.task_id})>"

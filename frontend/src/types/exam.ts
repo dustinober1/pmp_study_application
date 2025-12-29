@@ -150,3 +150,91 @@ export interface ExamReportResponse extends ExamReport {}
 export interface ExamResultResponse extends ExamResult {}
 
 export interface ExamResumeResponse extends ExamResumeData {}
+
+// ============ Exam Coach / Behavior Types ============
+
+export type BehaviorPattern =
+  | 'normal'
+  | 'rushing'
+  | 'dwelling'
+  | 'panic'
+  | 'guessing'
+  | 'flagging_spree'
+  | 'skipping'
+  | 'revisit_loop';
+
+export type CoachingSeverity = 'info' | 'suggestion' | 'warning' | 'urgent';
+
+export type PaceTrajectory = 'ahead' | 'on_track' | 'behind' | 'critical';
+
+export interface CoachingAlert {
+  pattern: string;
+  severity: CoachingSeverity;
+  title: string;
+  message: string;
+  suggested_action: string | null;
+  question_index: number | null;
+}
+
+export interface BehaviorMetrics {
+  current_pattern: BehaviorPattern;
+  engagement_score: number;
+  focus_score: number;
+  pace_trajectory: PaceTrajectory;
+  time_remaining_minutes: number;
+  questions_completed: number;
+  avg_time_per_question: number;
+}
+
+export interface GameTapeEvent {
+  event_type: 'answer' | 'flag' | 'revisit' | 'skip' | 'coaching';
+  question_index: number;
+  timestamp: string;
+  time_spent_seconds: number;
+  pattern_detected: BehaviorPattern | null;
+  coaching_message: string | null;
+  domain_name: string | null;
+  is_correct: boolean | null;
+}
+
+export interface GameTapeResponse {
+  exam_session_id: string;
+  events: GameTapeEvent[];
+  summary: BehaviorSummary;
+}
+
+export interface BehaviorSummary {
+  overall_pattern: BehaviorPattern;
+  engagement_score: number;
+  focus_score: number;
+  pace_trajectory: PaceTrajectory;
+  total_flags: number;
+  max_consecutive_flags: number;
+  question_revisits: number;
+  avg_time_per_question: number;
+  fastest_question: number;
+  slowest_question: number;
+  coaching_interventions: number;
+  pattern_history: PatternHistoryEntry[];
+  current_metrics: {
+    time_remaining_minutes: number;
+    questions_completed: number;
+  };
+}
+
+export interface PatternHistoryEntry {
+  pattern: BehaviorPattern;
+  start_q: number;
+  end_q: number;
+  duration_sec: number;
+}
+
+export interface BehaviorMetricsResponse {
+  current_pattern: BehaviorPattern;
+  engagement_score: number;
+  focus_score: number;
+  pace_trajectory: PaceTrajectory;
+  time_remaining_minutes: number;
+  questions_completed: number;
+  avg_time_per_question: number;
+}

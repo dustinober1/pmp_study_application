@@ -28,7 +28,10 @@ if TYPE_CHECKING:
         StudyGroupMember,
     )
     from app.models.exam import ExamSession
+    from app.models.explanation import UserLearningPreference
+    from app.models.micro_learning import MicroProgress, QuickSession, StudyQueue
     from app.models.progress import FlashcardProgress, QuestionProgress
+    from app.models.roadmap import StudyRoadmap
     from app.models.session import StudySession
     from app.models.subscription import Subscription, UsageTracking
 
@@ -177,6 +180,40 @@ class User(Base):
 
     usage_tracking: Mapped[list["UsageTracking"]] = relationship(
         "UsageTracking",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    # Roadmap relationship
+    roadmaps: Mapped[list["StudyRoadmap"]] = relationship(
+        "StudyRoadmap",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    # Learning preferences relationship
+    learning_preferences: Mapped["UserLearningPreference"] = relationship(
+        "UserLearningPreference",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+
+    # Micro-learning relationships
+    study_queues: Mapped[list["StudyQueue"]] = relationship(
+        "StudyQueue",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    quick_sessions: Mapped[list["QuickSession"]] = relationship(
+        "QuickSession",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    micro_progress: Mapped[list["MicroProgress"]] = relationship(
+        "MicroProgress",
         back_populates="user",
         cascade="all, delete-orphan",
     )

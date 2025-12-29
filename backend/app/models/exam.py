@@ -12,6 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 if TYPE_CHECKING:
+    from app.models.exam_behavior import ExamBehaviorProfile
     from app.models.question import Question
     from app.models.user import User
 
@@ -131,6 +132,13 @@ class ExamSession(Base):
 
     report: Mapped["ExamReport"] = relationship(
         "ExamReport",
+        back_populates="exam_session",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    behavior_profile: Mapped["ExamBehaviorProfile"] = relationship(
+        "ExamBehaviorProfile",
         back_populates="exam_session",
         uselist=False,
         cascade="all, delete-orphan",

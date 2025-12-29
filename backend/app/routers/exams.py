@@ -5,6 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -26,6 +27,11 @@ from app.schemas.exam import (
     ExamSessionResponse,
     ExamSessionSubmit,
     ExamSessionWithReportResponse,
+)
+from app.services.exam_coach_service import (
+    BehaviorMetrics,
+    GameTapeEvent,
+    create_exam_coach_service,
 )
 from app.services.exam_engine import EXAM_DURATION_MINUTES, TOTAL_QUESTIONS, ExamEngine, create_exam_engine
 
@@ -669,3 +675,217 @@ async def abandon_exam_session(
     db.commit()
 
     return None
+
+
+# ==================== Exam Coach Endpoints ====================
+
+
+class CoachingAlertResponse(BaseModel):
+    """Response model for coaching alerts."""
+
+    pattern: str
+    severity: str
+    title: str
+    message: str
+    suggested_action: str | None = None
+    question_index: int | None = None
+
+
+class BehaviorMetricsResponse(BaseModel):
+    """Response model for behavior metrics."""
+
+    current_pattern: str
+    engagement_score: float
+    focus_score: float
+    pace_trajectory: str
+    time_remaining_minutes: int
+    questions_completed: int
+    avg_time_per_question: float
+
+
+class GameTapeEventResponse(BaseModel):
+    """Response model for game tape events."""
+
+    event_type: str
+    question_index: int
+    timestamp: str
+    time_spent_seconds: int
+    pattern_detected: str | None = None
+    coaching_message: str | None = None
+    domain_name: str | None = None
+    is_correct: bool | None = None
+
+
+class GameTapeResponse(BaseModel):
+    """Response model for game tape."""
+
+    exam_session_id: UUID
+    events: list[GameTapeEventResponse]
+    summary: dict
+
+
+class BehaviorSummaryResponse(BaseModel):
+    """Response model for behavior summary."""
+
+    overall_pattern: str
+    engagement_score: float
+    focus_score: float
+    pace_trajectory: str
+    total_flags: int
+    max_consecutive_flags: int
+    question_revisits: int
+    avg_time_per_question: float
+    fastest_question: int
+    slowest_question: int
+    coaching_interventions: int
+    pattern_history: list[dict]
+    current_metrics: dict
+
+
+@router.get("/sessions/{session_id}/coach/metrics", response_model=BehaviorMetricsResponse)
+async def get_behavior_metrics(
+    session_id: UUID,
+    db: Annotated[Session, Depends(get_db)],
+    x_anonymous_id: Annotated[str, Header(alias="X-Anonymous-Id")],
+) -> BehaviorMetricsResponse:
+    """
+    Get real-time behavior metrics for an exam session.
+
+    Returns current pattern, engagement score, focus score, pace trajectory,
+    and other metrics for the exam coach panel.
+    """
+    user = get_or_create_user(db, x_anonymous_id)
+
+    # Get the session
+    stmt = select(ExamSession).where(ExamSession.id == session_id)
+    session = db.execute(stmt).scalar_one_or_none()
+
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Exam session {session_id} not found",
+        )
+
+    # Verify ownership
+    if session.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this exam session",
+        )
+
+    # Get behavior metrics
+    coach_service = create_exam_coach_service(db)
+    metrics = coach_service.get_current_metrics(session)
+
+    if metrics is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Behavior profile not found",
+        )
+
+    return BehaviorMetricsResponse(
+        current_pattern=metrics.current_pattern,
+        engagement_score=metrics.engagement_score,
+        focus_score=metrics.focus_score,
+        pace_trajectory=metrics.pace_trajectory,
+        time_remaining_minutes=metrics.time_remaining_minutes,
+        questions_completed=metrics.questions_completed,
+        avg_time_per_question=metrics.avg_time_per_question,
+    )
+
+
+@router.get("/sessions/{session_id}/coach/summary", response_model=BehaviorSummaryResponse)
+async def get_behavior_summary(
+    session_id: UUID,
+    db: Annotated[Session, Depends(get_db)],
+    x_anonymous_id: Annotated[str, Header(alias="X-Anonymous-Id")],
+) -> BehaviorSummaryResponse:
+    """
+    Get complete behavioral summary for an exam session.
+
+    Returns detailed behavioral insights including pattern history,
+    coaching interventions, and summary statistics.
+    """
+    user = get_or_create_user(db, x_anonymous_id)
+
+    # Get the session
+    stmt = select(ExamSession).where(ExamSession.id == session_id)
+    session = db.execute(stmt).scalar_one_or_none()
+
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Exam session {session_id} not found",
+        )
+
+    # Verify ownership
+    if session.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this exam session",
+        )
+
+    # Get behavior summary
+    coach_service = create_exam_coach_service(db)
+    summary = coach_service.get_behavior_summary(session)
+
+    return BehaviorSummaryResponse(**summary)
+
+
+@router.get("/sessions/{session_id}/coach/gametape", response_model=GameTapeResponse)
+async def get_game_tape(
+    session_id: UUID,
+    db: Annotated[Session, Depends(get_db)],
+    x_anonymous_id: Annotated[str, Header(alias="X-Anonymous-Id")],
+) -> GameTapeResponse:
+    """
+    Get post-exam "game tape" behavioral replay.
+
+    Returns a chronological list of all behaviors, coaching events,
+    and patterns detected during the exam for post-exam review.
+
+    Best viewed after exam completion for full behavioral insights.
+    """
+    user = get_or_create_user(db, x_anonymous_id)
+
+    # Get the session
+    stmt = select(ExamSession).where(ExamSession.id == session_id)
+    session = db.execute(stmt).scalar_one_or_none()
+
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Exam session {session_id} not found",
+        )
+
+    # Verify ownership
+    if session.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this exam session",
+        )
+
+    # Get game tape
+    coach_service = create_exam_coach_service(db)
+    events = coach_service.generate_game_tape(session)
+    summary = coach_service.get_behavior_summary(session)
+
+    event_responses = [
+        GameTapeEventResponse(
+            event_type=e.event_type,
+            question_index=e.question_index,
+            timestamp=e.timestamp,
+            time_spent_seconds=e.time_spent_seconds,
+            pattern_detected=e.pattern_detected,
+            coaching_message=e.coaching_message,
+            domain_name=e.domain_name,
+            is_correct=e.is_correct,
+        )
+        for e in events
+    ]
+
+    return GameTapeResponse(
+        exam_session_id=session_id,
+        events=event_responses,
+        summary=summary,
+    )

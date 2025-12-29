@@ -17,6 +17,9 @@ import type {
   ExamReport,
   ExamSessionWithReport,
   ExamResumeData,
+  BehaviorMetrics,
+  BehaviorSummary,
+  GameTapeResponse,
 } from '@/types/exam';
 import { API_BASE_URL, buildHeaders, ApiClientError } from './client';
 
@@ -199,4 +202,42 @@ export async function abandonExamSession(sessionId: string): Promise<void> {
       errorData
     );
   }
+}
+
+// ============ Exam Coach API ============
+
+/**
+ * Get real-time behavior metrics for an exam session
+ * GET /api/exams/sessions/{id}/coach/metrics
+ */
+export async function getBehaviorMetrics(sessionId: string): Promise<BehaviorMetrics> {
+  const response = await fetch(examUrl(`/sessions/${sessionId}/coach/metrics`), {
+    method: 'GET',
+    headers: buildHeaders(),
+  });
+  return handleResponse<BehaviorMetrics>(response);
+}
+
+/**
+ * Get complete behavioral summary for an exam session
+ * GET /api/exams/sessions/{id}/coach/summary
+ */
+export async function getBehaviorSummary(sessionId: string): Promise<BehaviorSummary> {
+  const response = await fetch(examUrl(`/sessions/${sessionId}/coach/summary`), {
+    method: 'GET',
+    headers: buildHeaders(),
+  });
+  return handleResponse<BehaviorSummary>(response);
+}
+
+/**
+ * Get post-exam "game tape" behavioral replay
+ * GET /api/exams/sessions/{id}/coach/gametape
+ */
+export async function getGameTape(sessionId: string): Promise<GameTapeResponse> {
+  const response = await fetch(examUrl(`/sessions/${sessionId}/coach/gametape`), {
+    method: 'GET',
+    headers: buildHeaders(),
+  });
+  return handleResponse<GameTapeResponse>(response);
 }

@@ -674,6 +674,9 @@ class ExamEngine:
             .first()
         )
 
+        # Check if this is a revisit (answer already exists)
+        is_revisit = answer is not None and answer.selected_answer != ""
+
         if answer:
             answer.selected_answer = selected_answer.upper()
             answer.is_correct = is_correct
@@ -701,6 +704,27 @@ class ExamEngine:
             .count()
         )
         session.current_question_index = answered_count
+
+        # Track behavior for exam coach (if answer was newly created or revisited)
+        if is_revisit or answer.selected_answer:
+            from app.services.exam_coach_service import create_exam_coach_service
+            coach_service = create_exam_coach_service(self.db)
+
+            # Get question index from the answer
+            question_index = answer.question_index
+
+            # Record behavior and get coaching alerts
+            try:
+                coach_service.record_answer_behavior(
+                    session=session,
+                    question_index=question_index,
+                    time_spent_seconds=time_spent_seconds,
+                    is_flagged=is_flagged,
+                    is_revisit=is_revisit,
+                )
+            except Exception:
+                # Don't fail answer submission if behavior tracking fails
+                pass
 
         self.db.commit()
         self.db.refresh(answer)
