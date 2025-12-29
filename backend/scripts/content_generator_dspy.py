@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Literal
 
 import dspy
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, AliasChoices
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -294,6 +294,13 @@ class Flashcard(BaseModel):
         description="Difficulty level of the flashcard"
     )
     
+    @field_validator('difficulty', mode='before')
+    @classmethod
+    def normalize_difficulty(cls, v):
+        if isinstance(v, str):
+            return v.lower()
+        return v
+    
     @field_validator('front', 'back')
     @classmethod
     def must_not_be_empty(cls, v: str) -> str:
@@ -342,7 +349,8 @@ class PracticeQuestion(BaseModel):
     
     question_text: str = Field(
         description="A complex scenario-based question",
-        alias="question"  # Accept 'question' as alias
+        alias="question",  # Accept 'question' as alias
+        validation_alias=AliasChoices('question', 'text', 'question_text') # Accept 'question', 'text', or 'question_text'
     )
     options: list[AnswerOption] = Field(
         description="Exactly 4 answer options. One must be correct (is_correct=true), three must be incorrect (is_correct=false)."
@@ -809,69 +817,77 @@ class PMPContentGenerator:
         existing_question_topics = self._get_existing_question_topics(task_name)
         
         # Generate flashcards
-        print(f"\nGenerating {num_flashcards} flashcards...")
-        if existing_flashcard_topics:
-            print(f"  (Avoiding {len(existing_flashcard_topics.split(chr(10)))} existing topics)")
-        try:
-            flashcard_set = self.flashcard_gen(
-                content=content,
-                domain=domain,
-                task_name=task_name,
-                num_flashcards=num_flashcards,
-                avoid_topics=existing_flashcard_topics
-            )
-            flashcards = [
-                {
-                    "front": fc.front,
-                    "back": fc.back,
-                    "difficulty": fc.difficulty,
-                    "domain": domain,
-                    "domain_id": domain_id,
-                    "task": task_name,
-                    "task_id": task_id,
-                }
-                for fc in flashcard_set.flashcards
-            ]
-            print(f"✓ Generated {len(flashcards)} flashcards")
-        except Exception as e:
-            print(f"✗ Error generating flashcards: {e}")
-            flashcards = []
+        flashcards = []
+        if num_flashcards > 0:
+            print(f"\nGenerating {num_flashcards} flashcards...")
+            if existing_flashcard_topics:
+                print(f"  (Avoiding {len(existing_flashcard_topics.split(chr(10)))} existing topics)")
+            try:
+                flashcard_set = self.flashcard_gen(
+                    content=content,
+                    domain=domain,
+                    task_name=task_name,
+                    num_flashcards=num_flashcards,
+                    avoid_topics=existing_flashcard_topics
+                )
+                flashcards = [
+                    {
+                        "front": fc.front,
+                        "back": fc.back,
+                        "difficulty": fc.difficulty,
+                        "domain": domain,
+                        "domain_id": domain_id,
+                        "task": task_name,
+                        "task_id": task_id,
+                    }
+                    for fc in flashcard_set.flashcards
+                ]
+                print(f"✓ Generated {len(flashcards)} flashcards")
+            except Exception as e:
+                print(f"✗ Error generating flashcards: {e}")
+                flashcards = []
+        else:
+            print(f"\nSkipping flashcards (count=0)")
         
         # Generate hard scenario-based questions
-        print(f"\nGenerating {num_questions} hard scenario-based questions...")
-        if existing_question_topics:
-            print(f"  (Avoiding {len(existing_question_topics.split(chr(10)))} existing scenarios)")
-        try:
-            question_set = self.question_gen(
-                content=content,
-                domain=domain,
-                task_name=task_name,
-                num_questions=num_questions,
-                avoid_topics=existing_question_topics
-            )
-            questions = [
-                {
-                    "question_text": q.question_text,
-                    "options": [
-                        {
-                            "text": opt.text,
-                            "explanation": opt.explanation,
-                            "is_correct": opt.is_correct
-                        }
-                        for opt in q.options
-                    ],
-                    "difficulty": q.difficulty,
-                    "domain": domain,
-                    "domain_id": domain_id,
-                    "task": task_name,
-                    "task_id": task_id,
-                }
-                for q in question_set.questions
-            ]
-            print(f"✓ Generated {len(questions)} scenario-based questions")
-        except Exception as e:
-            print(f"✗ Error generating questions: {e}")
-            questions = []
+        questions = []
+        if num_questions > 0:
+            print(f"\nGenerating {num_questions} hard scenario-based questions...")
+            if existing_question_topics:
+                print(f"  (Avoiding {len(existing_question_topics.split(chr(10)))} existing scenarios)")
+            try:
+                question_set = self.question_gen(
+                    content=content,
+                    domain=domain,
+                    task_name=task_name,
+                    num_questions=num_questions,
+                    avoid_topics=existing_question_topics
+                )
+                questions = [
+                    {
+                        "question_text": q.question_text,
+                        "options": [
+                            {
+                                "text": opt.text,
+                                "explanation": opt.explanation,
+                                "is_correct": opt.is_correct
+                            }
+                            for opt in q.options
+                        ],
+                        "difficulty": q.difficulty,
+                        "domain": domain,
+                        "domain_id": domain_id,
+                        "task": task_name,
+                        "task_id": task_id,
+                    }
+                    for q in question_set.questions
+                ]
+                print(f"✓ Generated {len(questions)} scenario-based questions")
+            except Exception as e:
+                print(f"✗ Error generating questions: {e}")
+                questions = []
+        else:
+            print(f"\nSkipping questions (count=0)")
         
         return {
             "domain": domain,
