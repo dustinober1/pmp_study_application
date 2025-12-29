@@ -35,7 +35,7 @@ load_dotenv()
 # Configuration
 GUIDE_PATH = Path("/Users/dustinober/PMP-2026/guide")
 DEFAULT_OUTPUT_DIR = Path("/Users/dustinober/Projects/pmp_study_app/backend/generated_content")
-MODEL_NAME = "gemini/gemini-2.0-flash"  # LiteLLM format: gemini/{model-name}
+MODEL_NAME = "gemini/gemini-3-flash-preview"  # LiteLLM format: gemini/{model-name}
 
 # ============================================================================
 # PMP 2026 ECO Task-to-File Mapping (Official ECO Structure)
