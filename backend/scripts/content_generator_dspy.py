@@ -337,8 +337,12 @@ class AnswerOption(BaseModel):
 
 class PracticeQuestion(BaseModel):
     """A hard, scenario-based PMP practice question with 4 options (randomizable order)."""
+    
+    model_config = {"populate_by_name": True}
+    
     question_text: str = Field(
-        description="A complex scenario-based question (3-5 sentences describing a realistic project situation, then asking what the PM should do)"
+        description="A complex scenario-based question",
+        alias="question"  # Accept 'question' as alias
     )
     options: list[AnswerOption] = Field(
         description="Exactly 4 answer options. One must be correct (is_correct=true), three must be incorrect (is_correct=false)."
@@ -485,6 +489,11 @@ def parse_json_response(response: str, model_class, list_key: str = None):
         if json_match:
             json_str = json_match.group(1)
         else:
+            # Maybe it's markdown formatted flashcards - try to parse
+            if list_key == "flashcards" and "**Front:**" in response:
+                flashcards = parse_markdown_flashcards(response)
+                if flashcards:
+                    return model_class.model_validate({"flashcards": flashcards})
             json_str = response.strip()
     
     try:
@@ -505,6 +514,11 @@ def parse_json_response(response: str, model_class, list_key: str = None):
                 data = {list_key: data}
             return model_class.model_validate(data)
         except Exception:
+            # Last resort for flashcards: try markdown parsing
+            if list_key == "flashcards":
+                flashcards = parse_markdown_flashcards(response)
+                if flashcards:
+                    return model_class.model_validate({"flashcards": flashcards})
             # Print debug info
             print(f"    DEBUG: Response length: {len(response)}")
             print(f"    DEBUG: First 200 chars: {response[:200]}")
@@ -518,6 +532,29 @@ def parse_json_response(response: str, model_class, list_key: str = None):
                 data = {list_key: data}
                 return model_class.model_validate(data)
         raise
+
+
+def parse_markdown_flashcards(text: str) -> list[dict]:
+    """Parse markdown formatted flashcards into dict list."""
+    import re
+    
+    flashcards = []
+    
+    # Pattern for **Front:** ... **Back:** ...
+    pattern = r'\*\*Front:\*\*\s*(.*?)\s*\*\*Back:\*\*\s*(.*?)(?=\*\*Flashcard|\*\*Front:|\Z)'
+    matches = re.findall(pattern, text, re.DOTALL | re.IGNORECASE)
+    
+    for front, back in matches:
+        front = front.strip()
+        back = back.strip()
+        if front and back and len(front) > 5 and len(back) > 5:
+            flashcards.append({
+                "front": front,
+                "back": back,
+                "difficulty": "medium"
+            })
+    
+    return flashcards
 
 
 class FlashcardGenerator(dspy.Module):
