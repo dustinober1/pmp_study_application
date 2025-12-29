@@ -24,6 +24,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
+import concurrent.futures
 
 import dspy
 from pydantic import BaseModel, Field, field_validator, AliasChoices
@@ -799,7 +800,9 @@ class PMPContentGenerator:
         task_name: str,
         files: list[str],
         num_flashcards: int = 10,
-        num_questions: int = 10
+        num_questions: int = 5,
+        iterations: int = 1,
+        dry_run: bool = False
     ) -> dict:
         """Generate content for a specific ECO task."""
         
@@ -808,6 +811,7 @@ class PMPContentGenerator:
         print(f"\n{'='*70}")
         print(f"ECO Task: {domain} - Task {task_id}")
         print(f"  {task_name}")
+        print(f"  Iterations: {iterations} | {num_flashcards} flashcards + {num_questions} questions each")
         print(f"{'='*70}")
         
         # Load content from mapped files
@@ -827,82 +831,85 @@ class PMPContentGenerator:
                 "questions": []
             }
         
-        # Load existing content to avoid duplicates
-        existing_flashcard_topics = self._get_existing_flashcard_topics(task_name)
-        existing_question_topics = self._get_existing_question_topics(task_name)
+        if dry_run:
+            expected_fc = num_flashcards * iterations
+            expected_q = num_questions * iterations
+            print(f"\n[DRY RUN] Would generate: {expected_fc} flashcards, {expected_q} questions")
+            return {
+                "domain": domain,
+                "domain_id": domain_id,
+                "task_id": task_id,
+                "task_name": task_name,
+                "files": loaded_files,
+                "flashcards": [],
+                "questions": [],
+                "dry_run_expected": {"flashcards": expected_fc, "questions": expected_q}
+            }
         
-        # Generate flashcards
-        flashcards = []
-        if num_flashcards > 0:
-            print(f"\nGenerating {num_flashcards} flashcards...")
-            if existing_flashcard_topics:
-                print(f"  (Avoiding {len(existing_flashcard_topics.split(chr(10)))} existing topics)")
-            try:
-                flashcard_set = self.flashcard_gen(
-                    content=content,
-                    domain=domain,
-                    task_name=task_name,
-                    num_flashcards=num_flashcards,
-                    avoid_topics=existing_flashcard_topics
-                )
-                flashcards = [
-                    {
-                        "front": fc.front,
-                        "back": fc.back,
-                        "difficulty": fc.difficulty,
-                        "domain": domain,
-                        "domain_id": domain_id,
-                        "task": task_name,
-                        "task_id": task_id,
-                    }
-                    for fc in flashcard_set.flashcards
-                ]
-                print(f"✓ Generated {len(flashcards)} flashcards")
-            except Exception as e:
-                print(f"✗ Error generating flashcards: {e}")
-                flashcards = []
-        else:
-            print(f"\nSkipping flashcards (count=0)")
+        all_flashcards = []
+        all_questions = []
         
-        # Generate hard scenario-based questions
-        questions = []
-        if num_questions > 0:
-            print(f"\nGenerating {num_questions} hard scenario-based questions...")
-            if existing_question_topics:
-                print(f"  (Avoiding {len(existing_question_topics.split(chr(10)))} existing scenarios)")
-            try:
-                question_set = self.question_gen(
-                    content=content,
-                    domain=domain,
-                    task_name=task_name,
-                    num_questions=num_questions,
-                    avoid_topics=existing_question_topics
-                )
-                questions = [
-                    {
-                        "question_text": q.question_text,
-                        "options": [
-                            {
-                                "text": opt.text,
-                                "explanation": opt.explanation,
-                                "is_correct": opt.is_correct
-                            }
-                            for opt in q.options
-                        ],
-                        "difficulty": q.difficulty,
-                        "domain": domain,
-                        "domain_id": domain_id,
-                        "task": task_name,
-                        "task_id": task_id,
-                    }
-                    for q in question_set.questions
-                ]
-                print(f"✓ Generated {len(questions)} scenario-based questions")
-            except Exception as e:
-                print(f"✗ Error generating questions: {e}")
-                questions = []
-        else:
-            print(f"\nSkipping questions (count=0)")
+        for iteration in range(1, iterations + 1):
+            print(f"\n--- Iteration {iteration}/{iterations} ---")
+            
+            # Generate flashcards
+            if num_flashcards > 0:
+                print(f"Generating {num_flashcards} flashcards...")
+                try:
+                    flashcard_set = self.flashcard_gen(
+                        content=content,
+                        domain=domain,
+                        task_name=task_name,
+                        num_flashcards=num_flashcards,
+                        avoid_topics=""
+                    )
+                    for fc in flashcard_set.flashcards:
+                        all_flashcards.append({
+                            "front": fc.front,
+                            "back": fc.back,
+                            "difficulty": fc.difficulty,
+                            "domain": domain,
+                            "domain_id": domain_id,
+                            "task": task_name,
+                            "task_id": task_id,
+                        })
+                    print(f"✓ Generated {len(flashcard_set.flashcards)} flashcards")
+                except Exception as e:
+                    print(f"✗ Error generating flashcards: {e}")
+            
+            # Generate questions
+            if num_questions > 0:
+                print(f"Generating {num_questions} questions...")
+                try:
+                    question_set = self.question_gen(
+                        content=content,
+                        domain=domain,
+                        task_name=task_name,
+                        num_questions=num_questions,
+                        avoid_topics=""
+                    )
+                    for q in question_set.questions:
+                        all_questions.append({
+                            "question_text": q.question_text,
+                            "options": [
+                                {
+                                    "text": opt.text,
+                                    "explanation": opt.explanation,
+                                    "is_correct": opt.is_correct
+                                }
+                                for opt in q.options
+                            ],
+                            "difficulty": q.difficulty,
+                            "domain": domain,
+                            "domain_id": domain_id,
+                            "task": task_name,
+                            "task_id": task_id,
+                        })
+                    print(f"✓ Generated {len(question_set.questions)} questions")
+                except Exception as e:
+                    print(f"✗ Error generating questions: {e}")
+        
+        print(f"\nTask total: {len(all_flashcards)} flashcards, {len(all_questions)} questions")
         
         return {
             "domain": domain,
@@ -910,14 +917,84 @@ class PMPContentGenerator:
             "task_id": task_id,
             "task_name": task_name,
             "files": loaded_files,
-            "flashcards": flashcards,
-            "questions": questions
+            "flashcards": all_flashcards,
+            "questions": all_questions
         }
     
+    def generate_batch(
+        self,
+        tasks_to_process: list[dict],
+        num_flashcards: int = 10,
+        num_questions: int = 5,
+        iterations: int = 1,
+        dry_run: bool = False,
+        max_concurrency: int = 1
+    ) -> list[dict]:
+        """Generate content for a batch of tasks, potentially in parallel."""
+        results = []
+        if not tasks_to_process:
+            return results
+
+        print(f"\nProcessing {len(tasks_to_process)} tasks with max_concurrency={max_concurrency}...")
+        
+        # If concurrency is 1, run sequentially to avoid thread overhead and keep clean logs
+        if max_concurrency <= 1:
+            for t in tasks_to_process:
+                res = self.generate_for_task(
+                    domain=t["domain"],
+                    task_id=t["task_id"],
+                    task_name=t["task_name"],
+                    files=t["files"],
+                    num_flashcards=num_flashcards,
+                    num_questions=num_questions,
+                    iterations=iterations,
+                    dry_run=dry_run
+                )
+                results.append(res)
+            return results
+
+        # Run in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_concurrency) as executor:
+            future_to_task = {
+                executor.submit(
+                    self.generate_for_task,
+                    domain=t["domain"],
+                    task_id=t["task_id"],
+                    task_name=t["task_name"],
+                    files=t["files"],
+                    num_flashcards=num_flashcards,
+                    num_questions=num_questions,
+                    iterations=iterations,
+                    dry_run=dry_run
+                ): t for t in tasks_to_process
+            }
+            
+            for future in concurrent.futures.as_completed(future_to_task):
+                task = future_to_task[future]
+                try:
+                    result = future.result()
+                    results.append(result)
+                except Exception as e:
+                    print(f"ERROR: Task '{task['task_name']}' generated an exception: {e}")
+                    # Return partial result indicating failure
+                    results.append({
+                        "domain": task["domain"],
+                        "task_id": task["task_id"],
+                        "task_name": task["task_name"],
+                        "error": str(e),
+                        "flashcards": [],
+                        "questions": []
+                    })
+                    
+        return results
+
     def generate_all(
         self,
         num_flashcards_per_task: int = 10,
-        num_questions_per_task: int = 10
+        num_questions_per_task: int = 5,
+        iterations: int = 1,
+        dry_run: bool = False,
+        max_concurrency: int = 10
     ) -> dict:
         """Generate content for all ECO tasks."""
         
@@ -932,19 +1009,22 @@ class PMPContentGenerator:
         
         all_tasks = get_all_eco_tasks()
         print(f"\nGenerating content for {len(all_tasks)} ECO tasks...")
+        if dry_run:
+            print("[DRY RUN MODE - No API calls will be made]")
         
-        for task_info in all_tasks:
-            result = self.generate_for_task(
-                domain=task_info["domain"],
-                task_id=task_info["task_id"],
-                task_name=task_info["task_name"],
-                files=task_info["files"],
-                num_flashcards=num_flashcards_per_task,
-                num_questions=num_questions_per_task
-            )
+        task_results = self.generate_batch(
+            all_tasks,
+            num_flashcards=num_flashcards_per_task,
+            num_questions=num_questions_per_task,
+            iterations=iterations,
+            dry_run=dry_run,
+            max_concurrency=max_concurrency
+        )
+        
+        for result in task_results:
             all_results["tasks"].append(result)
-            all_results["all_flashcards"].extend(result["flashcards"])
-            all_results["all_questions"].extend(result["questions"])
+            all_results["all_flashcards"].extend(result.get("flashcards", []))
+            all_results["all_questions"].extend(result.get("questions", []))
         
         # Summary by domain
         all_results["summary"] = {
@@ -953,9 +1033,17 @@ class PMPContentGenerator:
             "by_domain": {}
         }
         
+        if dry_run:
+            total_expected_fc = sum(r.get("dry_run_expected", {}).get("flashcards", 0) for r in all_results["tasks"])
+            total_expected_q = sum(r.get("dry_run_expected", {}).get("questions", 0) for r in all_results["tasks"])
+            all_results["summary"]["dry_run_expected"] = {
+                "flashcards": total_expected_fc,
+                "questions": total_expected_q
+            }
+        
         for domain_name in ["People", "Process", "Business Environment"]:
-            fc_count = len([f for f in all_results["all_flashcards"] if f["domain"] == domain_name])
-            q_count = len([q for q in all_results["all_questions"] if q["domain"] == domain_name])
+            fc_count = len([f for f in all_results["all_flashcards"] if f.get("domain") == domain_name])
+            q_count = len([q for q in all_results["all_questions"] if q.get("domain") == domain_name])
             all_results["summary"]["by_domain"][domain_name] = {
                 "flashcards": fc_count,
                 "questions": q_count
@@ -1149,13 +1237,24 @@ def main():
         "--flashcards",
         type=int,
         default=10,
-        help="Number of flashcards per task (default: 10)"
+        help="Number of flashcards per task per iteration (default: 10)"
     )
     parser.add_argument(
         "--questions",
         type=int,
-        default=10,
-        help="Number of questions per task (default: 10)"
+        default=5,
+        help="Number of questions per task per iteration (default: 5)"
+    )
+    parser.add_argument(
+        "--iterations",
+        type=int,
+        default=1,
+        help="Number of iterations per task (default: 1)"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview what would be generated without calling the API"
     )
     parser.add_argument(
         "--output-dir",
@@ -1172,6 +1271,12 @@ def main():
         "--allow-duplicates",
         action="store_true",
         help="Save generated content even if it's identical to existing master file content"
+    )
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=10,
+        help="Number of concurrent API calls/tasks (default: 10). Set to 1 for sequential execution."
     )
     parser.add_argument(
         "--list-tasks",
@@ -1202,11 +1307,43 @@ def main():
     try:
         generator = PMPContentGenerator()
         
+        if args.dry_run:
+            print("\n" + "="*60)
+            print("DRY RUN MODE - Previewing generation plan")
+            print("="*60)
+        
         if args.all:
-            results = generator.generate_all(args.flashcards, args.questions)
+            results = generator.generate_all(
+                args.flashcards, 
+                args.questions,
+                iterations=args.iterations,
+                dry_run=args.dry_run,
+                max_concurrency=args.concurrency
+            )
         elif args.domain:
             # Process all tasks in a domain
-            domain_tasks = PMP_2026_ECO[args.domain]["tasks"]
+            domain_tasks_dict = PMP_2026_ECO[args.domain]["tasks"]
+            
+            # Prepare tasks list for batch processing
+            domain_tasks = []
+            for task_id, task_data in domain_tasks_dict.items():
+                domain_tasks.append({
+                    "domain": args.domain,
+                    "domain_id": PMP_2026_ECO[args.domain]["id"],
+                    "task_id": task_id,
+                    "task_name": task_data["name"],
+                    "files": task_data["files"]
+                })
+            
+            task_results = generator.generate_batch(
+                domain_tasks,
+                num_flashcards=args.flashcards,
+                num_questions=args.questions,
+                iterations=args.iterations,
+                dry_run=args.dry_run,
+                max_concurrency=args.concurrency
+            )
+            
             all_results = {
                 "generated_at": datetime.now().isoformat(),
                 "tasks": [],
@@ -1214,22 +1351,20 @@ def main():
                 "all_questions": [],
                 "summary": {}
             }
-            for task_id, task_data in domain_tasks.items():
-                result = generator.generate_for_task(
-                    domain=args.domain,
-                    task_id=task_id,
-                    task_name=task_data["name"],
-                    files=task_data["files"],
-                    num_flashcards=args.flashcards,
-                    num_questions=args.questions
-                )
+            
+            for result in task_results:
                 all_results["tasks"].append(result)
-                all_results["all_flashcards"].extend(result["flashcards"])
-                all_results["all_questions"].extend(result["questions"])
+                all_results["all_flashcards"].extend(result.get("flashcards", []))
+                all_results["all_questions"].extend(result.get("questions", []))
+                
             all_results["summary"] = {
                 "total_flashcards": len(all_results["all_flashcards"]),
                 "total_questions": len(all_results["all_questions"])
             }
+            if args.dry_run:
+                total_expected_fc = sum(r.get("dry_run_expected", {}).get("flashcards", 0) for r in all_results["tasks"])
+                total_expected_q = sum(r.get("dry_run_expected", {}).get("questions", 0) for r in all_results["tasks"])
+                all_results["summary"]["dry_run_expected"] = {"flashcards": total_expected_fc, "questions": total_expected_q}
             results = all_results
         else:
             # Find the specific task
@@ -1243,7 +1378,9 @@ def main():
                             task_name=task_data["name"],
                             files=task_data["files"],
                             num_flashcards=args.flashcards,
-                            num_questions=args.questions
+                            num_questions=args.questions,
+                            iterations=args.iterations,
+                            dry_run=args.dry_run
                         )
                         results = {
                             "generated_at": datetime.now().isoformat(),
@@ -1255,6 +1392,8 @@ def main():
                                 "total_questions": len(result["questions"])
                             }
                         }
+                        if args.dry_run and "dry_run_expected" in result:
+                            results["summary"]["dry_run_expected"] = result["dry_run_expected"]
                         found = True
                         break
                 if found:
@@ -1264,7 +1403,17 @@ def main():
                 print(f"Error: Task '{args.task}' not found")
                 sys.exit(1)
         
-        if results["all_flashcards"] or results["all_questions"]:
+        if args.dry_run:
+            expected = results["summary"].get("dry_run_expected", {})
+            print(f"\n{'='*60}")
+            print("DRY RUN SUMMARY")
+            print(f"{'='*60}")
+            print(f"Tasks to process: {len(results['tasks'])}")
+            print(f"Iterations per task: {args.iterations}")
+            print(f"Expected flashcards: {expected.get('flashcards', 0)}")
+            print(f"Expected questions: {expected.get('questions', 0)}")
+            print(f"{'='*60}")
+        elif results["all_flashcards"] or results["all_questions"]:
             save_results(
                 results, 
                 Path(args.output_dir),
