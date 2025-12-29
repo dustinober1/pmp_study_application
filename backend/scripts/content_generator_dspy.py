@@ -1052,126 +1052,69 @@ class PMPContentGenerator:
         return all_results
 
 
-def compute_content_hash(text: str) -> str:
-    """Compute a hash for content deduplication."""
-    import hashlib
-    # Normalize text for comparison
-    normalized = " ".join(text.lower().split())
-    return hashlib.md5(normalized.encode()).hexdigest()[:12]
 
-
-def load_existing_content(output_dir: Path) -> tuple[set[str], set[str], list, list]:
-    """Load existing flashcards and questions from master files for deduplication."""
-    flashcard_hashes = set()
-    question_hashes = set()
+def load_master_content(output_dir: Path) -> tuple[list, list]:
+    """Load existing flashcards and questions from master files."""
     existing_flashcards = []
     existing_questions = []
     
     # Load existing flashcards
     flashcards_master = output_dir / "flashcards_master.json"
     if flashcards_master.exists():
-        with open(flashcards_master, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            existing_flashcards = data.get("flashcards", [])
-            for fc in existing_flashcards:
-                hash_key = compute_content_hash(fc.get("front", ""))
-                flashcard_hashes.add(hash_key)
-        print(f"Loaded {len(existing_flashcards)} existing flashcards for deduplication")
+        try:
+            with open(flashcards_master, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                existing_flashcards = data.get("flashcards", [])
+        except Exception as e:
+            print(f"Warning: Could not load master flashcards: {e}")
+            existing_flashcards = []
     
     # Load existing questions
     questions_master = output_dir / "questions_master.json"
     if questions_master.exists():
-        with open(questions_master, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            existing_questions = data.get("questions", [])
-            for q in existing_questions:
-                hash_key = compute_content_hash(q.get("question_text", ""))
-                question_hashes.add(hash_key)
-        print(f"Loaded {len(existing_questions)} existing questions for deduplication")
+        try:
+            with open(questions_master, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                existing_questions = data.get("questions", [])
+        except Exception as e:
+            print(f"Warning: Could not load master questions: {e}")
+            existing_questions = []
     
-    return flashcard_hashes, question_hashes, existing_flashcards, existing_questions
+    return existing_flashcards, existing_questions
 
-
-def deduplicate_content(
-    new_flashcards: list,
-    new_questions: list,
-    existing_fc_hashes: set[str],
-    existing_q_hashes: set[str]
-) -> tuple[list, list, int, int]:
-    """Remove duplicate flashcards and questions based on content hashing."""
-    unique_flashcards = []
-    unique_questions = []
-    fc_duplicates = 0
-    q_duplicates = 0
-    
-    for fc in new_flashcards:
-        hash_key = compute_content_hash(fc.get("front", ""))
-        if hash_key not in existing_fc_hashes:
-            unique_flashcards.append(fc)
-            existing_fc_hashes.add(hash_key)  # Prevent within-batch duplicates too
-        else:
-            fc_duplicates += 1
-    
-    for q in new_questions:
-        hash_key = compute_content_hash(q.get("question_text", ""))
-        if hash_key not in existing_q_hashes:
-            unique_questions.append(q)
-            existing_q_hashes.add(hash_key)
-        else:
-            q_duplicates += 1
-    
-    return unique_flashcards, unique_questions, fc_duplicates, q_duplicates
 
 
 def save_results(
     results: dict, 
     output_dir: Path,
-    append_to_master: bool = True,
-    skip_deduplication: bool = False
+    append_to_master: bool = True
 ) -> None:
     """Save generated content to files with optional append to master files."""
     output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    # Load existing content for deduplication
-    fc_hashes, q_hashes, existing_fcs, existing_qs = load_existing_content(output_dir)
-    
-    # Deduplicate new content
+    # Get new content
     new_flashcards = results.get("all_flashcards", [])
     new_questions = results.get("all_questions", [])
     
-    if skip_deduplication:
-        unique_fcs = new_flashcards
-        unique_qs = new_questions
-        fc_dupes = 0
-        q_dupes = 0
-        
-        # When allowing duplicates, we still want to add them to master
-    else:
-        unique_fcs, unique_qs, fc_dupes, q_dupes = deduplicate_content(
-            new_flashcards, new_questions, fc_hashes, q_hashes
-        )
-    
-    if fc_dupes > 0 or q_dupes > 0:
-        print(f"\n⚠️  Removed duplicates: {fc_dupes} flashcards, {q_dupes} questions")
-    
-    # Save timestamped run file (just this run's unique content)
+    # Save timestamped run file
     run_file = output_dir / f"run_{timestamp}.json"
     run_data = {
         "generated_at": results.get("generated_at", datetime.now().isoformat()),
-        "new_flashcards": len(unique_fcs),
-        "new_questions": len(unique_qs),
-        "duplicates_removed": {"flashcards": fc_dupes, "questions": q_dupes},
-        "flashcards": unique_fcs,
-        "questions": unique_qs
+        "new_flashcards": len(new_flashcards),
+        "new_questions": len(new_questions),
+        "flashcards": new_flashcards,
+        "questions": new_questions
     }
     with open(run_file, "w", encoding="utf-8") as f:
         json.dump(run_data, f, indent=2)
     print(f"\nSaved run to: {run_file}")
     
     if append_to_master:
+        existing_fcs, existing_qs = load_master_content(output_dir)
+        
         # Append to master flashcards file
-        all_flashcards = existing_fcs + unique_fcs
+        all_flashcards = existing_fcs + new_flashcards
         flashcards_master = output_dir / "flashcards_master.json"
         with open(flashcards_master, "w", encoding="utf-8") as f:
             json.dump({
@@ -1179,10 +1122,10 @@ def save_results(
                 "count": len(all_flashcards),
                 "flashcards": all_flashcards
             }, f, indent=2)
-        print(f"Updated master flashcards: {len(all_flashcards)} total ({len(unique_fcs)} new)")
+        print(f"Updated master flashcards: {len(all_flashcards)} total ({len(new_flashcards)} new)")
         
         # Append to master questions file
-        all_questions = existing_qs + unique_qs
+        all_questions = existing_qs + new_questions
         questions_master = output_dir / "questions_master.json"
         with open(questions_master, "w", encoding="utf-8") as f:
             json.dump({
@@ -1190,26 +1133,26 @@ def save_results(
                 "count": len(all_questions),
                 "questions": all_questions
             }, f, indent=2)
-        print(f"Updated master questions: {len(all_questions)} total ({len(unique_qs)} new)")
+        print(f"Updated master questions: {len(all_questions)} total ({len(new_questions)} new)")
     else:
         # Just save timestamped files (old behavior)
         flashcards_file = output_dir / f"flashcards_{timestamp}.json"
         with open(flashcards_file, "w", encoding="utf-8") as f:
             json.dump({
                 "generated_at": results.get("generated_at"),
-                "count": len(unique_fcs),
-                "flashcards": unique_fcs
+                "count": len(new_flashcards),
+                "flashcards": new_flashcards
             }, f, indent=2)
-        print(f"Saved {len(unique_fcs)} flashcards to: {flashcards_file}")
+        print(f"Saved {len(new_flashcards)} flashcards to: {flashcards_file}")
         
         questions_file = output_dir / f"questions_{timestamp}.json"
         with open(questions_file, "w", encoding="utf-8") as f:
             json.dump({
                 "generated_at": results.get("generated_at"),
-                "count": len(unique_qs),
-                "questions": unique_qs
+                "count": len(new_questions),
+                "questions": new_questions
             }, f, indent=2)
-        print(f"Saved {len(unique_qs)} questions to: {questions_file}")
+        print(f"Saved {len(new_questions)} questions to: {questions_file}")
 
 
 def main():
@@ -1267,11 +1210,7 @@ def main():
         action="store_true",
         help="Don't append to master files (just create timestamped files)"
     )
-    parser.add_argument(
-        "--allow-duplicates",
-        action="store_true",
-        help="Save generated content even if it's identical to existing master file content"
-    )
+
     parser.add_argument(
         "--concurrency",
         type=int,
@@ -1417,8 +1356,7 @@ def main():
             save_results(
                 results, 
                 Path(args.output_dir),
-                append_to_master=not args.no_append,
-                skip_deduplication=args.allow_duplicates
+                append_to_master=not args.no_append
             )
             print(f"\n{'='*60}")
             print("✅ Content generation complete!")
