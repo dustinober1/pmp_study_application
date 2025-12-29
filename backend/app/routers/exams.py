@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
+from app.middleware.tier_middleware import LimitType, enforce_limit
 from app.models.exam import ExamAnswer, ExamReport, ExamSession, ExamStatus
 from app.models.question import Question
 from app.models.user import User
@@ -65,8 +66,24 @@ async def create_exam_session(
     Adaptive difficulty adjusts question selection based on prior performance:
     - Weak domains get easier questions and more weight
     - Strong domains get harder questions and less weight
+
+    Tier limits:
+    - Public: 1 mini-exam (25Q) per day, no full exams
+    - Free: 2 mini-exams per month, no full exams
+    - Premium: Unlimited mini and full exams
     """
     user = get_or_create_user(db, x_anonymous_id)
+
+    # Determine if this is a full exam or mini-exam
+    # Default is full exam (185 questions), mini-exam is typically 25 questions
+    questions_count = config.total_questions if config and config.total_questions else TOTAL_QUESTIONS
+    is_mini_exam = questions_count <= 50  # Treat 50 or fewer as mini-exam
+
+    # Enforce tier limits
+    if is_mini_exam:
+        enforce_limit(LimitType.MINI_EXAM)(user, db)
+    else:
+        enforce_limit(LimitType.FULL_EXAM)(user, db)
 
     # Check if user has an in-progress session
     existing_stmt = select(ExamSession).where(

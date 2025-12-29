@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
+from app.middleware.tier_middleware import LimitType, enforce_limit, TierGate
 from app.models.flashcard import Flashcard
 from app.models.progress import FlashcardProgress
 from app.models.task import Task
@@ -242,6 +243,11 @@ async def submit_flashcard_review(
     - 5: Perfect recall
 
     Quality < 3 is considered a failure and resets the repetition count.
+
+    Tier limits:
+    - Public: 50 flashcards/day
+    - Free: Unlimited flashcards
+    - Premium: Unlimited flashcards
     """
     # Verify flashcard exists
     flashcard_stmt = select(Flashcard).where(Flashcard.id == flashcard_id)
@@ -255,6 +261,9 @@ async def submit_flashcard_review(
 
     # Get or create user
     user = get_or_create_user(db, x_anonymous_id)
+
+    # Enforce tier limit for flashcard views
+    enforce_limit(LimitType.FLASHCARD_VIEW)(user, db)
 
     # Get or create progress record
     progress_stmt = select(FlashcardProgress).where(

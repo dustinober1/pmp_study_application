@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
+from app.middleware.tier_middleware import LimitType, enforce_limit
 from app.models import Domain, Question, QuestionProgress, Task, User
 from app.schemas.question import (
     QuestionAnswerRequest,
@@ -119,6 +120,11 @@ async def submit_answer(
 
     Returns immediate feedback with the correct answer and explanation.
     If X-Anonymous-Id header is provided, tracks the user's progress.
+
+    Tier limits:
+    - Public: 30 questions/day
+    - Free: Unlimited questions
+    - Premium: Unlimited questions
     """
     # Get the question
     question = db.execute(
@@ -140,6 +146,9 @@ async def submit_answer(
     if x_anonymous_id:
         try:
             user = get_or_create_user(db, x_anonymous_id)
+
+            # Enforce tier limit for questions answered
+            enforce_limit(LimitType.QUESTION_ANSWER)(user, db)
 
             # Get or create progress record
             progress = db.execute(

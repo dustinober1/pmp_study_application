@@ -36,6 +36,16 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
 
+    # PayPal Configuration
+    paypal_mode: str = "sandbox"  # sandbox or live
+    paypal_client_id: str = ""
+    paypal_client_secret: str = ""
+    paypal_webhook_id: str = ""
+    paypal_webhook_url: str = ""
+    paypal_product_id: str = ""
+    paypal_plan_monthly: str = ""
+    paypal_plan_yearly: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""

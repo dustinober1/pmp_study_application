@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import analytics, auth, collaboration, domains, exams, flashcards, progress, questions
+from app.routers import analytics, auth, collaboration, domains, exams, flashcards, paypal, progress, questions
 
 settings = get_settings()
 
@@ -64,5 +64,6 @@ app.include_router(collaboration.router)
 app.include_router(domains.router)
 app.include_router(exams.router)
 app.include_router(flashcards.router)
+app.include_router(paypal.router)
 app.include_router(progress.router)
 app.include_router(questions.router)
