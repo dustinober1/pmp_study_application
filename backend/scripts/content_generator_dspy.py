@@ -35,7 +35,7 @@ load_dotenv()
 # Configuration
 GUIDE_PATH = Path("/Users/dustinober/PMP-2026/guide")
 DEFAULT_OUTPUT_DIR = Path("/Users/dustinober/Projects/pmp_study_app/backend/generated_content")
-MODEL_NAME = "gemini/gemini-3-flash-preview"  # LiteLLM format: gemini/{model-name}
+MODEL_NAME = "gemini/gemini-flash-lite-latest"  
 
 # ============================================================================
 # PMP 2026 ECO Task-to-File Mapping (Official ECO Structure)
@@ -460,10 +460,20 @@ class GenerateQuestions(dspy.Signature):
 # DSPy Modules
 # ============================================================================
 
-def parse_json_response(response: str, model_class):
-    """Parse JSON from LLM response into a Pydantic model."""
+def parse_json_response(response: str, model_class, list_key: str = None):
+    """Parse JSON from LLM response into a Pydantic model.
+    
+    Args:
+        response: The raw string response from the LLM
+        model_class: The Pydantic model class to validate against
+        list_key: If the expected format is {list_key: [...]} but LLM returns [...],
+                  this wraps the list automatically
+    """
     import json
     import re
+    
+    if not response or not response.strip():
+        raise ValueError("Empty response from LLM")
     
     # Try to extract JSON from markdown code blocks
     json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', response)
@@ -475,10 +485,15 @@ def parse_json_response(response: str, model_class):
         if json_match:
             json_str = json_match.group(1)
         else:
-            json_str = response
+            json_str = response.strip()
     
     try:
         data = json.loads(json_str)
+        
+        # If LLM returned a list but we expect an object with a list_key
+        if isinstance(data, list) and list_key:
+            data = {list_key: data}
+        
         return model_class.model_validate(data)
     except json.JSONDecodeError as e:
         # Try json_repair if available
@@ -486,9 +501,23 @@ def parse_json_response(response: str, model_class):
             from json_repair import repair_json
             repaired = repair_json(json_str)
             data = json.loads(repaired)
+            if isinstance(data, list) and list_key:
+                data = {list_key: data}
             return model_class.model_validate(data)
-        except:
+        except Exception:
+            # Print debug info
+            print(f"    DEBUG: Response length: {len(response)}")
+            print(f"    DEBUG: First 200 chars: {response[:200]}")
             raise ValueError(f"Could not parse JSON: {e}")
+    except Exception as e:
+        # Validation error - print helpful debug
+        print(f"    DEBUG: Parsed data type: {type(data)}")
+        if isinstance(data, list):
+            print(f"    DEBUG: List length: {len(data)}, wrapping with key '{list_key}'")
+            if list_key:
+                data = {list_key: data}
+                return model_class.model_validate(data)
+        raise
 
 
 class FlashcardGenerator(dspy.Module):
@@ -515,7 +544,7 @@ class FlashcardGenerator(dspy.Module):
         # Parse the string response into Pydantic model
         response = result.flashcard_set
         if isinstance(response, str):
-            return parse_json_response(response, FlashcardSet)
+            return parse_json_response(response, FlashcardSet, list_key="flashcards")
         return response
 
 
@@ -543,7 +572,7 @@ class QuestionGenerator(dspy.Module):
         # Parse the string response into Pydantic model
         response = result.question_set
         if isinstance(response, str):
-            return parse_json_response(response, QuestionSet)
+            return parse_json_response(response, QuestionSet, list_key="questions")
         return response
 
 
