@@ -406,14 +406,19 @@ class GenerateFlashcards(dspy.Signature):
     - ONLY use information from the provided content - do not make up facts
     - Focus on exam-relevant concepts, definitions, formulas, and practical applications
     - Mix difficulty levels appropriately
+    - Generate DIFFERENT flashcards from any listed in avoid_topics
+    - Be creative and explore different angles of the same concepts
+    
+    OUTPUT FORMAT: Return JSON array of flashcard objects with front, back, difficulty fields.
     """
     
     content: str = dspy.InputField(desc="PMP study content from the source material")
     domain: str = dspy.InputField(desc="ECO domain (People, Process, or Business Environment)")
     task_name: str = dspy.InputField(desc="ECO task name this content relates to")
     num_flashcards: int = dspy.InputField(desc="Number of flashcards to generate")
+    avoid_topics: str = dspy.InputField(desc="Topics/questions already covered - generate DIFFERENT content")
     
-    flashcard_set: FlashcardSet = dspy.OutputField(desc="Generated flashcard set")
+    flashcard_set: FlashcardSet = dspy.OutputField(desc="Generated flashcard set as JSON")
 
 
 class GenerateQuestions(dspy.Signature):
@@ -450,14 +455,20 @@ class GenerateQuestions(dspy.Signature):
        - Complex scenarios requiring judgment
        - Multiple valid-seeming options
        - Focus on what a PM should do FIRST or what is MOST important
+    
+    8. AVOID DUPLICATES: Generate DIFFERENT scenarios from those listed in avoid_topics.
+       Use creative variations: different industries, team sizes, project phases, etc.
+    
+    OUTPUT FORMAT: Return JSON with "questions" array containing question objects.
     """
     
     content: str = dspy.InputField(desc="PMP study content from the source material")
     domain: str = dspy.InputField(desc="ECO domain (People, Process, or Business Environment)")
     task_name: str = dspy.InputField(desc="ECO task name this content relates to")
     num_questions: int = dspy.InputField(desc="Number of questions to generate")
+    avoid_topics: str = dspy.InputField(desc="Question scenarios already covered - generate DIFFERENT scenarios")
     
-    question_set: QuestionSet = dspy.OutputField(desc="Generated question set")
+    question_set: QuestionSet = dspy.OutputField(desc="Generated question set as JSON")
 
 
 # ============================================================================
@@ -569,14 +580,16 @@ class FlashcardGenerator(dspy.Module):
         content: str,
         domain: str,
         task_name: str,
-        num_flashcards: int = 10
+        num_flashcards: int = 10,
+        avoid_topics: str = ""
     ) -> FlashcardSet:
         """Generate flashcards from content."""
         result = self.generate(
             content=content,
             domain=domain,
             task_name=task_name,
-            num_flashcards=num_flashcards
+            num_flashcards=num_flashcards,
+            avoid_topics=avoid_topics or "None - this is the first batch"
         )
         # Parse the string response into Pydantic model
         response = result.flashcard_set
@@ -597,14 +610,16 @@ class QuestionGenerator(dspy.Module):
         content: str,
         domain: str,
         task_name: str,
-        num_questions: int = 10
+        num_questions: int = 10,
+        avoid_topics: str = ""
     ) -> QuestionSet:
         """Generate questions from content."""
         result = self.generate(
             content=content,
             domain=domain,
             task_name=task_name,
-            num_questions=num_questions
+            num_questions=num_questions,
+            avoid_topics=avoid_topics or "None - this is the first batch"
         )
         # Parse the string response into Pydantic model
         response = result.question_set
@@ -693,6 +708,66 @@ class PMPContentGenerator:
         # Initialize generators
         self.flashcard_gen = FlashcardGenerator()
         self.question_gen = QuestionGenerator()
+        
+        # Cache for existing content
+        self._existing_flashcards = None
+        self._existing_questions = None
+    
+    def _load_existing_content(self):
+        """Load existing content from master files."""
+        if self._existing_flashcards is None:
+            try:
+                flashcards_master = DEFAULT_OUTPUT_DIR / "flashcards_master.json"
+                if flashcards_master.exists():
+                    with open(flashcards_master, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        self._existing_flashcards = data.get("flashcards", [])
+                else:
+                    self._existing_flashcards = []
+            except:
+                self._existing_flashcards = []
+        
+        if self._existing_questions is None:
+            try:
+                questions_master = DEFAULT_OUTPUT_DIR / "questions_master.json"
+                if questions_master.exists():
+                    with open(questions_master, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        self._existing_questions = data.get("questions", [])
+                else:
+                    self._existing_questions = []
+            except:
+                self._existing_questions = []
+    
+    def _get_existing_flashcard_topics(self, task_name: str) -> str:
+        """Get existing flashcard fronts for a task to avoid duplicates."""
+        self._load_existing_content()
+        
+        topics = []
+        for fc in self._existing_flashcards:
+            if fc.get("task") == task_name:
+                topics.append(f"- {fc.get('front', '')[:100]}")
+        
+        if not topics:
+            return ""
+        
+        return "Already covered (generate DIFFERENT content):\n" + "\n".join(topics[:20])  # Limit to 20
+    
+    def _get_existing_question_topics(self, task_name: str) -> str:
+        """Get existing question scenarios for a task to avoid duplicates."""
+        self._load_existing_content()
+        
+        topics = []
+        for q in self._existing_questions:
+            if q.get("task") == task_name:
+                # Get first 100 chars of question
+                question_text = q.get("question_text", "")[:100]
+                topics.append(f"- {question_text}")
+        
+        if not topics:
+            return ""
+        
+        return "Already covered scenarios (generate DIFFERENT scenarios):\n" + "\n".join(topics[:15])  # Limit
     
     def generate_for_task(
         self,
@@ -729,14 +804,21 @@ class PMPContentGenerator:
                 "questions": []
             }
         
+        # Load existing content to avoid duplicates
+        existing_flashcard_topics = self._get_existing_flashcard_topics(task_name)
+        existing_question_topics = self._get_existing_question_topics(task_name)
+        
         # Generate flashcards
         print(f"\nGenerating {num_flashcards} flashcards...")
+        if existing_flashcard_topics:
+            print(f"  (Avoiding {len(existing_flashcard_topics.split(chr(10)))} existing topics)")
         try:
             flashcard_set = self.flashcard_gen(
                 content=content,
                 domain=domain,
                 task_name=task_name,
-                num_flashcards=num_flashcards
+                num_flashcards=num_flashcards,
+                avoid_topics=existing_flashcard_topics
             )
             flashcards = [
                 {
@@ -757,12 +839,15 @@ class PMPContentGenerator:
         
         # Generate hard scenario-based questions
         print(f"\nGenerating {num_questions} hard scenario-based questions...")
+        if existing_question_topics:
+            print(f"  (Avoiding {len(existing_question_topics.split(chr(10)))} existing scenarios)")
         try:
             question_set = self.question_gen(
                 content=content,
                 domain=domain,
                 task_name=task_name,
-                num_questions=num_questions
+                num_questions=num_questions,
+                avoid_topics=existing_question_topics
             )
             questions = [
                 {

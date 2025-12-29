@@ -1,0 +1,186 @@
+{
+  "updated_at": "2025-12-28T19:25:18.893318",
+  "count": 20,
+  "flashcards": [
+    {
+      "front": "What is the primary function of the **Project Charter**?",
+      "back": "It is the formal document that authorizes the project manager to exist and use company resources; often called the \"Birth Certificate\" of the project.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "According to the content, what is the source of the Project Manager's authority?",
+      "back": "Formal authorization via sign-off from the **Sponsor** on the Project Charter.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "What key documents serve as common inputs (feeds) for developing the Project Charter?",
+      "back": "The Business Case/Benefits Management Plan and Agreements (Contracts, MOUs, SLAs).",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "How do Enterprise Environmental Factors (EEFs) differ from Organizational Process Assets (OPAs) when creating the Project Charter?",
+      "back": "EEFs are *conditions not under your control* (e.g., market conditions, regulations), while OPAs are *processes and knowledge bases you can use* (e.g., templates, historical data).",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "Name three essential components required in a standard Project Charter, as expected for the PMP exam.",
+      "back": "1. Project Purpose/Justification, 2. Measurable Success Criteria, and 3. Pre-approved Budget. (Other valid answers include High-Level Risks, PM Assignment, Sponsor Name).",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "In an Agile environment, what replaces the detailed scope definition found in a Traditional Project Charter?",
+      "back": "The Product Vision and the Initial Backlog.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "What is the key difference between the Project Charter and the Project Management Plan?",
+      "back": "The Project Charter provides formal authorization and high-level guardrails; the Project Management Plan details the execution strategy and baselines.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "What is the purpose of the **Team Charter**?",
+      "back": "It is a living document created *by the team, for the team* that sets the guardrails for team behavior, collaboration, and collective accountability (e.g., defining team values and ground rules).",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "What is the relationship between the Definition of Done (DoD) and Acceptance Criteria (AC) in team agreements?",
+      "back": "DoD applies to *ALL* work items as a quality gate for everything; AC applies to *ONE* specific item (like a user story) defining its specific requirements.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "If a team is deadlocked on a decision that is within the team's authority, what is the recommended conflict resolution step *before* escalating to functional managers?",
+      "back": "Step 2: A facilitated session with the PM or Scrum Master to clarify facts, options, and tradeoffs. (The PM/Scrum Master may act as the tie-breaker if specified).",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Develop a common vision",
+      "task_id": 1
+    },
+    {
+      "front": "According to the Thomas-Kilmann Conflict Mode Instrument (TKI), which mode is characterized by High Assertiveness and High Cooperativeness, aiming for a Win/Win outcome?",
+      "back": "Collaborate / Problem Solve. This mode focuses on finding a new solution that makes everyone happy but requires significant Time & Trust.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "In the TKI, what conflict mode is described as having Low Assertiveness + High Cooperativeness, resulting in a Lose/Win outcome? When is this mode best used?",
+      "back": "Smooth / Accommodate. Use when the issue is minor or preserving the relationship is critical.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "When using the Thomas-Kilmann Conflict Modes, what is the outcome associated with Compromise, and what situation makes it the best choice?",
+      "back": "Outcome is Lose/Lose (though often seen as a temporary partial win). It is best for temporary fixes when time is limited.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "What is the primary difference in impact between Task Conflict and Relationship Conflict, and what is the general PM action for each?",
+      "back": "Task Conflict (disagreement on work) can be healthy and drives innovation (PM facilitates debate). Relationship Conflict (personal friction) is always harmful and destroys trust (PM intervenes early and privately).",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "In negotiation, what term refers to your \"Plan B\"\u2014the course of action you will take if you cannot reach a satisfactory agreement?",
+      "back": "BATNA (Best Alternative to a Negotiated Agreement). You should never negotiate without knowing your BATNA, as it determines your leverage.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "Distinguish between the \"Distributive\" and \"Integrative\" negotiation strategies, and state which one is preferred for most project situations.",
+      "back": "Distributive is a \"Fixed Pie\" (Win-Lose) mindset, suitable for one-time transactions. Integrative is \"Expand the Pie\" (Win-Win), which is preferred for most project situations involving partnerships or long-term relationships.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "What are the first two steps in the Conflict Resolution Process ladder that a Project Manager should follow before bringing parties together or using formal authority?",
+      "back": "Step 1: Self-Correction (Let team members try to solve it first). Step 2: Private Intervention (Meet 1-on-1 with each party to understand perspectives).",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "When facilitating a collaborative session to resolve conflict, what is the key principle emphasized when generating options?",
+      "back": "Brainstorm first, evaluate second. This prevents premature criticism and encourages creative solutions that meet underlying interests.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "If a conflict arises because team members are arguing about *how* to work together rather than *what* work to do, what type of conflict is this, and what is a structural fix for recurring issues of this nature?",
+      "back": "This is Process Conflict. A structural fix for recurring process conflict (like role confusion) is to create/update a RACI chart or clarify decision models in the team charter.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    },
+    {
+      "front": "In the context of decision-making models, what is the difference between Unanimity and Consensus?",
+      "back": "Unanimity requires 100% agreement. Consensus means everyone can \"live with it\" and won't sabotage the outcome, even if it wasn't their first choice.",
+      "difficulty": "medium",
+      "domain": "People",
+      "domain_id": 1,
+      "task": "Manage conflicts",
+      "task_id": 2
+    }
+  ]
+}
