@@ -460,6 +460,37 @@ class GenerateQuestions(dspy.Signature):
 # DSPy Modules
 # ============================================================================
 
+def parse_json_response(response: str, model_class):
+    """Parse JSON from LLM response into a Pydantic model."""
+    import json
+    import re
+    
+    # Try to extract JSON from markdown code blocks
+    json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', response)
+    if json_match:
+        json_str = json_match.group(1).strip()
+    else:
+        # Try to find raw JSON (object or array)
+        json_match = re.search(r'(\{[\s\S]*\}|\[[\s\S]*\])', response)
+        if json_match:
+            json_str = json_match.group(1)
+        else:
+            json_str = response
+    
+    try:
+        data = json.loads(json_str)
+        return model_class.model_validate(data)
+    except json.JSONDecodeError as e:
+        # Try json_repair if available
+        try:
+            from json_repair import repair_json
+            repaired = repair_json(json_str)
+            data = json.loads(repaired)
+            return model_class.model_validate(data)
+        except:
+            raise ValueError(f"Could not parse JSON: {e}")
+
+
 class FlashcardGenerator(dspy.Module):
     """DSPy module for generating flashcards with validation."""
     
@@ -481,7 +512,11 @@ class FlashcardGenerator(dspy.Module):
             task_name=task_name,
             num_flashcards=num_flashcards
         )
-        return result.flashcard_set
+        # Parse the string response into Pydantic model
+        response = result.flashcard_set
+        if isinstance(response, str):
+            return parse_json_response(response, FlashcardSet)
+        return response
 
 
 class QuestionGenerator(dspy.Module):
@@ -505,7 +540,11 @@ class QuestionGenerator(dspy.Module):
             task_name=task_name,
             num_questions=num_questions
         )
-        return result.question_set
+        # Parse the string response into Pydantic model
+        response = result.question_set
+        if isinstance(response, str):
+            return parse_json_response(response, QuestionSet)
+        return response
 
 
 # ============================================================================
