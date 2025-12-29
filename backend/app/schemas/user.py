@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.models.user import Tier
+
 
 class UserBase(BaseModel):
     """Base schema for User with shared attributes."""
@@ -19,6 +21,7 @@ class UserBase(BaseModel):
     display_name: str | None = Field(
         None, max_length=100, description="Optional display name"
     )
+    tier: Tier = Field(Tier.PUBLIC, description="User tier level")
 
 
 class UserCreate(BaseModel):
@@ -57,6 +60,7 @@ class UserResponse(BaseModel):
     anonymous_id: str = Field(..., description="Browser-generated anonymous ID")
     email: EmailStr | None = Field(None, description="Registered email if any")
     display_name: str | None = Field(None, description="Display name")
+    tier: Tier = Field(..., description="User tier level")
     created_at: datetime = Field(..., description="Account creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 

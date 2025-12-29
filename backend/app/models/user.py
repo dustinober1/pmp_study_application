@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String, func
@@ -9,6 +10,14 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+
+class Tier(str, Enum):
+    """User tier levels for monetization."""
+
+    PUBLIC = "public"
+    FREE = "free"
+    PREMIUM = "premium"
 
 if TYPE_CHECKING:
     from app.models.analytics import UserAnalytics
@@ -21,6 +30,7 @@ if TYPE_CHECKING:
     from app.models.exam import ExamSession
     from app.models.progress import FlashcardProgress, QuestionProgress
     from app.models.session import StudySession
+    from app.models.subscription import Subscription, UsageTracking
 
 
 class User(Base):
@@ -65,6 +75,14 @@ class User(Base):
     password_hash: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
+    )
+
+    # User tier for monetization (anonymous users start as PUBLIC)
+    tier: Mapped[Tier] = mapped_column(
+        String(20),
+        default=Tier.PUBLIC,
+        nullable=False,
+        index=True,
     )
 
     # Timestamps
@@ -148,6 +166,19 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         uselist=False,
+    )
+
+    # Subscription relationships
+    subscriptions: Mapped[list["Subscription"]] = relationship(
+        "Subscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    usage_tracking: Mapped[list["UsageTracking"]] = relationship(
+        "UsageTracking",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

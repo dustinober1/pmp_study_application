@@ -14,8 +14,14 @@ from app.models.flashcard import Flashcard
 from app.models.progress import FlashcardProgress, QuestionProgress
 from app.models.question import Question
 from app.models.session import SessionType, StudySession
+from app.models.subscription import (
+    Subscription,
+    SubscriptionPeriod,
+    SubscriptionStatus,
+    UsageTracking,
+)
 from app.models.task import Task
-from app.models.user import User
+from app.models.user import Tier, User
 
 __all__ = [
     "Domain",
@@ -23,6 +29,7 @@ __all__ = [
     "Flashcard",
     "Question",
     "User",
+    "Tier",
     "FlashcardProgress",
     "QuestionProgress",
     "StudySession",
@@ -38,4 +45,8 @@ __all__ = [
     "ExamStatus",
     "UserAnalytics",
     "LearningRecommendation",
+    "Subscription",
+    "SubscriptionStatus",
+    "SubscriptionPeriod",
+    "UsageTracking",
 ]
