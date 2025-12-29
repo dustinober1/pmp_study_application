@@ -44,14 +44,17 @@ source venv/bin/activate
 # List all ECO tasks with their source files
 python -m scripts.content_generator_dspy --list-tasks
 
-# Generate for a specific task (10 flashcards, 10 questions)
+# Preview what a full run would generate (no API calls)
+python -m scripts.content_generator_dspy --all --iterations 5 --dry-run
+
+# Generate for a specific task (10 flashcards, 5 questions)
 python -m scripts.content_generator_dspy --task "Lead the project team"
 
-# Generate for all tasks in a domain
-python -m scripts.content_generator_dspy --domain People
+# Generate for all tasks in a domain with 5 iterations
+python -m scripts.content_generator_dspy --domain People --iterations 5
 
-# Generate for all 26 ECO tasks
-python -m scripts.content_generator_dspy --all
+# Full generation: all 26 ECO tasks, 5 iterations each
+python -m scripts.content_generator_dspy --all --iterations 5
 ```
 
 ## Command Line Options
@@ -61,13 +64,45 @@ python -m scripts.content_generator_dspy --all
 | `--task "name"` | Generate for a specific ECO task | - |
 | `--domain People\|Process\|Business Environment` | Generate for all tasks in a domain | - |
 | `--all` | Generate for all 26 ECO tasks | - |
-| `--flashcards N` | Number of flashcards per task | 10 |
-| `--questions N` | Number of questions per task | 10 |
+| `--flashcards N` | Number of flashcards per task per iteration | 10 |
+| `--concurrency N` | Number of concurrent API calls | 10 |
+| `--questions N` | Number of questions per task per iteration | 5 |
+| `--iterations N` | Number of generation passes per task | 1 |
+| `--dry-run` | Preview what would be generated (no API calls) | - |
 | `--output-dir PATH` | Output directory | `backend/generated_content` |
 | `--no-append` | Don't append to master files | False |
+| `--allow-duplicates` | Skip deduplication check | False |
 | `--list-tasks` | List all ECO tasks with source files | - |
 
 ## Examples
+
+### Preview a full generation run (dry run)
+```bash
+python -m scripts.content_generator_dspy --all --iterations 5 --dry-run
+```
+Output:
+```
+DRY RUN SUMMARY
+============================================================
+Tasks to process: 26
+Iterations per task: 5
+Expected flashcards: 1300
+Expected questions: 650
+```
+
+### Generate bulk content (5 iterations per task)
+```bash
+# Full run: 26 tasks × 5 iterations = 1,300 flashcards + 650 questions
+python -m scripts.content_generator_dspy --all --iterations 5
+```
+
+### Generate for one task with multiple iterations
+```bash
+# 5 iterations × 10 flashcards × 5 questions = 50 flashcards + 25 questions
+python -m scripts.content_generator_dspy \
+  --task "Manage conflicts" \
+  --iterations 5
+```
 
 ### Generate 15 flashcards and 10 questions for one task
 ```bash
@@ -81,13 +116,7 @@ python -m scripts.content_generator_dspy \
 ```bash
 python -m scripts.content_generator_dspy \
   --domain People \
-  --flashcards 10 \
-  --questions 10
-```
-
-### Generate everything (26 tasks × 10 each = 260 flashcards, 260 questions)
-```bash
-python -m scripts.content_generator_dspy --all
+  --iterations 5
 ```
 
 ### Custom output directory
@@ -275,7 +304,7 @@ Error: GOOGLE_AI_API_KEY environment variable is required
 ```
 ✗ Error generating questions: 429 Resource Exhausted
 ```
-→ Wait 1-2 minutes between runs, or reduce batch size
+→ Wait 1-2 minutes between runs, reduce batch size, or lower `--concurrency`
 
 ### Validation Errors
 ```
