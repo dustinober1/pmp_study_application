@@ -7,8 +7,7 @@ Generate high-quality flashcards and hard, scenario-based practice test question
 - ✅ **Hard, scenario-based questions** that mimic the actual PMP exam
 - ✅ **Explanations for ALL 4 options** (why correct or incorrect)
 - ✅ **Official PMP 2026 ECO mapping** - content organized by domains and tasks
-- ✅ **Deduplication** - prevents regenerating the same content
-- ✅ **Master files** - accumulates unique content across runs
+- ✅ **Master files** - accumulates content across runs
 - ✅ **Randomizable options** - no hardcoded A/B/C/D letters
 
 ## Prerequisites
@@ -71,7 +70,6 @@ python -m scripts.content_generator_dspy --all --iterations 5
 | `--dry-run` | Preview what would be generated (no API calls) | - |
 | `--output-dir PATH` | Output directory | `backend/generated_content` |
 | `--no-append` | Don't append to master files | False |
-| `--allow-duplicates` | Skip deduplication check | False |
 | `--list-tasks` | List all ECO tasks with source files | - |
 
 ## Examples
@@ -220,22 +218,6 @@ Each run creates a timestamped file showing what was added:
 }
 ```
 
-## Deduplication
-
-The script automatically prevents duplicate content:
-
-1. **Hash-based detection**: Uses MD5 hash of normalized text
-2. **Cross-run deduplication**: Compares new content against master files
-3. **Within-batch deduplication**: Prevents duplicates in a single run
-
-**Example output when duplicates are found**:
-```
-✓ Generated 10 flashcards
-✓ Generated 10 questions
-⚠️ Removed duplicates: 3 flashcards, 2 questions
-Updated master flashcards: 157 total (7 new)
-Updated master questions: 158 total (8 new)
-```
 
 ## PMP 2026 ECO Mapping
 
@@ -323,5 +305,5 @@ Error: GOOGLE_AI_API_KEY environment variable is required
 1. **Start small**: Test with one task before running `--all`
 2. **Batch by domain**: Process one domain at a time for better review
 3. **Check quality**: Review generated content before using
-4. **Use deduplication**: Run multiple times to build content variety
+4. **Custom output**: Use `--output-dir` for different content sets
 5. **Custom output**: Use `--output-dir` for different content sets
