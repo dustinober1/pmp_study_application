@@ -10,17 +10,7 @@ import {
   Settings,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import {
-  useMicroAudio,
-  useAudioEnabled,
-  useAudioPlaying,
-  useAudioRate,
-  useAudioPitch,
-  setAudioEnabled,
-  setAudioPlaying,
-  setAudioRate,
-  setAudioPitch,
-} from '@/stores/microStore';
+import { useMicroStore } from '@/stores/microStore';
 
 interface AudioFlashcardPlayerProps {
   frontText: string;
@@ -35,10 +25,14 @@ export default function AudioFlashcardPlayer({
   autoPlay = false,
   onPlayComplete,
 }: AudioFlashcardPlayerProps) {
-  const audio = useMicroAudio();
+  const audio = useMicroStore((state) => state.audio);
+  const setAudioEnabled = useMicroStore((state) => state.setAudioEnabled);
+  const setAudioPlaying = useMicroStore((state) => state.setAudioPlaying);
+  const setAudioRate = useMicroStore((state) => state.setAudioRate);
+  const setAudioPitch = useMicroStore((state) => state.setAudioPitch);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const [currentSide, 'front' | 'back'] = useState<'front' | 'back'>('front');
+  const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
   const [isPlaying, setIsPlaying] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 

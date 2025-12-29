@@ -339,3 +339,25 @@ export const useShouldRebuildQueue = () => {
 
   return lastRebuild < oneHourAgo;
 };
+
+// Additional selector hooks for component convenience
+export const useAudioEnabled = () =>
+  useMicroStore((state) => state.audio.isEnabled);
+export const useAudioPlaying = () =>
+  useMicroStore((state) => state.audio.isPlaying);
+export const useAudioRate = () =>
+  useMicroStore((state) => state.audio.rate);
+export const useAudioPitch = () =>
+  useMicroStore((state) => state.audio.pitch);
+export const setAudioEnabled = (enabled: boolean) =>
+  useMicroStore.getState().setAudioEnabled(enabled);
+export const setAudioPlaying = (playing: boolean, text?: string) =>
+  useMicroStore.getState().setAudioPlaying(playing, text);
+export const setAudioRate = (rate: number) =>
+  useMicroStore.getState().setAudioRate(rate);
+export const setAudioPitch = (pitch: number) =>
+  useMicroStore.getState().setAudioPitch(pitch);
+export const setSelectedContext = (context: MicroContext) =>
+  useMicroStore.getState().setSelectedContext(context);
+export const setPreferredContext = (context: MicroContext) =>
+  useMicroStore.getState().setPreferredContext(context);

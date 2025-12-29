@@ -18,7 +18,7 @@ import {
 import {
   useMicroQueue,
   useShouldRebuildQueue,
-  setSelectedContext,
+  useMicroStore,
 } from '@/stores/microStore';
 import type { MicroContext, StudyQueueEntry } from '@/types';
 
@@ -58,6 +58,7 @@ export default function QueueManager({ onStartSession }: QueueManagerProps) {
 
   const { selectedContext } = useMicroQueue();
   const shouldRebuild = useShouldRebuildQueue();
+  const setSelectedContext = useMicroStore((state) => state.setSelectedContext);
 
   const [filterContext, setFilterContext] = useState<MicroContext | null>(null);
 
