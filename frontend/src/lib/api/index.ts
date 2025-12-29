@@ -50,3 +50,37 @@ export {
   invalidateAllCaches,
   invalidateProgressCaches,
 } from './hooks';
+
+// Explanation hooks
+export {
+  useExplanation,
+  useRateExplanation,
+  useRecordPerformance,
+  useUserPreferences,
+  useUpdatePreferences,
+  useStyleAnalytics,
+  invalidateExplanationCaches,
+  type ExplanationStyle,
+  type ExplanationData,
+  type ExplanationRateRequest,
+  type StyleAnalytics,
+  type StyleAnalyticsItem,
+  type UserLearningPreferences,
+  type ExplanationPreferencesUpdate,
+} from './explanations';
+
+// Micro-learning hooks
+export {
+  useStudyQueue,
+  useRebuildQueue,
+  useDueCards,
+  useMicroStats,
+  useStartQuickSession,
+  useMicroReview,
+  useEndQuickSession,
+  useActiveQuickSession,
+  useQuickSessionHistory,
+  useMicroFlashcard,
+  invalidateMicroCaches,
+  prefetchStudyQueue,
+} from './micro';

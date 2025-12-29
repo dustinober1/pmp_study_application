@@ -64,7 +64,7 @@ class ExplanationTemplate(Base):
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Optional metadata about the explanation
-    metadata: Mapped[dict | None] = mapped_column(
+    explanation_metadata: Mapped[dict | None] = mapped_column(
         JSONB, nullable=True
     )  # e.g., {"analogy_type": "cooking", "visual_type": "flowchart"}
 

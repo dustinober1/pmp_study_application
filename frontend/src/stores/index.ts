@@ -100,3 +100,17 @@ export {
   useGroupChallenges,
   useActiveChallenges,
 } from './collaborationStore';
+
+// Micro-learning store
+export {
+  useMicroStore,
+  useCurrentMicroSession,
+  useMicroAudio,
+  useMicroQueue,
+  useMicroPreferences,
+  useIsInMicroSession,
+  useMicroSessionError,
+  useMicroSessionProgress,
+  useMicroSessionTimeRemaining,
+  useShouldRebuildQueue,
+} from './microStore';

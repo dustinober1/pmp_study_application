@@ -38,12 +38,12 @@ async def get_explanation(
     content_type: str,
     content_id: int,
     db: Annotated[Session, Depends(get_db)],
+    style: Annotated[
+        str | None, Query(description="Preferred explanation style override")] = None,
     x_anonymous_id: Annotated[
         str | None, Header(description="Browser-generated anonymous user ID")
     ] = None,
-    style: Annotated[
-        str | None, Query(description="Preferred explanation style override")]
-    ) -> dict:
+) -> dict:
     """
     Get an adaptive explanation for content.
 

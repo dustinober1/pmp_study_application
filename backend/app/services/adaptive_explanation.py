@@ -104,7 +104,7 @@ class AdaptiveExplanationEngine:
                 s for s in alternatives if s != selected_style
             ],
             "is_personalized": preferences.preferred_style is not None,
-            "metadata": template.metadata if template else None,
+            "metadata": template.explanation_metadata if template else None,
         }
 
     def rate_explanation(
