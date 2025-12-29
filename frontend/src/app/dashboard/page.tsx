@@ -3,6 +3,9 @@
 import { useDomains, useProgressSummary, useStudyStreak, useFlashcardsDue } from '@/lib/api/hooks';
 import Card, { CardBody } from '@/components/ui/Card';
 import Link from 'next/link';
+import { useIsPremium, useTierDisplay, useUser } from '@/stores/userStore';
+import { useTelemetry } from '@/lib/telemetry';
+import { useEffect } from 'react';
 
 // Domain color configurations
 const domainColors: Record<string, { color: string; bgColor: string; textColor: string }> = {
@@ -282,8 +285,20 @@ export default function DashboardPage() {
   const { data: progress, isLoading: progressLoading } = useProgressSummary();
   const { data: streak } = useStudyStreak();
   const { data: flashcardsDue } = useFlashcardsDue();
+  const isPremium = useIsPremium();
+  const tierDisplay = useTierDisplay();
+  const user = useUser();
+  const telemetry = useTelemetry();
+
+  // Track dashboard page view
+  useEffect(() => {
+    telemetry.trackPageView('dashboard');
+  }, [telemetry]);
 
   const isLoading = domainsLoading || progressLoading;
+
+  // Calculate days until exam (placeholder - would come from user profile)
+  const daysUntilExam = 90;
 
   // Format study time
   const formatStudyTime = (seconds: number): string => {
@@ -312,13 +327,24 @@ export default function DashboardPage() {
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track your PMP 2026 exam preparation progress
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Track your PMP 2026 exam preparation progress
+            </p>
+          </div>
+          {/* Tier Badge */}
+          <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${tierDisplay.bgColor} ${tierDisplay.color}`}>
+            {tierDisplay.name}
+            {isPremium && (
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            )}
+          </div>
         </div>
 
         {flashcardsDue && flashcardsDue.count > 0 && (
@@ -333,6 +359,76 @@ export default function DashboardPage() {
           </Link>
         )}
       </div>
+
+      {/* Premium Upgrade CTA for non-premium users */}
+      {!isPremium && user?.email && (
+        <Card variant="filled" className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800">
+          <CardBody className="p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
+                  <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                    Unlock Premium Features
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Get full 185-question exams, AI-powered coaching, adaptive explanations, and more. Start your free trial today.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/pricing"
+                  onClick={() => telemetry.trackUpgradeClick('dashboard_upgrade_cta')}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm"
+                >
+                  Upgrade to Premium
+                </Link>
+                <Link
+                  href="/pricing"
+                  onClick={() => telemetry.trackUpgradeClick('dashboard_view_plans')}
+                  className="px-4 py-2 text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
+                >
+                  View Plans
+                </Link>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Exam Day Countdown (shows for all users) */}
+      <Card variant="default" padding="md">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Days Until Exam
+              </h3>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {daysUntilExam} days
+              </p>
+            </div>
+          </div>
+          {user?.email && !isPremium && (
+            <Link
+              href="/roadmap"
+              className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+            >
+              Set up Study Plan
+            </Link>
+          )}
+        </div>
+      </Card>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

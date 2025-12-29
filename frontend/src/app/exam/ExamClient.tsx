@@ -23,6 +23,7 @@ import { ResumeExamPrompt } from '@/components/exam';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import type { ExamSession } from '@/types';
+import { useTelemetry } from '@/lib/telemetry';
 
 type ExamView = 'landing' | 'active' | 'results';
 
@@ -30,6 +31,7 @@ export default function ExamClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionIdParam = searchParams.get('session');
+  const telemetry = useTelemetry();
 
   const currentSession = useCurrentExamSession();
   const currentResult = useCurrentExamResult();
@@ -42,6 +44,12 @@ export default function ExamClient() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
+
+  // Track page view on mount
+  useEffect(() => {
+    telemetry.trackPageView('exam_simulator');
+    telemetry.trackPremiumFeatureAccess('exam_simulator');
+  }, [telemetry]);
 
   // Load history on mount
   useEffect(() => {
@@ -95,6 +103,9 @@ export default function ExamClient() {
   const handleStartExam = async () => {
     setIsStarting(true);
     try {
+      // Track exam start
+      telemetry.trackExamStart('full');
+
       // Create new exam session (default 240 minutes, 185 questions for PMP)
       const session = await createExamSession({
         exam_duration_minutes: 240,

@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NotificationBadge } from '@/components/ui/NotificationBadge';
 import { useChallengeNotifications } from '@/lib/api/collaboration-hooks';
+import { useIsPremium, useTierDisplay } from '@/stores/userStore';
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ReactNode;
   showNotification?: boolean;
+  isPremium?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -49,6 +51,49 @@ const navItems: NavItem[] = [
       </svg>
     ),
   },
+];
+
+const premiumNavItems: NavItem[] = [
+  {
+    name: 'Exam Simulator',
+    href: '/exam',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    isPremium: true,
+  },
+  {
+    name: 'Study Roadmap',
+    href: '/roadmap',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      </svg>
+    ),
+    isPremium: true,
+  },
+  {
+    name: 'Concept Graph',
+    href: '/concepts',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+      </svg>
+    ),
+    isPremium: true,
+  },
+  {
+    name: 'Micro Sessions',
+    href: '/micro',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    isPremium: true,
+  },
   {
     name: 'Study Groups',
     href: '/groups',
@@ -81,9 +126,21 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+function PremiumBadge() {
+  return (
+    <span className="ml-auto flex-shrink-0">
+      <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    </span>
+  );
+}
+
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { count: notificationCount, hasNotifications } = useChallengeNotifications();
+  const isPremium = useIsPremium();
+  const tierDisplay = useTierDisplay();
 
   return (
     <>
@@ -137,7 +194,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {navItems.map((item) => {
             const isActive = pathname === item.href;
 
-            const navContent = (
+            return (
               <Link
                 key={item.name}
                 href={item.href}
@@ -153,6 +210,49 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               >
                 {item.icon}
                 <span className="flex-1">{item.name}</span>
+                {item.isPremium && <PremiumBadge />}
+              </Link>
+            );
+          })}
+
+          {/* Premium Features Section */}
+          <div className="mt-8 mb-4">
+            <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+              Premium Features
+              {!isPremium && (
+                <span className="px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded">
+                  PRO
+                </span>
+              )}
+            </h3>
+          </div>
+          {premiumNavItems.map((item) => {
+            const isActive = pathname === item.href;
+            const isLocked = item.isPremium && !isPremium;
+
+            const navContent = (
+              <Link
+                key={item.name}
+                href={isLocked ? '/pricing' : item.href}
+                onClick={onClose}
+                className={`
+                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                  transition-colors duration-200 relative
+                  ${isActive
+                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }
+                  ${isLocked ? 'opacity-60' : ''}
+                `}
+              >
+                {item.icon}
+                <span className="flex-1">{item.name}</span>
+                {item.isPremium && <PremiumBadge />}
+                {isLocked && (
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                )}
               </Link>
             );
 
@@ -195,6 +295,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Bottom section */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          {/* User tier badge */}
+          <div className={`mb-3 px-3 py-2 rounded-lg ${tierDisplay.bgColor}`}>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${tierDisplay.color.replace('text-', 'bg-').split(' ')[0]}`} />
+              <span className={`text-xs font-medium ${tierDisplay.color}`}>
+                {tierDisplay.name} Account
+              </span>
+            </div>
+          </div>
+
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-3">
             <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
               PMP 2026 ECO
@@ -203,6 +313,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               Effective July 2026
             </p>
           </div>
+
+          {!isPremium && (
+            <Link
+              href="/pricing"
+              className="mt-3 block w-full text-center px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-medium rounded-lg hover:from-amber-600 hover:to-amber-700 transition-colors"
+            >
+              Upgrade to Premium
+            </Link>
+          )}
         </div>
       </aside>
     </>

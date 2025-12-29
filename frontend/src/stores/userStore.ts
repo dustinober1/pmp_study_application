@@ -1,11 +1,13 @@
 /**
  * Zustand store for user state management
- * Handles anonymous user sessions and optional registration
+ * Handles anonymous user sessions, optional registration, and tier management
  */
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User } from '@/types';
+
+export type Tier = 'public' | 'free' | 'premium';
 
 interface UserState {
   // User data
@@ -15,15 +17,30 @@ interface UserState {
   isLoading: boolean;
   error: string | null;
 
+  // Tier state
+  tier: Tier;
+  premiumExpiresAt: string | null;
+
   // Actions
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
   setAnonymousId: (id: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setTier: (tier: Tier, expiresAt?: string | null) => void;
   initializeAnonymousUser: () => string;
   logout: () => void;
   reset: () => void;
+
+  // Tier access helpers
+  canAccessFullExam: () => boolean;
+  canAccessExamCoach: () => boolean;
+  canAccessAdaptiveExplanations: () => boolean;
+  canAccessStudyRoadmap: () => boolean;
+  canAccessConceptGraph: () => boolean;
+  canAccessMicroLearning: () => boolean;
+  isPremiumActive: () => boolean;
+  getTierDisplay: () => { name: string; color: string; bgColor: string };
 }
 
 const ANONYMOUS_ID_KEY = 'pmp_anonymous_id';
@@ -34,6 +51,8 @@ const initialState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  tier: 'public' as Tier,
+  premiumExpiresAt: null as string | null,
 };
 
 export const useUserStore = create<UserState>()(
@@ -45,6 +64,8 @@ export const useUserStore = create<UserState>()(
         set({
           user,
           isAuthenticated: user !== null && user.email !== null,
+          // Determine tier based on user state
+          tier: user?.email ? 'free' : 'public',
         });
       },
 
@@ -72,6 +93,10 @@ export const useUserStore = create<UserState>()(
 
       setError: (error) => {
         set({ error });
+      },
+
+      setTier: (tier, expiresAt = null) => {
+        set({ tier, premiumExpiresAt: expiresAt });
       },
 
       initializeAnonymousUser: () => {
@@ -107,6 +132,8 @@ export const useUserStore = create<UserState>()(
           user: null,
           isAuthenticated: false,
           error: null,
+          tier: 'public',
+          premiumExpiresAt: null,
         });
         if (typeof window !== 'undefined') {
           localStorage.removeItem('pmp_auth_token');
@@ -120,6 +147,57 @@ export const useUserStore = create<UserState>()(
           localStorage.removeItem(ANONYMOUS_ID_KEY);
         }
       },
+
+      // Tier access helpers
+      canAccessFullExam: () => {
+        const { tier, isPremiumActive } = get();
+        return isPremiumActive();
+      },
+
+      canAccessExamCoach: () => {
+        const { tier, isPremiumActive } = get();
+        return isPremiumActive();
+      },
+
+      canAccessAdaptiveExplanations: () => {
+        const { tier, isPremiumActive } = get();
+        return isPremiumActive();
+      },
+
+      canAccessStudyRoadmap: () => {
+        const { tier, isPremiumActive } = get();
+        return isPremiumActive();
+      },
+
+      canAccessConceptGraph: () => {
+        const { tier, isPremiumActive } = get();
+        return isPremiumActive();
+      },
+
+      canAccessMicroLearning: () => {
+        const { tier, isPremiumActive } = get();
+        return isPremiumActive();
+      },
+
+      isPremiumActive: () => {
+        const { tier, premiumExpiresAt } = get();
+        if (tier !== 'premium') return false;
+        if (!premiumExpiresAt) return true; // Lifetime premium
+
+        const now = new Date();
+        const expiresAt = new Date(premiumExpiresAt);
+        return now < expiresAt;
+      },
+
+      getTierDisplay: () => {
+        const { tier } = get();
+        const tierDisplays = {
+          public: { name: 'Public', color: 'text-gray-600 dark:text-gray-400', bgColor: 'bg-gray-100 dark:bg-gray-800' },
+          free: { name: 'Free', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
+          premium: { name: 'Premium', color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/30' },
+        };
+        return tierDisplays[tier];
+      },
     }),
     {
       name: 'pmp-user-storage',
@@ -127,6 +205,8 @@ export const useUserStore = create<UserState>()(
       partialize: (state) => ({
         anonymousId: state.anonymousId,
         user: state.user,
+        tier: state.tier,
+        premiumExpiresAt: state.premiumExpiresAt,
       }),
     }
   )
@@ -138,3 +218,6 @@ export const useAnonymousId = () => useUserStore((state) => state.anonymousId);
 export const useIsAuthenticated = () => useUserStore((state) => state.isAuthenticated);
 export const useUserLoading = () => useUserStore((state) => state.isLoading);
 export const useUserError = () => useUserStore((state) => state.error);
+export const useUserTier = () => useUserStore((state) => state.tier);
+export const useIsPremium = () => useUserStore((state) => state.isPremiumActive());
+export const useTierDisplay = () => useUserStore((state) => state.getTierDisplay());
