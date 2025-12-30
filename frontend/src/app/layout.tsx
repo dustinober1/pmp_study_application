@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { MainLayout } from "@/components/layout";
-import { PWAInstaller, useServiceWorker } from "@/components/pwa/PWAInstaller";
+import PWAInstaller from "@/components/pwa/PWAInstaller";
+import { BMCButton } from "@/components/layout/BMCButton";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -57,6 +58,7 @@ export default function RootLayout({
         <ServiceWorkerRegister />
         <MainLayout>{children}</MainLayout>
         <PWAInstaller />
+        <BMCButton />
       </body>
     </html>
   );
