@@ -5,4 +5,3 @@
  */
 
 export { StudyPath } from './StudyPath';
-export { default as StudyPath } from './StudyPath';

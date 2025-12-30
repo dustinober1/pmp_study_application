@@ -36,11 +36,6 @@ export const viewport: Viewport = {
   themeColor: "#2563eb",
 };
 
-function ServiceWorkerRegister() {
-  useServiceWorker();
-  return null;
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -55,7 +50,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ServiceWorkerRegister />
         <MainLayout>{children}</MainLayout>
         <PWAInstaller />
         <BMCButton />
