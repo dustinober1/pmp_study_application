@@ -191,7 +191,7 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummaryResponse> {
     analytics: {
       user_id: 'guest',
       total_questions_answered: totalQuestions,
-      overall_accuracy,
+      overall_accuracy: overallAccuracy,
       avg_response_time: null,
       strong_domains: strongDomains.length > 0 ? strongDomains : null,
       weak_domains: weakDomains.length > 0 ? weakDomains : null,

@@ -5,7 +5,7 @@
 import useSWR, { mutate } from 'swr';
 import useSWRMutation from 'swr/mutation';
 import { fetcher, post, storage } from './client';
-import { calculateSM2, isCardDue, type SM2Progress } from './utils/sm2';
+import { calculateSM2, isCardDue, type SM2Progress } from '../utils/sm2';
 import type {
   DomainWithTasks,
   Task,
