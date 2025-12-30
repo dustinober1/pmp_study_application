@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { Card, CardBody, CardHeader } from '../ui/Card';
-import { Button } from '../ui/Button';
+import Button from '../ui/Button';
 import { useActiveRecommendations } from '@/stores/analyticsStore';
 import { Domain } from '@/types';
 

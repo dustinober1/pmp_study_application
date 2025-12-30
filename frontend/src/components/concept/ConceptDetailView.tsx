@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import Button from '@/components/ui/Button';
 import { useConceptDetails, useConceptFlashcards, useConceptQuestions } from '@/lib/api/concept-hooks';
 import type { RelationshipType } from '@/types';
 
