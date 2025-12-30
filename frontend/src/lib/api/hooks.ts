@@ -4,7 +4,8 @@
 
 import useSWR, { mutate } from 'swr';
 import useSWRMutation from 'swr/mutation';
-import { fetcher, post } from './client';
+import { fetcher, post, storage } from './client';
+import { calculateSM2, isCardDue, type SM2Progress } from './utils/sm2';
 import type {
   DomainWithTasks,
   Task,
@@ -23,6 +24,9 @@ import type {
   StudySessionCreate,
   User,
 } from '@/types';
+
+// Storage key for SM-2 flashcard progress
+const SM2_PROGRESS_KEY = 'pmp_flashcard_sm2_progress';
 
 // ============ Domain Hooks ============
 
@@ -59,6 +63,24 @@ interface FlashcardFilters {
   due_only?: boolean;
 }
 
+/**
+ * Custom fetcher that attaches SM-2 progress to flashcards
+ */
+async function fetcherWithSM2Progress(url: string): Promise<FlashcardWithProgress[]> {
+  // Fetch base flashcards from static JSON
+  const res = await fetch(url.startsWith('/api') ? url.replace('/api/flashcards', '/data/flashcards.json') : url);
+  const flashcards: FlashcardWithProgress[] = await res.json();
+
+  // Load SM-2 progress from localStorage
+  const sm2Progress = storage.get<Record<number, SM2Progress>>(SM2_PROGRESS_KEY) || {};
+
+  // Attach progress to each flashcard
+  return flashcards.map(card => ({
+    ...card,
+    progress: sm2Progress[card.id] || null,
+  }));
+}
+
 export function useFlashcards(filters?: FlashcardFilters) {
   const params = new URLSearchParams();
   if (filters?.domain_id) params.append('domain_id', String(filters.domain_id));
@@ -68,7 +90,28 @@ export function useFlashcards(filters?: FlashcardFilters) {
   const queryString = params.toString();
   const url = `/api/flashcards${queryString ? `?${queryString}` : ''}`;
 
-  return useSWR<FlashcardWithProgress[]>(url, fetcher);
+  // Custom SWR implementation for filtering by due_only
+  const { data, ...rest } = useSWR<FlashcardWithProgress[]>(
+    url,
+    fetcherWithSM2Progress,
+    {
+      compare: (a, b) => {
+        // Custom comparison to handle SM-2 progress changes
+        return JSON.stringify(a) === JSON.stringify(b);
+      },
+    }
+  );
+
+  // Filter by due_only if requested
+  let filteredData = data;
+  if (filters?.due_only && data) {
+    filteredData = data.filter(card => {
+      if (!card.progress) return true; // No progress means due
+      return isCardDue(card.progress.next_review_date);
+    });
+  }
+
+  return { data: filteredData, ...rest };
 }
 
 export function useFlashcard(id: number | undefined) {
@@ -82,14 +125,25 @@ export function useFlashcardsDue() {
   return useSWR<FlashcardsDueResponse>('/api/flashcards/due', fetcher);
 }
 
-// Mutation hook for flashcard review
+// Mutation hook for flashcard review with SM-2
 export function useFlashcardReview(flashcardId: number) {
-  const key = `/api/flashcards/${flashcardId}/review`;
-
   return useSWRMutation<FlashcardReviewResponse, Error, string, FlashcardReviewRequest>(
-    key,
+    `/api/flashcards/${flashcardId}/review`,
     async (url, { arg }) => {
-      const result = await post<FlashcardReviewRequest, FlashcardReviewResponse>(url, arg);
+      // Get existing SM-2 progress
+      const allProgress = storage.get<Record<number, SM2Progress>>(SM2_PROGRESS_KEY) || {};
+      const previous = allProgress[flashcardId];
+
+      // Calculate new SM-2 values
+      const sm2Result = calculateSM2(arg.quality, previous);
+
+      // Save progress to localStorage
+      allProgress[flashcardId] = {
+        ...sm2Result,
+        last_review_date: new Date().toISOString(),
+        last_quality: arg.quality,
+      };
+      storage.set(SM2_PROGRESS_KEY, allProgress);
 
       // Invalidate related caches after review
       mutate('/api/flashcards/due');
@@ -100,7 +154,14 @@ export function useFlashcardReview(flashcardId: number) {
         { revalidate: true }
       );
 
-      return result;
+      return {
+        flashcard_id: flashcardId,
+        quality: arg.quality,
+        ease_factor: sm2Result.ease_factor,
+        interval: sm2Result.interval,
+        next_review_at: sm2Result.next_review_date,
+        message: 'Review saved successfully',
+      };
     }
   );
 }
@@ -215,7 +276,7 @@ export function useEndSession(sessionId: string | undefined) {
   );
 }
 
-// ============ User Hooks ============
+// ============ User Hooks (Mocked) ============
 
 export function useCurrentUser() {
   return useSWR<User>('/api/users/me', fetcher);
@@ -224,13 +285,17 @@ export function useCurrentUser() {
 export function useRegisterUser() {
   return useSWRMutation<User, Error, string, { email: string; display_name?: string }>(
     '/api/users/register',
-    async (url, { arg }) => {
-      const result = await post<typeof arg, User>(url, arg);
-
-      // Invalidate user cache
-      mutate('/api/users/me');
-
-      return result;
+    async (_url, { arg }) => {
+      const user = {
+        id: crypto.randomUUID(),
+        anonymous_id: crypto.randomUUID(),
+        email: arg.email,
+        display_name: arg.display_name || 'Guest User',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      storage.set('pmp_user', user);
+      return user;
     }
   );
 }
