@@ -68,7 +68,7 @@ export function ConceptDetailView({
     );
   }
 
-  const masteryPercent = concept.mastery ? Math.round(con.mastery.level * 100) : 0;
+  const masteryPercent = concept.mastery?.level ? Math.round(concept.mastery.level * 100) : 0;
   const masteryColor = masteryPercent >= 80 ? 'text-green-600' : masteryPercent >= 50 ? 'text-yellow-600' : 'text-red-600';
 
   return (
