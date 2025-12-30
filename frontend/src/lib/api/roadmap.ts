@@ -11,7 +11,7 @@
  * - DELETE /api/roadmap/:id - Archive a roadmap
  */
 
-import { del, fetcher, post, put } from './client';
+import { storage } from './client';
 
 // ============ Types ============
 
@@ -100,91 +100,103 @@ export interface AdaptRoadmapResponse {
   adapted: boolean;
 }
 
-// ============ API Functions ============
+const ROADMAP_KEY = 'pmp_study_roadmap';
 
-/**
- * Create a new personalized study roadmap.
- *
- * Generates a complete study plan with weekly milestones based on:
- * - Target exam date
- * - Available study time
- * - User's current weak domains
- */
+// ============ API Functions (Mocked) ============
+
 export async function createRoadmap(request: CreateRoadmapRequest): Promise<StudyRoadmap> {
-  return post<CreateRoadmapRequest, StudyRoadmap>('/api/roadmap/create', request);
+  const now = new Date().toISOString();
+  const roadmap: StudyRoadmap = {
+    id: 1,
+    user_id: 'guest',
+    exam_date: request.exam_date,
+    weekly_study_hours: request.weekly_study_hours,
+    study_days_per_week: request.study_days_per_week,
+    status: 'active',
+    focus_areas: [],
+    recommendations: {},
+    total_milestones: 4,
+    completed_milestones: 0,
+    created_at: now,
+    updated_at: now,
+    last_adapted_at: null,
+    milestones: [
+      {
+        id: 1,
+        title: 'Foundations & People Domain',
+        description: 'Focus on leadership and team dynamics',
+        week_number: 1,
+        scheduled_date: now,
+        target_date: now,
+        domain_ids: [1],
+        daily_plan: {},
+        completion_criteria: {},
+        status: 'in_progress',
+        flashcards_completed: 0,
+        questions_completed: 0,
+        quiz_score: null,
+        completed_at: null,
+      }
+    ],
+  };
+  storage.set(ROADMAP_KEY, roadmap);
+  return roadmap;
 }
 
-/**
- * Get the user's active study roadmap.
- *
- * Returns the complete roadmap with all milestones including:
- * - Weekly study plans
- * - Daily breakdown
- * - Progress tracking
- * - AI-generated recommendations
- */
 export async function getActiveRoadmap(): Promise<StudyRoadmap> {
-  return fetcher<StudyRoadmap>('/api/roadmap/active');
+  const roadmap = storage.get<StudyRoadmap>(ROADMAP_KEY);
+  if (!roadmap) throw new Error('No active roadmap');
+  return roadmap;
 }
 
-/**
- * Get a specific roadmap by ID.
- *
- * Returns the complete roadmap with all milestones.
- */
-export async function getRoadmap(roadmapId: number): Promise<StudyRoadmap> {
-  return fetcher<StudyRoadmap>(`/api/roadmap/${roadmapId}`);
+export async function getRoadmap(_roadmapId: number): Promise<StudyRoadmap> {
+  if (!_roadmapId) return {} as StudyRoadmap;
+  return getActiveRoadmap();
 }
 
-/**
- * Get the daily study plan for a specific date.
- *
- * Returns the planned activities for the given date including:
- * - Study hours
- * - Focus domains
- * - Flashcard and question targets
- */
-export async function getDailyPlan(roadmapId: number, date: string): Promise<DailyPlanResponse> {
-  return fetcher<DailyPlanResponse>(`/api/roadmap/${roadmapId}/daily/${date}`);
+export async function getDailyPlan(_roadmapId: number, date: string): Promise<DailyPlanResponse> {
+  if (!_roadmapId) return { date, plan: null };
+  return {
+    date,
+    plan: {
+      type: 'study',
+      hours: 2,
+      domain: 'People',
+      activities: [
+        { type: 'flashcards', count: 20 },
+        { type: 'questions', count: 10 }
+      ]
+    }
+  };
 }
 
-/**
- * Update progress for a specific milestone.
- *
- * Use this to track completed flashcards and questions for a milestone.
- * Can also mark the milestone as complete.
- */
 export async function updateMilestone(
-  roadmapId: number,
+  _roadmapId: number,
   milestoneId: number,
   request: UpdateMilestoneRequest
 ): Promise<RoadmapMilestone> {
-  return put<UpdateMilestoneRequest, RoadmapMilestone>(
-    `/api/roadmap/${roadmapId}/milestones/${milestoneId}`,
-    request
-  );
+  if (!_roadmapId) return {} as RoadmapMilestone;
+  const roadmap = await getActiveRoadmap();
+  const milestone = roadmap.milestones.find((m: RoadmapMilestone) => m.id === milestoneId);
+  if (milestone) {
+    if (request.flashcards_completed !== undefined) milestone.flashcards_completed = request.flashcards_completed;
+    if (request.questions_completed !== undefined) milestone.questions_completed = request.questions_completed;
+    if (request.mark_complete) milestone.status = 'completed';
+    storage.set(ROADMAP_KEY, roadmap);
+  }
+  return milestone!;
 }
 
-/**
- * Adapt the roadmap based on current progress.
- *
- * Re-analyzes user performance and adjusts remaining milestones:
- * - Allocates more time to weak domains
- * - Adjusts daily plans based on completion rates
- * - Updates AI recommendations
- *
- * Call this after completing major milestones or when
- * performance has changed significantly.
- */
 export async function adaptRoadmap(roadmapId: number): Promise<AdaptRoadmapResponse> {
-  return post<never, AdaptRoadmapResponse>(`/api/roadmap/${roadmapId}/adapt`, {});
+  return {
+    message: 'Roadmap adapted locally',
+    roadmap_id: roadmapId,
+    adapted: true,
+  };
 }
 
-/**
- * Archive a roadmap.
- *
- * Soft-deletes by archiving the roadmap rather than removing it.
- */
-export async function archiveRoadmap(roadmapId: number): Promise<{ message: string }> {
-  return del<{ message: string }>(`/api/roadmap/${roadmapId}`);
+export async function archiveRoadmap(_roadmapId: number): Promise<{ message: string }> {
+  if (!_roadmapId) return { message: 'No roadmap specified' };
+  storage.set(ROADMAP_KEY, null);
+  return { message: 'Roadmap archived' };
 }

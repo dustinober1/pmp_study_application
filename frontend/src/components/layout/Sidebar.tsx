@@ -2,9 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { NotificationBadge } from '@/components/ui/NotificationBadge';
-import { useChallengeNotifications } from '@/lib/api/collaboration-hooks';
-import { useIsPremium, useTierDisplay } from '@/stores/userStore';
+import { useTierDisplay } from '@/stores/userStore';
 
 interface NavItem {
   name: string;
@@ -51,6 +49,15 @@ const navItems: NavItem[] = [
       </svg>
     ),
   },
+  {
+    name: 'Donations',
+    href: '/donations',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
 ];
 
 const premiumNavItems: NavItem[] = [
@@ -94,25 +101,6 @@ const premiumNavItems: NavItem[] = [
     ),
     isPremium: true,
   },
-  {
-    name: 'Study Groups',
-    href: '/groups',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-    ),
-  },
-  {
-    name: 'Challenges',
-    href: '/groups/challenges',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-    showNotification: true,
-  },
 ];
 
 const domainItems = [
@@ -126,20 +114,8 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-function PremiumBadge() {
-  return (
-    <span className="ml-auto flex-shrink-0">
-      <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-    </span>
-  );
-}
-
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { count: notificationCount, hasNotifications } = useChallengeNotifications();
-  const isPremium = useIsPremium();
   const tierDisplay = useTierDisplay();
 
   return (
@@ -210,30 +186,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               >
                 {item.icon}
                 <span className="flex-1">{item.name}</span>
-                {item.isPremium && <PremiumBadge />}
               </Link>
             );
           })}
 
-          {/* Premium Features Section */}
+          {/* All Features Section */}
           <div className="mt-8 mb-4">
             <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
-              Premium Features
-              {!isPremium && (
-                <span className="px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded">
-                  PRO
-                </span>
-              )}
+              All Features
+              <span className="px-1.5 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
+                OPEN
+              </span>
             </h3>
           </div>
           {premiumNavItems.map((item) => {
             const isActive = pathname === item.href;
-            const isLocked = item.isPremium && !isPremium;
 
-            const navContent = (
+            return (
               <Link
                 key={item.name}
-                href={isLocked ? '/pricing' : item.href}
+                href={item.href}
                 onClick={onClose}
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
@@ -242,35 +214,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }
-                  ${isLocked ? 'opacity-60' : ''}
                 `}
               >
                 {item.icon}
                 <span className="flex-1">{item.name}</span>
-                {item.isPremium && <PremiumBadge />}
-                {isLocked && (
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                )}
               </Link>
             );
-
-            // Wrap with notification badge if needed
-            if (item.showNotification) {
-              return (
-                <NotificationBadge
-                  key={item.name}
-                  count={notificationCount}
-                  variant={hasNotifications ? 'urgent' : 'default'}
-                  className="w-full"
-                >
-                  {navContent}
-                </NotificationBadge>
-              );
-            }
-
-            return navContent;
           })}
 
           {/* Domains Section */}
@@ -282,7 +231,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {domainItems.map((domain) => (
             <Link
               key={domain.name}
-              href={`/domains/${domain.name.toLowerCase().replace(' ', '-')}`}
+              href={`/flashcards?domain_id=${domain.name === 'People' ? 1 : domain.name === 'Process' ? 2 : 3}`}
               onClick={onClose}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
             >
@@ -295,12 +244,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Bottom section */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          {/* User tier badge */}
+          {/* Open Access badge */}
           <div className={`mb-3 px-3 py-2 rounded-lg ${tierDisplay.bgColor}`}>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${tierDisplay.color.replace('text-', 'bg-').split(' ')[0]}`} />
+              <div className={`w-2 h-2 rounded-full bg-green-500`} />
               <span className={`text-xs font-medium ${tierDisplay.color}`}>
-                {tierDisplay.name} Account
+                Open-Source Project
               </span>
             </div>
           </div>
@@ -313,15 +262,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               Effective July 2026
             </p>
           </div>
-
-          {!isPremium && (
-            <Link
-              href="/pricing"
-              className="mt-3 block w-full text-center px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-medium rounded-lg hover:from-amber-600 hover:to-amber-700 transition-colors"
-            >
-              Upgrade to Premium
-            </Link>
-          )}
         </div>
       </aside>
     </>

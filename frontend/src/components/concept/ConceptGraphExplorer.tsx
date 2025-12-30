@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { useConceptGraph } from '@/lib/api/concept-hooks';
-import type { ConceptGraphResponse, ConceptDomain, RelationshipType } from '@/types';
+import type { ConceptDomain, RelationshipType } from '@/types';
 
 interface ConceptGraphExplorerProps {
   domain?: ConceptDomain;
@@ -61,17 +61,19 @@ export function ConceptGraphExplorer({
         g.attr('transform', event.transform);
       });
 
-    svg.call(zoom as any);
+    svg.call(zoom);
 
     // Create force simulation
-    const simulation = d3.forceSimulation(graphData.nodes as any)
-      .force('link', d3.forceLink(graphData.links as any)
-        .id((d: any) => d.id)
-        .distance((d: any) => 100 + (1 - d.strength) * 100)
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const simulation = d3.forceSimulation<any>(graphData.nodes as any)
+      .force('link', d3.forceLink<any, any>(graphData.links as any)
+        .id((d) => d.id)
+        .distance((d) => 100 + (1 - d.strength) * 100)
       )
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, containerHeight / 2))
       .force('collision', d3.forceCollide().radius(30));
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // Create arrow markers for directed links
     const defs = svg.append('defs');
@@ -96,10 +98,10 @@ export function ConceptGraphExplorer({
       .selectAll('line')
       .data(graphData.links)
       .join('line')
-      .attr('stroke', (d: any) => RELATIONSHIP_COLORS[d.type] || '#94a3b8')
+      .attr('stroke', (d) => RELATIONSHIP_COLORS[d.type] || '#94a3b8')
       .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', (d: any) => Math.max(1, d.strength * 3))
-      .attr('marker-end', (d: any) => `url(#arrow-${d.type})`);
+      .attr('stroke-width', (d) => Math.max(1, d.strength * 3))
+      .attr('marker-end', (d) => `url(#arrow-${d.type})`);
 
     // Create link labels for relationship type
     const linkLabel = g.append('g')
@@ -110,7 +112,7 @@ export function ConceptGraphExplorer({
       .attr('font-size', '10px')
       .attr('fill', '#64748b')
       .attr('text-anchor', 'middle')
-      .text((d: any) => {
+      .text((d) => {
         const labels: Record<RelationshipType, string> = {
           'prerequisite': '→',
           'related': '~',
@@ -122,6 +124,7 @@ export function ConceptGraphExplorer({
       });
 
     // Create nodes
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     const node = g.append('g')
       .attr('class', 'nodes')
       .selectAll('g')
@@ -131,30 +134,31 @@ export function ConceptGraphExplorer({
       .call(d3.drag<SVGGElement, any>()
         .on('start', dragstarted)
         .on('drag', dragged)
-        .on('end', dragended) as any
+        .on('end', dragended)
       );
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // Node circles
     node.append('circle')
-      .attr('r', (d: any) => 15 + Math.sqrt(d.flashcard_count + d.question_count) * 2)
-      .attr('fill', (d: any) => DOMAIN_COLORS[d.domain as ConceptDomain] || '#64748b')
-      .attr('stroke', (d: any) => {
+      .attr('r', (d) => 15 + Math.sqrt(d.flashcard_count + d.question_count) * 2)
+      .attr('fill', (d) => DOMAIN_COLORS[d.domain_focus as ConceptDomain] || '#64748b')
+      .attr('stroke', (d) => {
         if (selectedNode === d.id) return '#f59e0b';
         if (hoveredNode === d.id) return '#fbbf24';
         return '#fff';
       })
-      .attr('stroke-width', (d: any) => {
+      .attr('stroke-width', (d) => {
         if (selectedNode === d.id) return 3;
         if (hoveredNode === d.id) return 2;
         return 2;
       })
-      .attr('opacity', (d: any) => {
+      .attr('opacity', (d) => {
         if (selectedNode === null) return 1;
         // Dim non-selected nodes
         if (selectedNode !== d.id) {
           const isConnected = graphData.links.some(
-            (l: any) => (l.source.id === d.id && l.target.id === selectedNode) ||
-                        (l.target.id === d.id && l.source.id === selectedNode)
+            (l) => (l.source === d.id && l.target === selectedNode) ||
+                        (l.target === d.id && l.source === selectedNode)
           );
           return isConnected ? 1 : 0.3;
         }
@@ -168,14 +172,14 @@ export function ConceptGraphExplorer({
       .attr('font-size', '12px')
       .attr('font-weight', '500')
       .attr('fill', '#1e293b')
-      .text((d: any) => d.name.length > 15 ? d.name.substring(0, 12) + '...' : d.name);
+      .text((d) => d.name.length > 15 ? d.name.substring(0, 12) + '...' : d.name);
 
     // Mastery indicator (small dot inside node)
     node.append('circle')
       .attr('r', 5)
       .attr('cx', 10)
       .attr('cy', -10)
-      .attr('fill', (d: any) => {
+      .attr('fill', (d) => {
         if (d.mastery_level === undefined) return 'transparent';
         if (d.mastery_level >= 0.8) return '#10b981';
         if (d.mastery_level >= 0.5) return '#f59e0b';
@@ -185,7 +189,7 @@ export function ConceptGraphExplorer({
       .attr('stroke-width', 1);
 
     // Node click handler
-    node.on('click', (event, d: any) => {
+    node.on('click', (event, d) => {
       event.stopPropagation();
       setSelectedNode(d.id);
       if (onNodeClick) {
@@ -194,7 +198,7 @@ export function ConceptGraphExplorer({
     });
 
     // Hover effects
-    node.on('mouseenter', (event, d: any) => {
+    node.on('mouseenter', (_event, d) => {
       setHoveredNode(d.id);
     }).on('mouseleave', () => {
       setHoveredNode(null);
@@ -214,7 +218,7 @@ export function ConceptGraphExplorer({
       .style('opacity', 0)
       .style('z-index', 1000);
 
-    node.on('mouseover', (event, d: any) => {
+    node.on('mouseover', (event, d) => {
       tooltip.transition().duration(200).style('opacity', 1);
       tooltip.html(`
         <div class="font-semibold">${d.name}</div>
@@ -241,6 +245,7 @@ export function ConceptGraphExplorer({
     });
 
     // Update positions on simulation tick
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     simulation.on('tick', () => {
       link
         .attr('x1', (d: any) => d.source.x)
@@ -271,6 +276,7 @@ export function ConceptGraphExplorer({
       d.fx = null;
       d.fy = null;
     }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // Cleanup tooltip on unmount
     return () => {
@@ -323,7 +329,7 @@ export function ConceptGraphExplorer({
         {/* Relationship Legend */}
         <div className="flex flex-wrap gap-3 px-4 py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
           <span className="font-medium text-gray-700 dark:text-gray-300">Relationships:</span>
-          {Object.entries(relationshipTypes).map(([type, description]) => (
+          {Object.entries(relationshipTypes).map(([type]) => (
             <div key={type} className="flex items-center gap-1">
               <span
                 className="w-3 h-0.5"

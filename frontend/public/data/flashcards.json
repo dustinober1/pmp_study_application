@@ -1,0 +1,912 @@
+[
+  {
+    "id": 1,
+    "task_id": 1,
+    "domain_id": 1,
+    "front": "What is servant leadership?",
+    "back": "A leadership style where the leader prioritizes the needs of team members and helps them develop and perform at their highest potential."
+  },
+  {
+    "id": 2,
+    "task_id": 1,
+    "domain_id": 1,
+    "front": "What are the key elements of setting team expectations?",
+    "back": "Clear goals, defined roles and responsibilities, performance standards, communication protocols, and decision-making processes."
+  },
+  {
+    "id": 3,
+    "task_id": 1,
+    "domain_id": 1,
+    "front": "How should a PM adapt leadership style?",
+    "back": "Based on team maturity, project phase, organizational culture, and individual team member needs using situational leadership."
+  },
+  {
+    "id": 4,
+    "task_id": 1,
+    "domain_id": 1,
+    "front": "What is psychological safety in teams?",
+    "back": "An environment where team members feel safe to take risks, express ideas, ask questions, and admit mistakes without fear of punishment."
+  },
+  {
+    "id": 5,
+    "task_id": 1,
+    "domain_id": 1,
+    "front": "What are the stages of team development?",
+    "back": "Forming, Storming, Norming, Performing, and Adjourning (Tuckman's model)."
+  },
+  {
+    "id": 6,
+    "task_id": 2,
+    "domain_id": 1,
+    "front": "What is tacit knowledge?",
+    "back": "Knowledge gained through personal experience that is difficult to articulate or document, such as intuition and skills."
+  },
+  {
+    "id": 7,
+    "task_id": 2,
+    "domain_id": 1,
+    "front": "What is explicit knowledge?",
+    "back": "Knowledge that can be easily documented, shared, and transferred through written documents, procedures, or databases."
+  },
+  {
+    "id": 8,
+    "task_id": 2,
+    "domain_id": 1,
+    "front": "What are common knowledge transfer methods?",
+    "back": "Mentoring, pair programming, documentation, wikis, lessons learned sessions, communities of practice, and training sessions."
+  },
+  {
+    "id": 9,
+    "task_id": 2,
+    "domain_id": 1,
+    "front": "What is a lessons learned register?",
+    "back": "A document that captures knowledge gained during a project, including what worked well and what could be improved for future projects."
+  },
+  {
+    "id": 10,
+    "task_id": 2,
+    "domain_id": 1,
+    "front": "When should knowledge transfer occur?",
+    "back": "Throughout the project lifecycle, not just at the end - during retrospectives, phase gates, and team transitions."
+  },
+  {
+    "id": 11,
+    "task_id": 3,
+    "domain_id": 1,
+    "front": "What is a stakeholder?",
+    "back": "Any individual, group, or organization that can affect, be affected by, or perceive themselves to be affected by the project."
+  },
+  {
+    "id": 12,
+    "task_id": 3,
+    "domain_id": 1,
+    "front": "What is a power/interest grid?",
+    "back": "A stakeholder analysis tool that maps stakeholders based on their level of authority (power) and their concern (interest) in project outcomes."
+  },
+  {
+    "id": 13,
+    "task_id": 3,
+    "domain_id": 1,
+    "front": "What information is in a stakeholder register?",
+    "back": "Stakeholder identification, assessment information, and stakeholder classification including contact info, role, expectations, and influence level."
+  },
+  {
+    "id": 14,
+    "task_id": 3,
+    "domain_id": 1,
+    "front": "What is stakeholder salience?",
+    "back": "A model that classifies stakeholders based on power, legitimacy, and urgency to determine their relative importance."
+  },
+  {
+    "id": 15,
+    "task_id": 3,
+    "domain_id": 1,
+    "front": "What are the stakeholder engagement levels?",
+    "back": "Unaware, Resistant, Neutral, Supportive, and Leading - used to assess current and desired engagement."
+  },
+  {
+    "id": 16,
+    "task_id": 4,
+    "domain_id": 1,
+    "front": "What is a communication management plan?",
+    "back": "A document describing how project communications will be planned, structured, implemented, and monitored."
+  },
+  {
+    "id": 17,
+    "task_id": 4,
+    "domain_id": 1,
+    "front": "What factors affect communication method selection?",
+    "back": "Stakeholder preferences, urgency, sensitivity, complexity of information, geographic distribution, and organizational culture."
+  },
+  {
+    "id": 18,
+    "task_id": 4,
+    "domain_id": 1,
+    "front": "What is push communication?",
+    "back": "Information sent to specific recipients who need to know, such as emails, reports, and memos."
+  },
+  {
+    "id": 19,
+    "task_id": 4,
+    "domain_id": 1,
+    "front": "What is pull communication?",
+    "back": "Information placed in a central location for recipients to access at their discretion, such as websites and knowledge repositories."
+  },
+  {
+    "id": 20,
+    "task_id": 4,
+    "domain_id": 1,
+    "front": "What is interactive communication?",
+    "back": "Multidirectional exchange of information in real-time, such as meetings, calls, and video conferences."
+  },
+  {
+    "id": 21,
+    "task_id": 5,
+    "domain_id": 1,
+    "front": "What is a stakeholder engagement plan?",
+    "back": "A component of the project management plan that identifies strategies for engaging stakeholders in project decisions and execution."
+  },
+  {
+    "id": 22,
+    "task_id": 5,
+    "domain_id": 1,
+    "front": "What is the stakeholder engagement assessment matrix?",
+    "back": "A tool comparing current vs. desired engagement levels for each stakeholder to identify gaps requiring action."
+  },
+  {
+    "id": 23,
+    "task_id": 5,
+    "domain_id": 1,
+    "front": "How do you handle resistant stakeholders?",
+    "back": "Understand their concerns, address issues directly, find common ground, involve them in decisions, and demonstrate value to their interests."
+  },
+  {
+    "id": 24,
+    "task_id": 5,
+    "domain_id": 1,
+    "front": "What are engagement activities?",
+    "back": "Meetings, workshops, reviews, presentations, one-on-ones, site visits, and other interactions designed to build relationships and commitment."
+  },
+  {
+    "id": 25,
+    "task_id": 5,
+    "domain_id": 1,
+    "front": "How is stakeholder engagement monitored?",
+    "back": "Through regular assessment of engagement levels, feedback collection, relationship indicators, and adjustment of strategies as needed."
+  },
+  {
+    "id": 26,
+    "task_id": 6,
+    "domain_id": 1,
+    "front": "What are the foundations of trust in project management?",
+    "back": "Competence, integrity, consistency, reliability, transparency, and genuine concern for stakeholder interests."
+  },
+  {
+    "id": 27,
+    "task_id": 6,
+    "domain_id": 1,
+    "front": "What is emotional intelligence (EQ)?",
+    "back": "The ability to recognize, understand, and manage your own emotions and those of others - critical for building relationships."
+  },
+  {
+    "id": 28,
+    "task_id": 6,
+    "domain_id": 1,
+    "front": "What are influence techniques?",
+    "back": "Persuasion, negotiation, coalition building, leveraging expertise, building relationships, and using data/evidence."
+  },
+  {
+    "id": 29,
+    "task_id": 6,
+    "domain_id": 1,
+    "front": "What is the difference between authority and influence?",
+    "back": "Authority is formal power from position; influence is the ability to affect behavior without formal authority through relationships and credibility."
+  },
+  {
+    "id": 30,
+    "task_id": 6,
+    "domain_id": 1,
+    "front": "How do you rebuild trust after it's broken?",
+    "back": "Acknowledge the issue, take responsibility, communicate openly, follow through on commitments, and demonstrate changed behavior over time."
+  },
+  {
+    "id": 31,
+    "task_id": 7,
+    "domain_id": 1,
+    "front": "What is a high-performing team?",
+    "back": "A team that consistently achieves goals, collaborates effectively, maintains trust, and continuously improves its processes."
+  },
+  {
+    "id": 32,
+    "task_id": 7,
+    "domain_id": 1,
+    "front": "What are impediments?",
+    "back": "Obstacles that slow or block the team's progress, which the PM or Scrum Master helps remove."
+  },
+  {
+    "id": 33,
+    "task_id": 7,
+    "domain_id": 1,
+    "front": "What is recognition in project management?",
+    "back": "Acknowledging team and individual contributions to reinforce positive behaviors and maintain motivation."
+  },
+  {
+    "id": 34,
+    "task_id": 7,
+    "domain_id": 1,
+    "front": "What is a team charter?",
+    "back": "A document establishing team values, agreements, and operating guidelines created collaboratively by team members."
+  },
+  {
+    "id": 35,
+    "task_id": 7,
+    "domain_id": 1,
+    "front": "What is colocation?",
+    "back": "Placing team members in the same physical location to improve communication and collaboration. Virtual colocation uses digital tools."
+  },
+  {
+    "id": 36,
+    "task_id": 8,
+    "domain_id": 1,
+    "front": "What are the conflict resolution techniques?",
+    "back": "Collaborate/Problem-solve, Compromise, Smooth/Accommodate, Force/Direct, Withdraw/Avoid."
+  },
+  {
+    "id": 37,
+    "task_id": 8,
+    "domain_id": 1,
+    "front": "What is the best conflict resolution approach?",
+    "back": "Collaborate/Problem-solve - works together to find a win-win solution addressing everyone's concerns."
+  },
+  {
+    "id": 38,
+    "task_id": 8,
+    "domain_id": 1,
+    "front": "What are common sources of conflict?",
+    "back": "Schedules, priorities, resources, technical opinions, administrative procedures, cost, and personalities."
+  },
+  {
+    "id": 39,
+    "task_id": 8,
+    "domain_id": 1,
+    "front": "When is conflict beneficial?",
+    "back": "Constructive conflict can lead to better solutions, innovation, and stronger team dynamics when managed properly."
+  },
+  {
+    "id": 40,
+    "task_id": 8,
+    "domain_id": 1,
+    "front": "What is the Thomas-Kilmann Conflict Mode?",
+    "back": "A framework describing five conflict-handling modes based on assertiveness and cooperativeness dimensions."
+  },
+  {
+    "id": 41,
+    "task_id": 9,
+    "domain_id": 2,
+    "front": "What is a Work Breakdown Structure (WBS)?",
+    "back": "A hierarchical decomposition of the total scope of work to accomplish project objectives and create deliverables."
+  },
+  {
+    "id": 42,
+    "task_id": 9,
+    "domain_id": 2,
+    "front": "What is a product backlog?",
+    "back": "An ordered list of everything needed in the product, maintained by the Product Owner, continuously refined and prioritized."
+  },
+  {
+    "id": 43,
+    "task_id": 9,
+    "domain_id": 2,
+    "front": "What is scope creep?",
+    "back": "Uncontrolled expansion of project scope without adjustments to time, cost, and resources."
+  },
+  {
+    "id": 44,
+    "task_id": 9,
+    "domain_id": 2,
+    "front": "What is a work package?",
+    "back": "The lowest level of the WBS, a deliverable that can be estimated, scheduled, monitored, and controlled."
+  },
+  {
+    "id": 45,
+    "task_id": 9,
+    "domain_id": 2,
+    "front": "What is a user story?",
+    "back": "A short description of functionality from the user's perspective: As a [user], I want [goal] so that [benefit]."
+  },
+  {
+    "id": 46,
+    "task_id": 10,
+    "domain_id": 2,
+    "front": "What is MoSCoW prioritization?",
+    "back": "A technique categorizing requirements as Must have, Should have, Could have, and Won't have for this release."
+  },
+  {
+    "id": 47,
+    "task_id": 10,
+    "domain_id": 2,
+    "front": "What is value-based prioritization?",
+    "back": "Ordering work items based on the business value they deliver relative to effort required."
+  },
+  {
+    "id": 48,
+    "task_id": 10,
+    "domain_id": 2,
+    "front": "What is Weighted Shortest Job First (WSJF)?",
+    "back": "A prioritization method using (Business Value + Time Criticality + Risk Reduction) / Job Size."
+  },
+  {
+    "id": 49,
+    "task_id": 10,
+    "domain_id": 2,
+    "front": "What is the cost of delay?",
+    "back": "The economic impact of not delivering a feature or product on time, used to prioritize based on urgency."
+  },
+  {
+    "id": 50,
+    "task_id": 10,
+    "domain_id": 2,
+    "front": "What is a Minimum Viable Product (MVP)?",
+    "back": "A version with just enough features to satisfy early customers and provide feedback for future development."
+  },
+  {
+    "id": 51,
+    "task_id": 11,
+    "domain_id": 2,
+    "front": "What is incremental delivery?",
+    "back": "Delivering project scope in usable portions throughout the project rather than all at once at the end."
+  },
+  {
+    "id": 52,
+    "task_id": 11,
+    "domain_id": 2,
+    "front": "What is a release plan?",
+    "back": "A plan showing which features will be delivered in which releases, typically spanning multiple iterations."
+  },
+  {
+    "id": 53,
+    "task_id": 11,
+    "domain_id": 2,
+    "front": "What are the benefits of incremental delivery?",
+    "back": "Earlier value realization, faster feedback, reduced risk, improved stakeholder engagement, and ability to adapt."
+  },
+  {
+    "id": 54,
+    "task_id": 11,
+    "domain_id": 2,
+    "front": "What is continuous delivery?",
+    "back": "A practice where code changes are automatically built, tested, and prepared for release to production."
+  },
+  {
+    "id": 55,
+    "task_id": 11,
+    "domain_id": 2,
+    "front": "What is a potentially shippable increment?",
+    "back": "In Scrum, the output of a sprint that meets the Definition of Done and could be released if desired."
+  },
+  {
+    "id": 56,
+    "task_id": 12,
+    "domain_id": 2,
+    "front": "What is a resource breakdown structure?",
+    "back": "A hierarchical representation of resources by category and type used to organize resource planning."
+  },
+  {
+    "id": 57,
+    "task_id": 12,
+    "domain_id": 2,
+    "front": "What is resource leveling?",
+    "back": "A technique to adjust start and finish dates based on resource limits, often extending the schedule."
+  },
+  {
+    "id": 58,
+    "task_id": 12,
+    "domain_id": 2,
+    "front": "What is resource smoothing?",
+    "back": "A technique to adjust activities within float without extending the project schedule."
+  },
+  {
+    "id": 59,
+    "task_id": 12,
+    "domain_id": 2,
+    "front": "What is a resource calendar?",
+    "back": "A calendar showing when and how resources are available, including working days, shifts, and holidays."
+  },
+  {
+    "id": 60,
+    "task_id": 12,
+    "domain_id": 2,
+    "front": "What is a responsibility assignment matrix (RAM)?",
+    "back": "A grid showing project resources assigned to work packages; RACI is a common format."
+  },
+  {
+    "id": 61,
+    "task_id": 13,
+    "domain_id": 2,
+    "front": "What are the main contract types?",
+    "back": "Fixed Price (FP), Time and Materials (T&M), and Cost Reimbursable (CR) with various subtypes."
+  },
+  {
+    "id": 62,
+    "task_id": 13,
+    "domain_id": 2,
+    "front": "What is a Statement of Work (SOW)?",
+    "back": "A description of the products, services, or results to be delivered by a seller."
+  },
+  {
+    "id": 63,
+    "task_id": 13,
+    "domain_id": 2,
+    "front": "What is a make-or-buy decision?",
+    "back": "Analysis to determine whether to produce internally or purchase from external sources."
+  },
+  {
+    "id": 64,
+    "task_id": 13,
+    "domain_id": 2,
+    "front": "What is a Request for Proposal (RFP)?",
+    "back": "A document used to solicit proposals from prospective sellers when the solution approach is not predetermined."
+  },
+  {
+    "id": 65,
+    "task_id": 13,
+    "domain_id": 2,
+    "front": "What is contract administration?",
+    "back": "Managing the contract relationship, monitoring performance, and making changes as needed."
+  },
+  {
+    "id": 66,
+    "task_id": 14,
+    "domain_id": 2,
+    "front": "What is a predictive approach?",
+    "back": "A development approach where scope, time, and cost are determined early and changes are carefully managed. Also called waterfall."
+  },
+  {
+    "id": 67,
+    "task_id": 14,
+    "domain_id": 2,
+    "front": "What is an adaptive approach?",
+    "back": "An iterative approach where requirements and solutions evolve through collaboration. Includes agile methodologies."
+  },
+  {
+    "id": 68,
+    "task_id": 14,
+    "domain_id": 2,
+    "front": "What is a hybrid approach?",
+    "back": "A combination of predictive and adaptive elements tailored to project needs."
+  },
+  {
+    "id": 69,
+    "task_id": 14,
+    "domain_id": 2,
+    "front": "What factors influence approach selection?",
+    "back": "Requirements stability, stakeholder availability, organizational culture, risk tolerance, regulations, and team experience."
+  },
+  {
+    "id": 70,
+    "task_id": 14,
+    "domain_id": 2,
+    "front": "What is project tailoring?",
+    "back": "Selecting and adapting processes, tools, techniques, and methods appropriate for the specific project."
+  },
+  {
+    "id": 71,
+    "task_id": 15,
+    "domain_id": 2,
+    "front": "What is the project management plan?",
+    "back": "The document describing how the project will be executed, monitored, controlled, and closed."
+  },
+  {
+    "id": 72,
+    "task_id": 15,
+    "domain_id": 2,
+    "front": "What are subsidiary plans?",
+    "back": "Component plans for scope, schedule, cost, quality, resources, communications, risk, procurement, and stakeholder management."
+  },
+  {
+    "id": 73,
+    "task_id": 15,
+    "domain_id": 2,
+    "front": "What are project baselines?",
+    "back": "Approved versions of scope, schedule, and cost plans used to measure and compare actual performance."
+  },
+  {
+    "id": 74,
+    "task_id": 15,
+    "domain_id": 2,
+    "front": "When should the project plan be updated?",
+    "back": "When approved changes occur, as part of progressive elaboration, or when planning assumptions change."
+  },
+  {
+    "id": 75,
+    "task_id": 15,
+    "domain_id": 2,
+    "front": "What is rolling wave planning?",
+    "back": "An iterative planning technique where near-term work is planned in detail while future work is planned at a higher level."
+  },
+  {
+    "id": 76,
+    "task_id": 16,
+    "domain_id": 2,
+    "front": "What is Earned Value Management (EVM)?",
+    "back": "A methodology integrating scope, schedule, and cost to measure project performance and progress."
+  },
+  {
+    "id": 77,
+    "task_id": 16,
+    "domain_id": 2,
+    "front": "What is Schedule Variance (SV)?",
+    "back": "SV = EV - PV. Positive means ahead of schedule, negative means behind schedule."
+  },
+  {
+    "id": 78,
+    "task_id": 16,
+    "domain_id": 2,
+    "front": "What is Cost Variance (CV)?",
+    "back": "CV = EV - AC. Positive means under budget, negative means over budget."
+  },
+  {
+    "id": 79,
+    "task_id": 16,
+    "domain_id": 2,
+    "front": "What is Schedule Performance Index (SPI)?",
+    "back": "SPI = EV / PV. Greater than 1 means ahead of schedule, less than 1 means behind."
+  },
+  {
+    "id": 80,
+    "task_id": 16,
+    "domain_id": 2,
+    "front": "What is Cost Performance Index (CPI)?",
+    "back": "CPI = EV / AC. Greater than 1 means under budget, less than 1 means over budget."
+  },
+  {
+    "id": 81,
+    "task_id": 17,
+    "domain_id": 2,
+    "front": "What is a risk?",
+    "back": "An uncertain event that, if it occurs, has a positive or negative effect on project objectives."
+  },
+  {
+    "id": 82,
+    "task_id": 17,
+    "domain_id": 2,
+    "front": "What are the risk response strategies for threats?",
+    "back": "Avoid, Transfer, Mitigate, Accept, and Escalate."
+  },
+  {
+    "id": 83,
+    "task_id": 17,
+    "domain_id": 2,
+    "front": "What are the risk response strategies for opportunities?",
+    "back": "Exploit, Share, Enhance, Accept, and Escalate."
+  },
+  {
+    "id": 84,
+    "task_id": 17,
+    "domain_id": 2,
+    "front": "What is a risk register?",
+    "back": "A document containing risk identification, analysis, response planning, and monitoring information."
+  },
+  {
+    "id": 85,
+    "task_id": 17,
+    "domain_id": 2,
+    "front": "What is Expected Monetary Value (EMV)?",
+    "back": "EMV = Probability x Impact. Used in quantitative risk analysis to calculate average risk outcomes."
+  },
+  {
+    "id": 86,
+    "task_id": 18,
+    "domain_id": 2,
+    "front": "What is integrated change control?",
+    "back": "The process of reviewing, approving, and managing changes to deliverables, documents, and baselines."
+  },
+  {
+    "id": 87,
+    "task_id": 18,
+    "domain_id": 2,
+    "front": "What is a Change Control Board (CCB)?",
+    "back": "A formally chartered group responsible for reviewing, evaluating, approving, or rejecting changes."
+  },
+  {
+    "id": 88,
+    "task_id": 18,
+    "domain_id": 2,
+    "front": "What is a change request?",
+    "back": "A formal proposal to modify a document, deliverable, or baseline that goes through change control."
+  },
+  {
+    "id": 89,
+    "task_id": 18,
+    "domain_id": 2,
+    "front": "What is configuration management?",
+    "back": "A system for managing changes to project artifacts, ensuring consistency and traceability."
+  },
+  {
+    "id": 90,
+    "task_id": 18,
+    "domain_id": 2,
+    "front": "What is the change log?",
+    "back": "A document listing all change requests and their current status throughout the project."
+  },
+  {
+    "id": 91,
+    "task_id": 19,
+    "domain_id": 3,
+    "front": "What is a PESTLE analysis?",
+    "back": "A framework analyzing Political, Economic, Social, Technological, Legal, and Environmental external factors."
+  },
+  {
+    "id": 92,
+    "task_id": 19,
+    "domain_id": 3,
+    "front": "What are regulatory impacts on projects?",
+    "back": "Compliance requirements, industry standards, data privacy laws, and safety regulations that constrain project decisions."
+  },
+  {
+    "id": 93,
+    "task_id": 19,
+    "domain_id": 3,
+    "front": "What is environmental scanning?",
+    "back": "Continuously monitoring external factors that could impact the project or organization."
+  },
+  {
+    "id": 94,
+    "task_id": 19,
+    "domain_id": 3,
+    "front": "What are geopolitical risks?",
+    "back": "Risks from political instability, trade policies, sanctions, or international relations affecting project operations."
+  },
+  {
+    "id": 95,
+    "task_id": 19,
+    "domain_id": 3,
+    "front": "What is technology disruption?",
+    "back": "Changes in technology that may obsolete project deliverables or require adaptation of project approach."
+  },
+  {
+    "id": 96,
+    "task_id": 20,
+    "domain_id": 3,
+    "front": "What is impact analysis?",
+    "back": "Evaluating how changes (internal or external) affect project scope, schedule, cost, quality, and risks."
+  },
+  {
+    "id": 97,
+    "task_id": 20,
+    "domain_id": 3,
+    "front": "How do regulatory changes affect scope?",
+    "back": "May require new features, modified requirements, additional documentation, or compliance activities."
+  },
+  {
+    "id": 98,
+    "task_id": 20,
+    "domain_id": 3,
+    "front": "What is backlog refinement?",
+    "back": "The ongoing process of reviewing, updating, and reprioritizing backlog items based on new information."
+  },
+  {
+    "id": 99,
+    "task_id": 20,
+    "domain_id": 3,
+    "front": "What is scope validation?",
+    "back": "Formalizing acceptance of completed deliverables with stakeholders to ensure they meet requirements."
+  },
+  {
+    "id": 100,
+    "task_id": 20,
+    "domain_id": 3,
+    "front": "What triggers scope reassessment?",
+    "back": "Market changes, technology shifts, regulatory updates, stakeholder feedback, or strategic pivots."
+  },
+  {
+    "id": 101,
+    "task_id": 21,
+    "domain_id": 3,
+    "front": "What is business value?",
+    "back": "The net benefit derived from a business endeavor, including tangible and intangible benefits."
+  },
+  {
+    "id": 102,
+    "task_id": 21,
+    "domain_id": 3,
+    "front": "What is a value stream?",
+    "back": "The set of actions required to deliver value from concept to customer, including both value-adding and non-value-adding steps."
+  },
+  {
+    "id": 103,
+    "task_id": 21,
+    "domain_id": 3,
+    "front": "What is Return on Investment (ROI)?",
+    "back": "A measure of project profitability: (Gains - Costs) / Costs, expressed as a percentage."
+  },
+  {
+    "id": 104,
+    "task_id": 21,
+    "domain_id": 3,
+    "front": "What are Key Performance Indicators (KPIs)?",
+    "back": "Quantifiable measures used to evaluate the success of a project in meeting its objectives."
+  },
+  {
+    "id": 105,
+    "task_id": 21,
+    "domain_id": 3,
+    "front": "What is a benefits realization plan?",
+    "back": "A document describing how and when benefits will be delivered and measured."
+  },
+  {
+    "id": 106,
+    "task_id": 22,
+    "domain_id": 3,
+    "front": "What is benefits measurement?",
+    "back": "The process of quantifying and tracking the value delivered by a project against expected benefits."
+  },
+  {
+    "id": 107,
+    "task_id": 22,
+    "domain_id": 3,
+    "front": "What is a benefits owner?",
+    "back": "The person accountable for ensuring projected benefits are realized after project completion."
+  },
+  {
+    "id": 108,
+    "task_id": 22,
+    "domain_id": 3,
+    "front": "What is benefits tracking?",
+    "back": "Ongoing monitoring of actual vs. expected benefits using defined metrics and measurement systems."
+  },
+  {
+    "id": 109,
+    "task_id": 22,
+    "domain_id": 3,
+    "front": "What is a success metric?",
+    "back": "A quantifiable indicator used to determine if project objectives and benefits are being achieved."
+  },
+  {
+    "id": 110,
+    "task_id": 22,
+    "domain_id": 3,
+    "front": "When does benefits realization occur?",
+    "back": "Often after project closure, during operations, requiring handoff to a benefits owner."
+  },
+  {
+    "id": 111,
+    "task_id": 23,
+    "domain_id": 3,
+    "front": "What is strategic alignment?",
+    "back": "Ensuring project goals and outcomes support the organization's strategic objectives and direction."
+  },
+  {
+    "id": 112,
+    "task_id": 23,
+    "domain_id": 3,
+    "front": "What is a project portfolio?",
+    "back": "A collection of projects, programs, and operations managed as a group to achieve strategic objectives."
+  },
+  {
+    "id": 113,
+    "task_id": 23,
+    "domain_id": 3,
+    "front": "What is organizational project management (OPM)?",
+    "back": "A framework linking project, program, and portfolio management to organizational strategy."
+  },
+  {
+    "id": 114,
+    "task_id": 23,
+    "domain_id": 3,
+    "front": "What is a strategic initiative?",
+    "back": "A program or project specifically designed to advance organizational strategic goals."
+  },
+  {
+    "id": 115,
+    "task_id": 23,
+    "domain_id": 3,
+    "front": "How do projects support strategy?",
+    "back": "By delivering capabilities, products, or changes that enable strategic goals and competitive advantage."
+  },
+  {
+    "id": 116,
+    "task_id": 24,
+    "domain_id": 3,
+    "front": "What is organizational change management?",
+    "back": "A structured approach to transitioning individuals, teams, and organizations to a desired future state."
+  },
+  {
+    "id": 117,
+    "task_id": 24,
+    "domain_id": 3,
+    "front": "What is the ADKAR model?",
+    "back": "A change management framework: Awareness, Desire, Knowledge, Ability, Reinforcement."
+  },
+  {
+    "id": 118,
+    "task_id": 24,
+    "domain_id": 3,
+    "front": "What is change resistance?",
+    "back": "Opposition to change due to fear, uncertainty, loss of control, or perceived negative impacts."
+  },
+  {
+    "id": 119,
+    "task_id": 24,
+    "domain_id": 3,
+    "front": "What is a change agent?",
+    "back": "A person who facilitates and promotes change within an organization."
+  },
+  {
+    "id": 120,
+    "task_id": 24,
+    "domain_id": 3,
+    "front": "What is sustainability in change?",
+    "back": "Ensuring changes are embedded and maintained in the organization after the project ends."
+  },
+  {
+    "id": 121,
+    "task_id": 25,
+    "domain_id": 3,
+    "front": "What is project sustainability?",
+    "back": "Considering environmental, social, and economic impacts in project planning and execution."
+  },
+  {
+    "id": 122,
+    "task_id": 25,
+    "domain_id": 3,
+    "front": "What is the triple bottom line?",
+    "back": "A framework measuring success across three dimensions: People, Planet, and Profit."
+  },
+  {
+    "id": 123,
+    "task_id": 25,
+    "domain_id": 3,
+    "front": "How can AI support project management?",
+    "back": "Through predictive analytics, automation, risk assessment, resource optimization, and decision support."
+  },
+  {
+    "id": 124,
+    "task_id": 25,
+    "domain_id": 3,
+    "front": "What are AI ethics in projects?",
+    "back": "Considerations including bias, transparency, privacy, accountability, and human oversight in AI use."
+  },
+  {
+    "id": 125,
+    "task_id": 25,
+    "domain_id": 3,
+    "front": "What is carbon footprint in projects?",
+    "back": "The total greenhouse gas emissions caused by project activities and deliverables."
+  },
+  {
+    "id": 126,
+    "task_id": 26,
+    "domain_id": 3,
+    "front": "What is continuous improvement?",
+    "back": "An ongoing effort to improve processes, products, and services through incremental and breakthrough improvements."
+  },
+  {
+    "id": 127,
+    "task_id": 26,
+    "domain_id": 3,
+    "front": "What is a retrospective?",
+    "back": "A meeting where the team reflects on what went well, what didn't, and how to improve."
+  },
+  {
+    "id": 128,
+    "task_id": 26,
+    "domain_id": 3,
+    "front": "What is the Plan-Do-Check-Act (PDCA) cycle?",
+    "back": "A continuous improvement framework: Plan the change, Do/implement it, Check results, Act to standardize or adjust."
+  },
+  {
+    "id": 129,
+    "task_id": 26,
+    "domain_id": 3,
+    "front": "What are lessons learned?",
+    "back": "Knowledge gained from project experiences that can be applied to improve future performance."
+  },
+  {
+    "id": 130,
+    "task_id": 26,
+    "domain_id": 3,
+    "front": "What is Kaizen?",
+    "back": "A Japanese philosophy of continuous incremental improvement involving all employees."
+  }
+]

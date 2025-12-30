@@ -4,12 +4,8 @@ import React, { useMemo } from 'react';
 import useSWR from 'swr';
 import {
   BarChart,
-  Bar,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -20,21 +16,13 @@ import {
 import { getAnalyticsSummary, getRecommendations } from '@/lib/api/analytics';
 import type {
   AnalyticsSummaryResponse,
-  DomainPerformanceSummary,
   LearningRecommendationItem,
 } from '@/lib/api/analytics';
 
-// Domain colors for charts
 const DOMAIN_COLORS: Record<number, string> = {
   1: '#10b981', // People - emerald
   2: '#3b82f6', // Process - blue
   3: '#f59e0b', // Business Environment - amber
-};
-
-const DOMAIN_NAMES: Record<number, string> = {
-  1: 'People',
-  2: 'Process',
-  3: 'Business Environment',
 };
 
 // Chart colors for trend lines
@@ -59,11 +47,11 @@ interface PerformanceDashboardProps {
  * - Study streak metrics
  * - Weak areas highlights from recommendations
  */
-export default function PerformanceDashboard({ userId }: PerformanceDashboardProps) {
+export default function PerformanceDashboard({}: PerformanceDashboardProps) {
   const { data: analyticsData, error: analyticsError, isLoading: analyticsLoading } =
     useSWR<AnalyticsSummaryResponse>('/api/analytics/summary', getAnalyticsSummary);
 
-  const { data: recommendationsData, error: recsError } = useSWR<LearningRecommendationItem[]>(
+  const { data: recommendationsData } = useSWR<LearningRecommendationItem[]>(
     '/api/analytics/recommendations',
     () => getRecommendations().then(r => r.recommendations)
   );
@@ -234,7 +222,8 @@ export default function PerformanceDashboard({ userId }: PerformanceDashboardPro
                 border: '1px solid #e5e7eb',
                 borderRadius: '8px',
               }}
-              formatter={((value: number | undefined) => [`${value ?? 0}%`, 'Accuracy']) as any}
+              /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+              formatter={((value: any) => [`${Number(value ?? 0)}%`, 'Accuracy']) as any}
             />
             <Legend />
             <Line
@@ -271,27 +260,23 @@ export default function PerformanceDashboard({ userId }: PerformanceDashboardPro
               axisLine={false}
               domain={[0, 100]}
             />
+            {/* eslint-disable @typescript-eslint/no-explicit-any */}
             <Tooltip
               contentStyle={{
                 backgroundColor: 'white',
                 border: '1px solid #e5e7eb',
                 borderRadius: '8px',
               }}
-              formatter={((value: number | undefined, name: string) => {
-                const val = value ?? 0;
-                if (name === 'accuracy') return [`${val}%`, 'Accuracy'];
-                if (name === 'questions') return [val, 'Questions'];
-                if (name === 'weight') return [`${val}%`, 'Exam Weight'];
-                return [val, name];
+              formatter={((value: any, name: any) => {
+                const val = Number(value ?? 0);
+                const n = String(name ?? '');
+                if (n === 'accuracy') return [`${val}%`, 'Accuracy'];
+                if (n === 'questions') return [val, 'Questions'];
+                if (n === 'weight') return [`${val}%`, 'Exam Weight'];
+                return [val, n];
               }) as any}
             />
-            <Legend />
-            <Bar
-              dataKey="accuracy"
-              name="Accuracy %"
-              fill={CHART_COLORS.primary}
-              radius={[8, 8, 0, 0]}
-            />
+            {/* eslint-enable @typescript-eslint/no-explicit-any */}
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -323,9 +308,7 @@ export default function PerformanceDashboard({ userId }: PerformanceDashboardPro
             Study Recommendations
           </h2>
           {weakAreas.length === 0 ? (
-            <p className="text-gray-500 text-sm">
-              No recommendations at the moment. Check back after more study sessions!
-            </p>
+            <p className="text-gray-700 dark:text-gray-300">We&apos;ll analyze your explanation against the correct answer</p>
           ) : (
             <div className="space-y-3">
               {weakAreas.map((rec) => (
@@ -407,14 +390,14 @@ function WeakAreaItem({ name, accuracy, questions }: WeakAreaItemProps) {
   const accuracyColor = accuracy < 50 ? 'bg-red-500' : accuracy < 70 ? 'bg-yellow-500' : 'bg-green-500';
 
   return (
-    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+    <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800">
       <div>
-        <p className="font-medium text-gray-900">{name}</p>
-        <p className="text-sm text-gray-500">{questions} questions attempted</p>
+        <p className="font-medium text-gray-900 dark:text-white">{name}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{questions} questions attempted</p>
       </div>
       <div className="text-right">
-        <div className="text-lg font-bold text-red-600">{accuracy}%</div>
-        <div className="w-16 h-2 bg-gray-200 rounded-full mt-1 ml-auto">
+        <div className="text-lg font-bold text-red-600 dark:text-red-400">{accuracy}%</div>
+        <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1 ml-auto">
           <div className={`h-full rounded-full ${accuracyColor}`} style={{ width: `${accuracy}%` }} />
         </div>
       </div>

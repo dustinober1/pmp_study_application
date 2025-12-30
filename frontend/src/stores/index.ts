@@ -80,27 +80,6 @@ export {
   useExamAnswerByIndex,
 } from './examStore';
 
-// Collaboration store
-export {
-  useCollaborationStore,
-  useGroups,
-  useCurrentGroup,
-  useGroupMembers,
-  useInviteCode,
-  useDiscussions,
-  useChallenges,
-  useIsLoadingGroups,
-  useIsLoadingDiscussions,
-  useIsLoadingChallenges,
-  useCollaborationError,
-  useGroupById,
-  useDiscussionById,
-  useChallengeById,
-  useGroupDiscussions,
-  useGroupChallenges,
-  useActiveChallenges,
-} from './collaborationStore';
-
 // Micro-learning store
 export {
   useMicroStore,

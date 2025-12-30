@@ -225,11 +225,10 @@ export default function StudyRoadmapView() {
         </div>
 
         <div className="divide-y divide-gray-200">
-          {roadmap.milestones.map((milestone, index) => (
+          {roadmap.milestones.map((milestone) => (
             <MilestoneItem
               key={milestone.id}
               milestone={milestone}
-              index={index}
               onClick={() => setSelectedMilestone(milestone)}
             />
           ))}
@@ -243,11 +242,9 @@ export default function StudyRoadmapView() {
 
 function MilestoneItem({
   milestone,
-  index,
   onClick,
 }: {
   milestone: RoadmapMilestone;
-  index: number;
   onClick: () => void;
 }) {
   const statusConfig = {
@@ -282,11 +279,12 @@ function MilestoneItem({
   };
 
   const config = statusConfig[milestone.status] || statusConfig.pending;
+  const criteria = milestone.completion_criteria as { flashcards?: number; questions?: number } || {};
   const progress =
     milestone.completion_criteria && typeof milestone.completion_criteria === 'object'
       ? {
-          flashcards: (milestone.completion_criteria as any).flashcards || 0,
-          questions: (milestone.completion_criteria as any).questions || 0,
+          flashcards: criteria.flashcards || 0,
+          questions: criteria.questions || 0,
         }
       : { flashcards: 0, questions: 0 };
 

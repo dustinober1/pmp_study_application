@@ -7,7 +7,6 @@ import type {
   GameTapeResponse,
   GameTapeEvent,
   BehaviorPattern,
-  BehaviorSummary,
 } from '@/types/exam';
 
 export interface PostExamGameTapeProps {

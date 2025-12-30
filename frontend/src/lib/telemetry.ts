@@ -13,7 +13,7 @@ export type TelemetryEvent =
   | 'page_view'
   | 'feature_click'
   | 'upgrade_click'
-  | 'premium_feature_accessed'
+  | 'open_access_accessed'
   | 'study_session_start'
   | 'exam_start'
   | 'flashcard_review'
@@ -68,25 +68,11 @@ export function trackEvent(
 }
 
 /**
- * Send telemetry data to backend API
+ * Send telemetry data to backend API (Disabled for static site)
  */
-async function sendToTelemetryAPI(data: TelemetryData): Promise<void> {
-  try {
-    const apiUrl = '/api/telemetry';
-
-    await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-  } catch (error) {
-    // Silent fail - telemetry shouldn't break the app
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[Telemetry] Failed to send event:', error);
-    }
-  }
+async function sendToTelemetryAPI(_data: TelemetryData): Promise<void> {
+  if (!_data) return;
+  return;
 }
 
 /**
@@ -105,8 +91,8 @@ export function useTelemetry() {
     trackEvent('upgrade_click', source, { source });
   };
 
-  const trackPremiumFeatureAccess = (featureName: string) => {
-    trackEvent('premium_feature_accessed', featureName);
+  const trackOpenAccessFeature = (featureName: string) => {
+    trackEvent('open_access_accessed', featureName);
   };
 
   const trackStudySession = (sessionType: string) => {
@@ -141,7 +127,7 @@ export function useTelemetry() {
     trackPageView,
     trackFeatureClick,
     trackUpgradeClick,
-    trackPremiumFeatureAccess,
+    trackOpenAccessFeature,
     trackStudySession,
     trackExamStart,
     trackFlashcardReview,
@@ -159,13 +145,17 @@ export function withPageTracking<P extends object>(
   WrappedComponent: React.ComponentType<P>,
   pageName: string
 ): React.ComponentType<P> {
-  return (props: P) => {
+  const ComponentWithTracking = (props: P) => {
     React.useEffect(() => {
       trackEvent('page_view', pageName);
     }, []);
 
     return React.createElement(WrappedComponent, props);
   };
+
+  ComponentWithTracking.displayName = `WithPageTracking(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
+
+  return ComponentWithTracking;
 }
 
 // Import React for the HOC

@@ -1,0 +1,123 @@
+# Phase 2: PayPal Integration - Implementation Complete
+
+## Summary
+Successfully implemented PayPal service with full payment processing and subscription management capabilities for the PMP 2026 Study App's 3-tier monetization model.
+
+## Files Created
+
+### 1. backend/app/services/paypal_service.py (NEW)
+Comprehensive PayPal service with:
+- Order creation and capture for one-time payments
+- Subscription creation and management (monthly/yearly)
+- Product and billing plan management
+- Webhook signature verification
+- IPN (Instant Payment Notification) support for legacy compatibility
+- Automatic access token management with refresh logic
+- Pricing configuration: $14.99/month or $119.99/year
+
+Key classes:
+- `PayPalService`: Main service class with all PayPal API operations
+- Exception classes: `PayPalError`, `PayPalConfigError`, `PayPalAPIError`, `PayPalWebhookError`
+
+Key methods:
+- `create_order()`: Create one-time payment orders
+- `capture_order()`: Capture approved payments
+- `create_subscription()`: Create recurring subscriptions
+- `cancel_subscription()`: Cancel active subscriptions
+- `get_subscription_details()`: Retrieve subscription status
+- `verify_webhook_signature()`: Verify webhook authenticity
+- `verify_ipn()`: Verify IPN messages
+- `parse_ipn_message()`: Parse IPN form data
+
+### 2. backend/app/routers/paypal.py (NEW)
+PayPal router with REST API endpoints:
+
+Endpoints:
+- `POST /api/paypal/checkout` - Create checkout session
+- `POST /api/paypal/webhook` - Handle PayPal webhook events
+- `POST /api/paypal/webhook/ipn` - Handle IPN messages
+- `GET /api/paypal/subscription` - Get current subscription
+- `POST /api/paypal/subscription/cancel` - Cancel subscription
+
+Features:
+- JWT authentication for protected endpoints
+- Background task processing for webhooks
+- Automatic user tier upgrades/downgrades based on subscription status
+- Subscription status tracking (pending, active, cancelled, expired)
+- Integration with existing Subscription model
+
+## Files Modified
+
+### 3. backend/app/config.py
+Added PayPal configuration fields:
+- `paypal_mode`: sandbox or live
+- `paypal_client_id`: PayPal API client ID
+- `paypal_client_secret`: PayPal API client secret
+- `paypal_webhook_id`: Webhook ID for signature verification
+- `paypal_webhook_url`: Webhook endpoint URL
+- `paypal_product_id`: Optional pre-configured product ID
+- `paypal_plan_monthly`: Optional pre-configured monthly plan ID
+- `paypal_plan_yearly`: Optional pre-configured yearly plan ID
+
+### 4. backend/app/main.py
+- Added PayPal router import
+- Registered PayPal router in FastAPI app
+
+## Configuration Requirements
+
+The following environment variables need to be set in `.env`:
+
+```bash
+# PayPal Configuration
+PAYPAL_MODE=sandbox  # or 'live' for production
+PAYPAL_CLIENT_ID=your_paypal_client_id
+PAYPAL_CLIENT_SECRET=your_paypal_client_secret
+PAYPAL_WEBHOOK_ID=your_webhook_id_from_paypal
+PAYPAL_WEBHOOK_URL=https://your-domain.com/api/paypal/webhook
+
+# Optional: Pre-configured plans (if not set, will be auto-created)
+PAYPAL_PRODUCT_ID=your_product_id
+PAYPAL_PLAN_MONTHLY=your_monthly_plan_id
+PAYPAL_PLAN_YEARLY=your_yearly_plan_id
+```
+
+## Integration Notes
+
+### Subscription Model (Already Exists)
+The `backend/app/models/subscription.py` file already contains:
+- `Subscription` model with PayPal integration fields
+- `UsageTracking` model for daily limit enforcement
+- Enums: `SubscriptionStatus`, `SubscriptionPeriod`
+
+### Webhook Event Handling
+The router handles these PayPal webhook events:
+- `BILLING.SUBSCRIPTION.ACTIVATED` - Activates subscription, upgrades user to Premium
+- `BILLING.SUBSCRIPTION.CANCELLED` - Marks as cancelled
+- `BILLING.SUBSCRIPTION.EXPIRED` - Marks as expired, downgrades to Free
+- `PAYMENT.SALE.COMPLETED` - Extends expiration on payment
+
+### IPN Support
+Legacy IPN support for transaction types:
+- `subscr_signup` - New subscription
+- `subscr_cancel` - Cancellation
+- `subscr_eot` - End of term
+- `subscr_payment` - Successful payment
+
+## Testing Checklist
+- [ ] Configure PayPal sandbox credentials
+- [ ] Test checkout flow with sandbox account
+- [ ] Verify webhook signature validation
+- [ ] Test subscription activation
+- [ ] Test subscription cancellation
+- [ ] Verify user tier changes (Public -> Premium, Premium -> Free)
+- [ ] Test IPN verification
+
+## Next Steps for Frontend Integration
+1. Create checkout page that calls `/api/paypal/checkout`
+2. Redirect user to returned `approval_url`
+3. Handle return from PayPal with success/error
+4. Display subscription status from `/api/paypal/subscription`
+5. Implement cancel button calling `/api/paypal/subscription/cancel`
+
+## No Blockers Encountered
+All dependencies already satisfied (httpx present in requirements.txt).

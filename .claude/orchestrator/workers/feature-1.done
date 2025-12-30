@@ -1,0 +1,67 @@
+# Phase 1: Tier System Infrastructure - COMPLETED
+
+## Summary
+Successfully implemented the tier system infrastructure for the 3-tier monetization model.
+
+## Changes Made
+
+### 1. User Model Updates (backend/app/models/user.py)
+- Added `Tier` enum with values: PUBLIC, FREE, PREMIUM
+- Added `tier` field to User model (defaults to PUBLIC for new users)
+- Added relationships for `subscriptions` and `usage_tracking`
+- Imported Subscription and UsageTracking models
+
+### 2. New Subscription Model (backend/app/models/subscription.py)
+Created `Subscription` model with fields:
+- `id`: UUID primary key
+- `user_id`: Foreign key to users
+- `paypal_subscription_id`: PayPal subscription reference
+- `paypal_plan_id`: PayPal plan reference
+- `status`: SubscriptionStatus enum (active, cancelled, expired, pending)
+- `period`: SubscriptionPeriod enum (monthly, yearly)
+- `amount`: Numeric pricing in USD
+- `started_at`, `expires_at`, `cancelled_at`: Date tracking
+- `created_at`, `updated_at`: Timestamps
+
+Created `SubscriptionStatus` enum: ACTIVE, CANCELLED, EXPIRED, PENDING
+
+Created `SubscriptionPeriod` enum: MONTHLY, YEARLY
+
+### 3. New UsageTracking Model (backend/app/models/subscription.py)
+Created `UsageTracking` model with fields:
+- `id`: UUID primary key
+- `user_id`: Foreign key to users
+- `tracking_date`: UTC date for tracking
+- `flashcards_viewed`: Daily flashcard count
+- `questions_answered`: Daily question count
+- `mini_exams_taken`: Daily 25-question exam count
+- `full_exams_taken`: Daily 185-question exam count
+- `created_at`, `updated_at`: Timestamps
+
+### 4. User Schema Updates (backend/app/schemas/user.py)
+- Added `tier` field to `UserBase` schema
+- Added `tier` field to `UserResponse` schema
+- Imported `Tier` enum from user model
+
+### 5. Model Exports (backend/app/models/__init__.py)
+- Exported `Tier` enum
+- Exported `Subscription`, `SubscriptionStatus`, `SubscriptionPeriod`
+- Exported `UsageTracking`
+
+### 6. Alembic Migration (backend/alembic/versions/20241228_add_tier_system.py)
+Created migration that:
+- Adds `tier` column to users table (string(20), default='public', indexed)
+- Creates `subscriptions` table with all required fields and foreign keys
+- Creates `usage_tracking` table with all required fields and foreign keys
+- Includes proper downgrade logic
+
+## Tier Limits Reference
+- **Public** (Anonymous): 50 flashcards/day, 30 questions/day, 1 mini-exam
+- **Free** (Registered): Unlimited core studying, 2 mini-exams/month
+- **Premium** ($14.99/mo or $119.99/year): Full 185-Q exams, all features unlimited
+
+## Notes
+- Migration was created manually due to PostgreSQL not being available locally
+- All models follow existing patterns in the codebase
+- Relationships are properly configured with cascade delete
+- Indexes added for performance on tier and user_id fields

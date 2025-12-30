@@ -1,16 +1,6 @@
-/**
- * SWR hooks for Micro-Learning API
- *
- * Provides hooks for 2-minute micro-learning sessions with:
- * - Study queue management
- * - Quick session creation/review
- * - Context-aware learning (commute, break, waiting, general)
- * - Audio flashcard support
- */
-
 import useSWR, { mutate } from 'swr';
 import useSWRMutation from 'swr/mutation';
-import { fetcher, post } from './client';
+import { storage } from './client';
 import type {
   StudyQueueResponse,
   DueCardsResponse,
@@ -21,31 +11,64 @@ import type {
   MicroFlashcardWithProgress,
   MicroContext,
   MicroSessionMode,
+  StudyQueueEntry,
 } from '@/types';
 
-// ============ Study Queue Hooks ============
+const MICRO_SESSIONS_KEY = 'pmp_micro_sessions';
 
 interface StudyQueueOptions {
   context?: MicroContext;
   limit?: number;
 }
 
-/**
- * Get user's study queue for micro-learning
- */
-export function useStudyQueue(options?: StudyQueueOptions) {
-  const params = new URLSearchParams();
-  if (options?.context) params.append('context', options.context);
-  if (options?.limit) params.append('limit', String(options.limit));
+interface DueCardsOptions {
+  context?: MicroContext;
+  limit?: number;
+}
 
-  const queryString = params.toString();
-  const url = `/api/micro/queue${queryString ? `?${queryString}` : ''}`;
-
-  return useSWR<StudyQueueResponse>(url, fetcher);
+interface StartSessionOptions {
+  context?: MicroContext;
+  mode?: MicroSessionMode;
+  target?: number;
 }
 
 /**
- * Rebuild user's study queue with updated priority scores
+ * Get user's study queue for micro-learning (Mocked)
+ */
+export function useStudyQueue(options?: StudyQueueOptions) {
+  const url = `/api/micro/queue`;
+  return useSWR<StudyQueueResponse>(url, async () => {
+    const res = await fetch('/data/flashcards.json');
+    const allCards = await res.json();
+    const queue: StudyQueueEntry[] = allCards.slice(0, options?.limit || 10).map((c: { id: number; front: string; back: string }, index: number) => ({
+      queue_id: crypto.randomUUID(),
+      position: index,
+      recommended_context: options?.context || 'general',
+      priority_score: 1.0,
+      micro_flashcard: {
+        id: c.id,
+        micro_front: c.front,
+        micro_back: c.back,
+        audio_script: null,
+        context_tags: [],
+        estimated_seconds: 30,
+        priority: 1,
+        source_flashcard_id: c.id,
+      },
+      source_flashcard_id: c.id,
+    }));
+
+    return {
+      user_id: 'guest',
+      context: options?.context || 'general',
+      queue: queue,
+      queue_size: queue.length
+    };
+  });
+}
+
+/**
+ * Rebuild user's study queue (Mocked)
  */
 export function useRebuildQueue() {
   return useSWRMutation<
@@ -55,98 +78,90 @@ export function useRebuildQueue() {
     { context?: MicroContext; limit?: number }
   >(
     '/api/micro/queue/rebuild',
-    async (url, { arg }) => {
-      const params = new URLSearchParams();
-      if (arg?.context) params.append('context', arg.context);
-      if (arg?.limit) params.append('limit', String(arg.limit));
-
-      const fullUrl = `${url}${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await fetch(fullUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to rebuild queue');
-      return response.json();
+    async () => {
+      return { user_id: 'guest', context: 'general', queue_size: 10, message: 'Queue rebuilt locally' };
     },
     {
       onSuccess: () => {
-        // Invalidate queue cache after rebuild
         mutate('/api/micro/queue');
       },
     }
   );
 }
 
-// ============ Due Cards Hook ============
-
-interface DueCardsOptions {
-  context?: MicroContext;
-  limit?: number;
-}
-
 /**
- * Get micro cards due for review
+ * Get micro cards due for review (Mocked)
  */
 export function useDueCards(options?: DueCardsOptions) {
-  const params = new URLSearchParams();
-  if (options?.context) params.append('context', options.context);
-  if (options?.limit) params.append('limit', String(options.limit));
-
-  const queryString = params.toString();
-  const url = `/api/micro/due${queryString ? `?${queryString}` : ''}`;
-
-  return useSWR<DueCardsResponse>(url, fetcher);
+  const url = `/api/micro/due`;
+  return useSWR<DueCardsResponse>(url, async (): Promise<DueCardsResponse> => {
+    const res = await fetch('/data/flashcards.json');
+    const allCards = await res.json();
+    return {
+      user_id: 'guest',
+      due_count: 5,
+      cards: allCards.slice(0, options?.limit || 5).map((c: { id: number; front: string; back: string }) => ({
+        micro_flashcard_id: c.id,
+        micro_front: c.front,
+        micro_back: c.back,
+        audio_script: null,
+        estimated_seconds: 30,
+        progress: {
+          ease_factor: 2.5,
+          interval: 1,
+          repetitions: 0,
+          review_count: 0,
+          last_quality: null,
+          next_review_at: null,
+        },
+        source_flashcard_id: c.id,
+      })),
+    };
+  });
 }
 
-// ============ Micro Stats Hook ============
-
 /**
- * Get micro-learning statistics for the user
+ * Get micro-learning statistics (Mocked)
  */
 export function useMicroStats() {
-  return useSWR<MicroStatsResponse>('/api/micro/stats', fetcher);
-}
-
-// ============ Quick Session Hooks ============
-
-interface StartSessionOptions {
-  context?: MicroContext;
-  mode?: MicroSessionMode;
-  target?: number;
+  return useSWR<MicroStatsResponse>('/api/micro/stats', async (): Promise<MicroStatsResponse> => {
+    return {
+      user_id: 'guest',
+      total_reviews: 0,
+      overall_accuracy: 0,
+      unique_cards_learned: 0,
+      context_accuracy: {},
+      recent_sessions: {
+        total: 0,
+        avg_cards_completed: 0,
+        avg_duration_seconds: 0,
+      },
+    };
+  });
 }
 
 /**
- * Start a new quick micro-learning session
+ * Start a new quick micro-learning session (Mocked)
  */
 export function useStartQuickSession() {
-  return useSWRMutation<
-    QuickSession,
-    Error,
-    string,
-    StartSessionOptions
-  >(
+  return useSWRMutation<QuickSession, Error, string, StartSessionOptions>(
     '/api/micro/sessions/start',
-    async (url, { arg }) => {
-      const params = new URLSearchParams();
-      if (arg?.context) params.append('context', arg.context);
-      if (arg?.mode) params.append('mode', arg.mode);
-      if (arg?.target) params.append('target', String(arg.target));
-
-      const fullUrl = `${url}${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await fetch(fullUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to start session');
-      return response.json();
+    async (_url, { arg }) => {
+      const newSession: QuickSession = {
+        session_id: crypto.randomUUID(),
+        context: arg.context || 'general',
+        mode: arg.mode || 'cards',
+        target: arg.target || 5,
+        cards_count: arg.target || 5,
+        started_at: new Date().toISOString(),
+      };
+      const sessions = storage.get<QuickSession[]>(MICRO_SESSIONS_KEY) || [];
+      sessions.push(newSession);
+      storage.set(MICRO_SESSIONS_KEY, sessions);
+      return newSession;
     },
     {
       onSuccess: () => {
-        // Invalidate related caches
         mutate('/api/micro/sessions/active');
         mutate('/api/micro/queue');
       },
@@ -155,11 +170,10 @@ export function useStartQuickSession() {
 }
 
 /**
- * Submit a micro flashcard review within a session
+ * Submit a micro flashcard review (Mocked)
  */
-export function useMicroReview(sessionId: string) {
-  const url = `/api/micro/sessions/${sessionId}/review`;
-
+export function useMicroReview(_sessionId: string) {
+  const url = `/api/micro/sessions/${_sessionId}/review`;
   return useSWRMutation<
     MicroReviewResponse,
     Error,
@@ -167,23 +181,15 @@ export function useMicroReview(sessionId: string) {
     { micro_flashcard_id: number; quality: number; context?: MicroContext }
   >(
     url,
-    async (url, { arg }) => {
-      const params = new URLSearchParams();
-      if (arg?.context) params.append('context', arg.context);
-
-      const fullUrl = `${url}${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await fetch(fullUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          body: JSON.stringify({
-            micro_flashcard_id: arg.micro_flashcard_id,
-            quality: arg.quality,
-          }),
-        },
-      });
-      if (!response.ok) throw new Error('Failed to submit review');
-      return response.json();
+    async () => {
+      return {
+        micro_flashcard_id: 0,
+        quality: 0,
+        ease_factor: 2.5,
+        interval: 1,
+        repetitions: 1,
+        next_review_at: new Date().toISOString(),
+      };
     },
     {
       onSuccess: () => {
@@ -195,11 +201,10 @@ export function useMicroReview(sessionId: string) {
 }
 
 /**
- * End a quick session and record final metrics
+ * End a quick session (Mocked)
  */
 export function useEndQuickSession(sessionId: string) {
   const url = `/api/micro/sessions/${sessionId}/end`;
-
   return useSWRMutation<
     {
       session_id: string;
@@ -214,21 +219,22 @@ export function useEndQuickSession(sessionId: string) {
     { cards_completed?: number }
   >(
     url,
-    async (url, { arg }) => {
-      const params = new URLSearchParams();
-      if (arg?.cards_completed !== undefined) {
-        params.append('cards_completed', String(arg.cards_completed));
+    async () => {
+      const sessions = storage.get<QuickSessionDetail[]>(MICRO_SESSIONS_KEY) || [];
+      const sessionIndex = sessions.findIndex(s => s.session_id === sessionId);
+      if (sessionIndex !== -1) {
+        sessions[sessionIndex].status = 'completed';
+        sessions[sessionIndex].ended_at = new Date().toISOString();
+        storage.set(MICRO_SESSIONS_KEY, sessions);
       }
-
-      const fullUrl = `${url}${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await fetch(fullUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to end session');
-      return response.json();
+      return {
+        session_id: sessionId,
+        is_completed: true,
+        duration_seconds: 120,
+        cards_completed: 5,
+        cards_presented: 5,
+        completion_rate: 100,
+      };
     },
     {
       onSuccess: () => {
@@ -241,53 +247,91 @@ export function useEndQuickSession(sessionId: string) {
 }
 
 /**
- * Get user's currently active quick session
+ * Get active quick session (Mocked)
  */
 export function useActiveQuickSession() {
   return useSWR<{ active_session: QuickSessionDetail | null }>(
     '/api/micro/sessions/active',
-    fetcher
+    async (): Promise<{ active_session: QuickSessionDetail | null }> => {
+      const sessions = storage.get<QuickSessionDetail[]>(MICRO_SESSIONS_KEY) || [];
+      const active = sessions.find(s => s.status === 'in_progress');
+      if (!active) return { active_session: null };
+      
+      return {
+        active_session: {
+          ...active,
+          cards: [],
+        }
+      };
+    }
   );
 }
 
 /**
- * Get user's completed quick session history
+ * Get quick session history (Mocked)
  */
 export function useQuickSessionHistory(limit?: number) {
-  const url = limit
-    ? `/api/micro/sessions/history?limit=${limit}`
-    : '/api/micro/sessions/history';
-
-  return useSWR<
-    { total_sessions: number; sessions: Array<QuickSessionDetail> }
-  >(url, fetcher);
+  const url = '/api/micro/sessions/history';
+  return useSWR<{ total_sessions: number; sessions: Array<QuickSessionDetail> }>(
+    url,
+    async (): Promise<{ total_sessions: number; sessions: Array<QuickSessionDetail> }> => {
+      const sessions = storage.get<QuickSessionDetail[]>(MICRO_SESSIONS_KEY) || [];
+      return {
+        total_sessions: sessions.length,
+        sessions: sessions.slice(0, limit || 10).map(s => ({
+          ...s,
+          cards: [],
+        }))
+      };
+    }
+  );
 }
 
-// ============ Single Micro Flashcard Hook ============
-
 /**
- * Get a single micro flashcard by ID
+ * Get a single micro flashcard (Mocked)
  */
 export function useMicroFlashcard(microId: number | undefined) {
   return useSWR<MicroFlashcardWithProgress>(
     microId ? `/api/micro/flashcards/${microId}` : null,
-    fetcher
+    async () => {
+      const res = await fetch('/data/flashcards.json');
+      const allCards = await res.json();
+      const card = allCards.find((c: { id: number; front: string; back: string }) => c.id === microId);
+      return {
+        id: card.id,
+        micro_front: card.front,
+        micro_back: card.back,
+        audio_script: null,
+        context_tags: [],
+        estimated_seconds: 30,
+        priority: 1,
+        source_flashcard_id: card.id,
+        progress: {
+          ease_factor: 2.5,
+          interval: 1,
+          repetitions: 0,
+          review_count: 0,
+          last_quality: null,
+          next_review_at: null,
+        }
+      };
+    }
   );
 }
 
-// ============ Utility Functions ============
+/**
+ * Prefetch study queue for faster initial load (Mocked)
+ */
+export function prefetchStudyQueue(context?: MicroContext) {
+  const params = context ? `?context=${context}` : '';
+  const url = `/api/micro/queue${params}`;
+  // For mock, we just use useStudyQueue's internal logic or a simple fetch
+  return mutate(url);
+}
 
 /**
  * Invalidate all micro-learning caches
  */
 export function invalidateMicroCaches() {
   mutate((key) => typeof key === 'string' && key.startsWith('/api/micro'));
-}
-
-/**
- * Prefetch study queue for faster initial load
- */
-export function prefetchStudyQueue(context?: MicroContext) {
-  const params = context ? `?context=${context}` : '';
-  return mutate(`/api/micro/queue${params}`, fetcher(`/api/micro/queue${params}`));
 }

@@ -11,7 +11,6 @@ import type {
   ConceptListResponse,
   ConceptCategoryInfo,
   LearningPath,
-  RelationshipType,
   ConceptDomain,
   ConceptCategory,
 } from '@/types';

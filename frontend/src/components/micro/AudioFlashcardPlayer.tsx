@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Volume2,
   VolumeX,
@@ -36,20 +36,7 @@ export default function AudioFlashcardPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Auto-play on mount if enabled
-  useEffect(() => {
-    if (autoPlay && audio.isEnabled) {
-      handlePlay('front');
-    }
-    // Cleanup on unmount
-    return () => {
-      if (synthRef.current) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
-
-  const handlePlay = (side: 'front' | 'back') => {
+  const handlePlay = useCallback((side: 'front' | 'back') => {
     if (!('speechSynthesis' in window)) {
       console.warn('Speech synthesis not supported');
       return;
@@ -103,7 +90,20 @@ export default function AudioFlashcardPlayer({
     synthRef.current = utterance;
     window.speechSynthesis.speak(utterance);
     setCurrentSide(side);
-  };
+  }, [frontText, backText, audio.rate, audio.pitch, autoPlay, onPlayComplete, setAudioPlaying]);
+
+  // Auto-play on mount if enabled
+  useEffect(() => {
+    if (autoPlay && audio.isEnabled) {
+      handlePlay('front');
+    }
+    // Cleanup on unmount
+    return () => {
+      if (synthRef.current) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [autoPlay, audio.isEnabled, handlePlay]);
 
   const handlePause = () => {
     if (window.speechSynthesis.speaking) {

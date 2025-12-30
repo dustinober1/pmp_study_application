@@ -16,7 +16,6 @@ import {
   useMicroStats,
 } from '@/lib/api/micro';
 import {
-  useMicroQueue,
   useShouldRebuildQueue,
   useMicroStore,
 } from '@/stores/microStore';
@@ -56,7 +55,6 @@ export default function QueueManager({ onStartSession }: QueueManagerProps) {
   const { data: statsData } = useMicroStats();
   const { trigger: rebuildQueue, isMutating: isRebuilding } = useRebuildQueue();
 
-  const { selectedContext } = useMicroQueue();
   const shouldRebuild = useShouldRebuildQueue();
   const setSelectedContext = useMicroStore((state) => state.setSelectedContext);
 

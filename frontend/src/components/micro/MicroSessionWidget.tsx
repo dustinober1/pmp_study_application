@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import useSWR from 'swr';
 import { Play, Clock, Users, Zap, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
@@ -12,7 +11,6 @@ import {
 } from '@/lib/api/micro';
 import {
   useMicroStore,
-  useMicroPreferences,
   useShouldRebuildQueue,
   useIsInMicroSession,
 } from '@/stores/microStore';
@@ -57,7 +55,7 @@ export default function MicroSessionWidget({
   onClose,
   standalone = false,
 }: MicroSessionWidgetProps) {
-  const { data: queueData, isLoading } = useStudyQueue();
+  const { data: queueData } = useStudyQueue();
   const { data: statsData } = useMicroStats();
   const { trigger: startSession, isMutating } = useStartQuickSession();
 

@@ -48,7 +48,7 @@ export default function ExamClient() {
   // Track page view on mount
   useEffect(() => {
     telemetry.trackPageView('exam_simulator');
-    telemetry.trackPremiumFeatureAccess('exam_simulator');
+    telemetry.trackOpenAccessFeature('exam_simulator');
   }, [telemetry]);
 
   // Load history on mount

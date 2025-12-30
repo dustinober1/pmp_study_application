@@ -149,55 +149,14 @@ export const useUserStore = create<UserState>()(
       },
 
       // Tier access helpers
-      canAccessFullExam: () => {
-        const { tier, isPremiumActive } = get();
-        return isPremiumActive();
-      },
-
-      canAccessExamCoach: () => {
-        const { tier, isPremiumActive } = get();
-        return isPremiumActive();
-      },
-
-      canAccessAdaptiveExplanations: () => {
-        const { tier, isPremiumActive } = get();
-        return isPremiumActive();
-      },
-
-      canAccessStudyRoadmap: () => {
-        const { tier, isPremiumActive } = get();
-        return isPremiumActive();
-      },
-
-      canAccessConceptGraph: () => {
-        const { tier, isPremiumActive } = get();
-        return isPremiumActive();
-      },
-
-      canAccessMicroLearning: () => {
-        const { tier, isPremiumActive } = get();
-        return isPremiumActive();
-      },
-
-      isPremiumActive: () => {
-        const { tier, premiumExpiresAt } = get();
-        if (tier !== 'premium') return false;
-        if (!premiumExpiresAt) return true; // Lifetime premium
-
-        const now = new Date();
-        const expiresAt = new Date(premiumExpiresAt);
-        return now < expiresAt;
-      },
-
-      getTierDisplay: () => {
-        const { tier } = get();
-        const tierDisplays = {
-          public: { name: 'Public', color: 'text-gray-600 dark:text-gray-400', bgColor: 'bg-gray-100 dark:bg-gray-800' },
-          free: { name: 'Free', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
-          premium: { name: 'Premium', color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/30' },
-        };
-        return tierDisplays[tier];
-      },
+      canAccessFullExam: () => true,
+      canAccessExamCoach: () => true,
+      canAccessAdaptiveExplanations: () => true,
+      canAccessStudyRoadmap: () => true,
+      canAccessConceptGraph: () => true,
+      canAccessMicroLearning: () => true,
+      isPremiumActive: () => true,
+      getTierDisplay: () => ({ name: 'Open', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' }),
     }),
     {
       name: 'pmp-user-storage',

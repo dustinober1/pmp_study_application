@@ -139,17 +139,17 @@ export interface ExamResumeData {
 
 // ============ API Response Types ============
 
-export interface ExamSessionResponse extends ExamSession {}
+export type ExamSessionResponse = ExamSession;
 
-export interface ExamSessionDetailResponse extends ExamSessionDetail {}
+export type ExamSessionDetailResponse = ExamSessionDetail;
 
-export interface ExamAnswerResponse extends ExamAnswer {}
+export type ExamAnswerResponse = ExamAnswer;
 
-export interface ExamReportResponse extends ExamReport {}
+export type ExamReportResponse = ExamReport;
 
-export interface ExamResultResponse extends ExamResult {}
+export type ExamResultResponse = ExamResult;
 
-export interface ExamResumeResponse extends ExamResumeData {}
+export type ExamResumeResponse = ExamResumeData;
 
 // ============ Exam Coach / Behavior Types ============
 

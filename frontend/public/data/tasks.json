@@ -1,0 +1,184 @@
+[
+  {
+    "id": 1,
+    "domain_id": 1,
+    "name": "Lead the project team",
+    "description": "Set expectations, empower team members, address problems, and adapt leadership style to context.",
+    "order": 1
+  },
+  {
+    "id": 2,
+    "domain_id": 1,
+    "name": "Help ensure knowledge transfer",
+    "description": "Facilitate sharing of knowledge and lessons learned within and across projects.",
+    "order": 2
+  },
+  {
+    "id": 3,
+    "domain_id": 1,
+    "name": "Identify and analyze stakeholders",
+    "description": "Identify stakeholders, analyze their interests and influence, and develop engagement strategies.",
+    "order": 3
+  },
+  {
+    "id": 4,
+    "domain_id": 1,
+    "name": "Tailor communication to stakeholder needs",
+    "description": "Adapt communication methods, frequency, and content to meet diverse stakeholder requirements.",
+    "order": 4
+  },
+  {
+    "id": 5,
+    "domain_id": 1,
+    "name": "Execute stakeholder engagement plan",
+    "description": "Implement strategies to engage stakeholders effectively throughout the project.",
+    "order": 5
+  },
+  {
+    "id": 6,
+    "domain_id": 1,
+    "name": "Build trust and influence stakeholders",
+    "description": "Develop authentic relationships, demonstrate integrity, and use influence to achieve project objectives.",
+    "order": 6
+  },
+  {
+    "id": 7,
+    "domain_id": 1,
+    "name": "Support team performance",
+    "description": "Foster an environment that enables the team to deliver value, remove impediments, and recognize contributions.",
+    "order": 7
+  },
+  {
+    "id": 8,
+    "domain_id": 1,
+    "name": "Manage conflict",
+    "description": "Identify, analyze, and address conflicts constructively to maintain team effectiveness.",
+    "order": 8
+  },
+  {
+    "id": 9,
+    "domain_id": 2,
+    "name": "Define and break down scope",
+    "description": "Define project scope, create WBS or product backlog, and obtain stakeholder agreement.",
+    "order": 1
+  },
+  {
+    "id": 10,
+    "domain_id": 2,
+    "name": "Prioritize work based on value",
+    "description": "Prioritize deliverables and features based on business value, stakeholder feedback, and dependencies.",
+    "order": 2
+  },
+  {
+    "id": 11,
+    "domain_id": 2,
+    "name": "Assess opportunities for incremental delivery",
+    "description": "Identify opportunities to deliver value incrementally rather than at project end.",
+    "order": 3
+  },
+  {
+    "id": 12,
+    "domain_id": 2,
+    "name": "Define and manage resources",
+    "description": "Identify, acquire, and manage physical and team resources needed for the project.",
+    "order": 4
+  },
+  {
+    "id": 13,
+    "domain_id": 2,
+    "name": "Plan and execute procurement",
+    "description": "Plan, conduct, and manage procurement of goods and services from external sources.",
+    "order": 5
+  },
+  {
+    "id": 14,
+    "domain_id": 2,
+    "name": "Recommend project management approach",
+    "description": "Recommend and adapt the project management approach (predictive, adaptive, or hybrid) based on project needs.",
+    "order": 6
+  },
+  {
+    "id": 15,
+    "domain_id": 2,
+    "name": "Create and maintain project plan",
+    "description": "Develop and maintain the integrated project management plan and subsidiary plans.",
+    "order": 7
+  },
+  {
+    "id": 16,
+    "domain_id": 2,
+    "name": "Collect and analyze data",
+    "description": "Gather project data and analyze it to make informed decisions and take appropriate actions.",
+    "order": 8
+  },
+  {
+    "id": 17,
+    "domain_id": 2,
+    "name": "Manage risk",
+    "description": "Identify, analyze, plan responses, and monitor risks throughout the project.",
+    "order": 9
+  },
+  {
+    "id": 18,
+    "domain_id": 2,
+    "name": "Manage change",
+    "description": "Evaluate, approve, and implement changes through integrated change control.",
+    "order": 10
+  },
+  {
+    "id": 19,
+    "domain_id": 3,
+    "name": "Evaluate external business environment",
+    "description": "Assess changes in the external environment including regulations, technology, and market conditions.",
+    "order": 1
+  },
+  {
+    "id": 20,
+    "domain_id": 3,
+    "name": "Assess impact on project scope/backlog",
+    "description": "Evaluate how external changes affect project scope, requirements, and backlog items.",
+    "order": 2
+  },
+  {
+    "id": 21,
+    "domain_id": 3,
+    "name": "Help ensure value-based delivery",
+    "description": "Focus on delivering value aligned with business objectives and stakeholder needs.",
+    "order": 3
+  },
+  {
+    "id": 22,
+    "domain_id": 3,
+    "name": "Verify measurement systems for benefits",
+    "description": "Establish and verify systems to measure and track benefit realization.",
+    "order": 4
+  },
+  {
+    "id": 23,
+    "domain_id": 3,
+    "name": "Support organizational strategy",
+    "description": "Ensure projects align with and support organizational strategic objectives.",
+    "order": 5
+  },
+  {
+    "id": 24,
+    "domain_id": 3,
+    "name": "Navigate organizational change",
+    "description": "Help the organization and stakeholders adapt to changes resulting from project outcomes.",
+    "order": 6
+  },
+  {
+    "id": 25,
+    "domain_id": 3,
+    "name": "Integrate sustainability and AI considerations",
+    "description": "Consider environmental sustainability and artificial intelligence impacts in project decisions.",
+    "order": 7
+  },
+  {
+    "id": 26,
+    "domain_id": 3,
+    "name": "Promote continuous improvement",
+    "description": "Foster a culture of learning and continuous improvement in project practices.",
+    "order": 8
+  }
+]

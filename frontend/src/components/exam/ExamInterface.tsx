@@ -7,7 +7,6 @@ import { submitExamAnswer, completeExamSession, abandonExamSession } from '@/lib
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import type { ExamQuestion } from '@/types';
 
 interface ExamInterfaceProps {
   sessionId: string;
@@ -53,7 +52,12 @@ export const ExamInterface: React.FC<ExamInterfaceProps> = ({ sessionId }) => {
     if (isExpired && currentSession?.status === 'in_progress') {
       handleSubmitExam(true);
     }
-  }, [isExpired]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isExpired, currentSession?.status]);
+
+  const toggleFullScreen = useCallback(() => {
+    setIsFullScreen((prev) => !prev);
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -65,11 +69,7 @@ export const ExamInterface: React.FC<ExamInterfaceProps> = ({ sessionId }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullScreen]);
-
-  const toggleFullScreen = useCallback(() => {
-    setIsFullScreen((prev) => !prev);
-  }, []);
+  }, [isFullScreen, toggleFullScreen]);
 
   const handleAnswerSelect = async (answer: string) => {
     if (isSubmitting || !currentQuestion) return;

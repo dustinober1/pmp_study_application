@@ -28,10 +28,10 @@ export default function DailyStudyPlan({ milestone, roadmapId, onBack, onUpdate 
     return order.indexOf(a) - order.indexOf(b);
   });
 
-  const criteria = milestone.completion_criteria || {};
-  const targetFlashcards = (criteria as any).flashcards || 0;
-  const targetQuestions = (criteria as any).questions || 0;
-  const minScore = (criteria as any).min_score || 0.7;
+  const criteria = (milestone.completion_criteria || {}) as { flashcards?: number; questions?: number; min_score?: number };
+  const targetFlashcards = criteria.flashcards || 0;
+  const targetQuestions = criteria.questions || 0;
+  const minScore = criteria.min_score || 0.7;
 
   const handleMarkComplete = async () => {
     if (!confirm('Mark this milestone as complete?')) return;

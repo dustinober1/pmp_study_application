@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "People",
+    "description": "Leadership, team dynamics, and stakeholder engagement across project environments.",
+    "weight": 33.0,
+    "order": 1
+  },
+  {
+    "id": 2,
+    "name": "Process",
+    "description": "Planning, execution, monitoring, and adaptation of project work across methodologies.",
+    "weight": 41.0,
+    "order": 2
+  },
+  {
+    "id": 3,
+    "name": "Business Environment",
+    "description": "Strategic alignment, governance, and value delivery in the organizational context.",
+    "weight": 26.0,
+    "order": 3
+  }
+]

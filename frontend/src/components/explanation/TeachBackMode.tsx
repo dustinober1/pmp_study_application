@@ -60,9 +60,9 @@ export const TeachBackMode: React.FC<TeachBackModeProps> = ({
         const userWords = userText.toLowerCase().split(/\s+/);
 
         // Extract key concepts (words longer than 5 characters)
-        const keyConcepts = [...new Set(
+        const keyConcepts = Array.from(new Set(
             correctWords.filter((w) => w.length > 5)
-        )];
+        ));
 
         const covered: string[] = [];
         const missed: string[] = [];
@@ -85,7 +85,7 @@ export const TeachBackMode: React.FC<TeachBackModeProps> = ({
         } else if (coverageScore >= 60) {
             feedback = 'Good effort! Review the key points you missed to strengthen your understanding.';
         } else if (coverageScore >= 40) {
-            feedback = 'You\'re on the right track. Spend more time studying this concept.';
+            feedback = 'You&apos;re on the right track. Spend more time studying this concept.';
         } else {
             feedback = 'This concept needs more review. Try re-reading the explanation and try again.';
         }
@@ -144,7 +144,7 @@ export const TeachBackMode: React.FC<TeachBackModeProps> = ({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <p className="text-gray-700 dark:text-gray-300">We'll analyze your explanation against the correct answer</p>
+                            <p className="text-gray-700 dark:text-gray-300">We&apos;ll analyze your explanation against the correct answer</p>
                         </div>
                         <div className="flex items-start gap-3">
                             <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">

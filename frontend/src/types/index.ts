@@ -314,6 +314,7 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   per_page: number;
+  per_page_count?: number; // Some APIs might use different names
   pages: number;
 }
 
@@ -321,10 +322,6 @@ export interface ApiError {
   detail: string;
   status_code?: number;
 }
-
-// ============ Collaboration Types ============
-// Export all collaboration types from the dedicated module
-export * from './collaboration';
 
 // ============ Exam Types ============
 // Export all exam types from the dedicated module
@@ -490,11 +487,14 @@ export interface StudyQueueResponse {
 
 export interface QuickSession {
   session_id: string;
+  user_id?: string;
+  status?: string;
   context: MicroContext;
   mode: MicroSessionMode;
   target: number;
   cards_count: number;
   started_at: string;
+  ended_at?: string;
 }
 
 export interface QuickSessionDetail extends QuickSession {
