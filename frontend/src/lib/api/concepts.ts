@@ -1,10 +1,3 @@
-/**
- * Concept Graph API endpoints
- *
- * Provides access to the PMP knowledge graph for exploring concept relationships
- */
-
-import { fetcher } from './client';
 import type {
   ConceptDetails,
   ConceptDomainInfo,
@@ -15,123 +8,159 @@ import type {
 } from '@/types';
 
 /**
- * Get the full concept knowledge graph
+ * Load concepts from static JSON file
  */
-export async function getConceptGraph(params?: {
-  domain?: string;
-  min_strength?: number;
-}): Promise<ConceptGraphResponse> {
-  const searchParams = new URLSearchParams();
-  if (params?.domain) searchParams.set('domain', params.domain);
-  if (params?.min_strength !== undefined) searchParams.set('min_strength', params.min_strength.toString());
-
-  const query = searchParams.toString();
-  return fetcher<ConceptGraphResponse>(`/api/concepts/graph${query ? `?${query}` : ''}`);
+async function loadConceptData() {
+  const res = await fetch('/data/concepts.json');
+  if (!res.ok) {
+    throw new Error('Failed to load concepts data');
+  }
+  return await res.json();
 }
 
 /**
- * Get a list of all concepts with optional filtering
+ * Get the full concept knowledge graph
  */
-export async function getConcepts(params?: {
-  domain?: string;
-  category?: string;
-  search?: string;
-}): Promise<ConceptListResponse> {
-  const searchParams = new URLSearchParams();
-  if (params?.domain) searchParams.set('domain', params.domain);
-  if (params?.category) searchParams.set('category', params.category);
-  if (params?.search) searchParams.set('search', params.search);
+export async function getConceptGraph(): Promise<ConceptGraphResponse> {
+  const data = await loadConceptData();
 
-  const query = searchParams.toString();
-  return fetcher<ConceptListResponse>(`/api/concepts${query ? `?${query}` : ''}`);
+  // Extract unique categories from nodes
+  const categories = Array.from(
+    new Set(data.nodes.map((n: { category: string }) => n.category))
+  ).filter(Boolean);
+
+  return {
+    nodes: data.nodes,
+    links: data.links,
+    relationship_types: data.relationship_types || {},
+    categories,
+  };
+}
+
+/**
+ * Get a list of all concepts
+ */
+export async function getConcepts(): Promise<ConceptListResponse> {
+  const data = await loadConceptData();
+
+  return {
+    concepts: data.nodes,
+    count: data.nodes.length,
+  };
 }
 
 /**
  * Get detailed information about a specific concept
  */
 export async function getConceptDetails(conceptId: number): Promise<ConceptDetails> {
-  return fetcher<ConceptDetails>(`/api/concepts/${conceptId}`);
+  const data = await loadConceptData();
+  const concept = data.nodes.find((n: { id: number }) => n.id === conceptId);
+
+  if (!concept) {
+    throw new Error(`Concept ${conceptId} not found`);
+  }
+
+  // Find related concepts
+  const outgoingRelationships = data.links
+    .filter((l: { source: number }) => l.source === conceptId)
+    .map((l: { target: number; type: string; strength: number }) => ({
+      target_id: l.target,
+      relationship_type: l.type,
+      strength: l.strength,
+    }));
+
+  const incomingRelationships = data.links
+    .filter((l: { target: number }) => l.target === conceptId)
+    .map((l: { source: number; type: string; strength: number }) => ({
+      source_id: l.source,
+      relationship_type: l.type,
+      strength: l.strength,
+    }));
+
+  return {
+    id: concept.id,
+    name: concept.name,
+    description: concept.description,
+    category: concept.category,
+    domain_focus: concept.domain_focus,
+    created_at: new Date().toISOString(),
+    flashcard_count: concept.flashcard_count,
+    question_count: concept.question_count,
+    mastery: concept.mastery_level,
+    outgoing_relationships: outgoingRelationships,
+    incoming_relationships: incomingRelationships,
+    related_flashcards: [],
+    related_questions: [],
+  };
 }
 
 /**
- * Get a subgraph centered on a specific concept
+ * Get a subgraph centered on a specific concept (Mocked)
  */
 export async function getConceptSubgraph(
-  conceptId: number,
-  params?: { max_depth?: number }
+  _conceptId: number
 ): Promise<ConceptGraphResponse> {
-  const searchParams = new URLSearchParams();
-  if (params?.max_depth !== undefined) searchParams.set('max_depth', params.max_depth.toString());
-
-  const query = searchParams.toString();
-  return fetcher<ConceptGraphResponse>(
-    `/api/concepts/${conceptId}/subgraph${query ? `?${query}` : ''}`
-  );
+  if (_conceptId) { /* ignore */ }
+  return {
+    nodes: [],
+    links: [],
+    relationship_types: {},
+    categories: [],
+  };
 }
 
 /**
- * Find a learning path between two concepts
+ * Find a learning path between two concepts (Mocked)
  */
 export async function getLearningPath(
-  conceptId: number,
-  targetConceptId: number
+  _conceptId: number,
+  _targetConceptId: number
 ): Promise<LearningPath> {
-  return fetcher<LearningPath>(
-    `/api/concepts/${conceptId}/path?target_concept_id=${targetConceptId}`
-  );
+  if (_conceptId || _targetConceptId) { /* ignore */ }
+  return {
+    path: [],
+    length: 0,
+  };
 }
 
 /**
- * Get flashcards for a specific concept
+ * Get flashcards for a specific concept (Mocked)
  */
 export async function getConceptFlashcards(
-  conceptId: number,
-  params?: { limit?: number; offset?: number }
+  _conceptId: number
 ) {
-  const searchParams = new URLSearchParams();
-  if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
-  if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
-
-  const query = searchParams.toString();
-  return fetcher(
-    `/api/concepts/${conceptId}/flashcards${query ? `?${query}` : ''}`
-  );
+  if (_conceptId) { /* ignore */ }
+  return { items: [], total: 0 };
 }
 
 /**
- * Get questions for a specific concept
+ * Get questions for a specific concept (Mocked)
  */
 export async function getConceptQuestions(
-  conceptId: number,
-  params?: { limit?: number; offset?: number }
+  _conceptId: number
 ) {
-  const searchParams = new URLSearchParams();
-  if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
-  if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
-
-  const query = searchParams.toString();
-  return fetcher(
-    `/api/concepts/${conceptId}/questions${query ? `?${query}` : ''}`
-  );
+  if (_conceptId) { /* ignore */ }
+  return { items: [], total: 0 };
 }
 
 /**
- * Get all concept categories
+ * Get all concept categories (Mocked)
  */
 export async function getConceptCategories(): Promise<{ categories: ConceptCategoryInfo[] }> {
-  return fetcher('/api/concepts/categories');
+  return { categories: [] };
 }
 
 /**
- * Get all domains that have concepts
+ * Get all domains that have concepts (Mocked)
  */
 export async function getConceptDomains(): Promise<{ domains: ConceptDomainInfo[] }> {
-  return fetcher('/api/concepts/domains');
+  return { domains: [] };
 }
 
 /**
- * Search for concepts
+ * Search for concepts (Mocked)
  */
-export async function searchConcepts(query: string, limit = 10): Promise<ConceptListResponse> {
-  return fetcher<ConceptListResponse>(`/api/concepts/search/${query}?limit=${limit}`);
+export async function searchConcepts(_query: string): Promise<ConceptListResponse> {
+  if (_query) { /* ignore */ }
+  return { concepts: [], count: 0 };
 }
