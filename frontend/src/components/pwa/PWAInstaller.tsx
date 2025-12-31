@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Install, X } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 
@@ -133,7 +133,7 @@ export default function PWAInstaller() {
                 size="sm"
                 fullWidth
                 onClick={handleInstallClick}
-                leftIcon={<Install className="w-4 h-4" />}
+                leftIcon={<Download className="w-4 h-4" />}
               >
                 Install
               </Button>

@@ -131,6 +131,7 @@ export function ConceptGraphExplorer({
       .data(graphData.nodes)
       .join('g')
       .attr('cursor', 'pointer')
+      // @ts-expect-error D3 drag typings are incompatible with our selection generics
       .call(d3.drag<SVGGElement, any>()
         .on('start', dragstarted)
         .on('drag', dragged)
